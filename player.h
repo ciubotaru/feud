@@ -14,7 +14,7 @@ char *const ranklist[5];
 
 typedef struct player {
 	uint16_t id;
-	char name[17]; /* 16 + endchar */
+	char name[17];		/* 16 + endchar */
 	uint16_t money;
 	unsigned char rank;
 	uint16_t rank_land;
@@ -24,8 +24,8 @@ typedef struct player {
 	struct gametime deathdate;
 	struct player *lord;
 	struct player *heir;
-//	uint16_t nr_vassals;
-//	struct player **vassals;
+//      uint16_t nr_vassals;
+//      struct player **vassals;
 	struct player *next;
 } player_t;
 
@@ -33,31 +33,31 @@ player_t *add_player(const char *name);
 
 void print_player_list();
 
-void remove_player(player_t *player);
+void remove_player(player_t * player);
 
 void clear_player_list();
 
-uint16_t get_money(player_t *player);
+uint16_t get_money(player_t * player);
 
-void set_money(player_t *player, const uint16_t money);
+void set_money(player_t * player, const uint16_t money);
 
 player_t *get_player_by_name(const char *name);
 
 player_t *get_player_by_id(const uint16_t id);
 
-uint16_t get_player_order(player_t *player);
+uint16_t get_player_order(player_t * player);
 
-unsigned char get_player_rank(player_t *player);
+unsigned char get_player_rank(player_t * player);
 
-void set_player_rank(player_t *player, unsigned char rank);
+void set_player_rank(player_t * player, unsigned char rank);
 
 player_t *get_player_by_order(int playerlist_selector);
 
-int transfer_money(player_t *source, player_t *destination, const int amount);
+int transfer_money(player_t * source, player_t * destination, const int amount);
 
-void set_expected_age(player_t *player);
+void set_expected_age(player_t * player);
 
-void set_successor(player_t *player, player_t *successor);
+void set_successor(player_t * player, player_t * successor);
 
 unsigned int count_players();
 
@@ -67,6 +67,6 @@ int is_gameover();
 
 void check_death();
 
-void succession(player_t *player);
+void succession(player_t * player);
 
-#endif /* PLAYER_H */
+#endif				/* PLAYER_H */

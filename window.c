@@ -41,30 +41,38 @@ char *screens[] = {
 	[GAME_OVER] = "GAME OVER",
 };
 
-int check_termsize() {
+int check_termsize()
+{
 	int retval = 0;
-    struct winsize w;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-	if (w.ws_row < 24 || w.ws_col < 80) retval = 1;
+	struct winsize w;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+	if (w.ws_row < 24 || w.ws_col < 80)
+		retval = 1;
 	return retval;
 }
 
-int get_input(WINDOW *window) {
+int get_input(WINDOW * window)
+{
 	int ch = 0, ch2 = 0, input = 0;
 	ch = wgetch(window);
 	if (ch == 27) {
 		ch2 = wgetch(window);
 		if (ch2 == '[') {
 			input = wgetch(window);
-			if (input == 65 || input == 66 || input == 67 || input == 68) return input + 1000;
+			if (input == 65 || input == 66 || input == 67
+			    || input == 68)
+				return input + 1000;
 		}
 	}
 	return ch;
 }
 
-void set_cursor(uint16_t new_height, uint16_t new_width) {
-	if (world->grid == NULL) return;
-	if (new_height < world->grid->height) world->grid->cursor_height = new_height;
-	if (new_width < world->grid->width) world->grid->cursor_width = new_width;
+void set_cursor(uint16_t new_height, uint16_t new_width)
+{
+	if (world->grid == NULL)
+		return;
+	if (new_height < world->grid->height)
+		world->grid->cursor_height = new_height;
+	if (new_width < world->grid->width)
+		world->grid->cursor_width = new_width;
 }
-

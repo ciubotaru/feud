@@ -39,7 +39,7 @@ void create_world(void);
 
 void destroy_world(void);
 
-char message[255]; /* ToDo replace all occurences with user_message */
+char message[255];		/* ToDo replace all occurences with user_message */
 
 char user_message[255];
 
@@ -52,4 +52,3 @@ void msg_to_display(char *new_text);
 int validate_game_data(char **error_message);
 
 #endif
-

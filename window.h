@@ -4,7 +4,7 @@
 #define BG_BLACK "\33[40m"
 #define BG_WHITE "\33[47m"
 #define WHITE "\33[0;97;40m"
-#define B_WHITE "\33[1;97;40m" //bright white
+#define B_WHITE "\33[1;97;40m"	//bright white
 #define RESET "\33[0m"
 #define SAVE_CURSOR "\033[s"
 

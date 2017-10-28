@@ -3,4 +3,4 @@
 
 unsigned char get_dice();
 
-#endif /* DICE_H */
+#endif				/* DICE_H */

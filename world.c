@@ -4,10 +4,13 @@
 
 world_t *world = NULL;
 
-void create_world() {
-	if (world != NULL) return;// world;
+void create_world()
+{
+	if (world != NULL)
+		return;		// world;
 	world = malloc(sizeof(world_t));
-	if (world == NULL) return;// NULL;
+	if (world == NULL)
+		return;		// NULL;
 	world->grid = NULL;
 
 	/**
@@ -18,7 +21,7 @@ void create_world() {
 	world->next_player_id = 1;
 	world->selected_player = 0;
 
-//	world->current_time = NULL;
+//      world->current_time = NULL;
 	init_gametime();
 
 	world->piecelist = NULL;
@@ -39,10 +42,13 @@ void create_world() {
 	world->diplomacylist = NULL;
 }
 
-void destroy_world() {
-	if (world == NULL) return;
+void destroy_world()
+{
+	if (world == NULL)
+		return;
 	/* remove regions */
-	while (world->regionlist != NULL) remove_region(world->regionlist);
+	while (world->regionlist != NULL)
+		remove_region(world->regionlist);
 	/* remove pieces */
 	clear_piece_list();
 	/* remove players */
@@ -51,16 +57,18 @@ void destroy_world() {
 	remove_grid();
 }
 
-char message[255] = {0};
+char message[255] = { 0 };
 
-char user_message[255] = {0};
+char user_message[255] = { 0 };
 
-void add_user_message(char *new_text) {
+void add_user_message(char *new_text)
+{
 	memset(&user_message, 0, strlen(user_message));
 	strcpy(user_message, new_text);
 }
 
-int validate_game_data(char **error_message) {
+int validate_game_data(char **error_message)
+{
 	/* returns 0 if game is playable or 1 otherwise */
 	char *msg;
 	int error = 0;
@@ -72,7 +80,8 @@ int validate_game_data(char **error_message) {
 		msg = "World not created";
 		goto error;
 	}
-	int total_months = world->current_time.tm_year * 12 + world->current_time.tm_mon;
+	int total_months =
+	    world->current_time.tm_year * 12 + world->current_time.tm_mon;
 
 	/* Stop if there's no map */
 	if (world->grid == NULL) {
@@ -121,7 +130,8 @@ int validate_game_data(char **error_message) {
 		region = world->regionlist;
 		error = 1;
 		while (region != NULL) {
-			if (region->owner != NULL && region->owner->id == player->id) {
+			if (region->owner != NULL
+			    && region->owner->id == player->id) {
 				error = 0;
 				break;
 			}
@@ -140,7 +150,8 @@ int validate_game_data(char **error_message) {
 		piece = world->piecelist;
 		error = 1;
 		while (piece != NULL) {
-			if (piece->owner != NULL && piece->owner->id == player->id) {
+			if (piece->owner != NULL
+			    && piece->owner->id == player->id) {
 				error = 0;
 				break;
 			}
@@ -157,7 +168,8 @@ int validate_game_data(char **error_message) {
 	int nr_nobles = 0;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (piece->type == NOBLE) nr_nobles++;
+		if (piece->type == NOBLE)
+			nr_nobles++;
 		piece = piece->next;
 	}
 	if (nr_nobles != nr_players) {
@@ -169,7 +181,8 @@ int validate_game_data(char **error_message) {
 	error = 0;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (world->grid->tiles[piece->height][piece->width]->walkable == 0) {
+		if (world->grid->tiles[piece->height][piece->width]->walkable ==
+		    0) {
 			error = 1;
 			break;
 		}
@@ -184,7 +197,8 @@ int validate_game_data(char **error_message) {
 	error = 0;
 	player = world->playerlist;
 	while (player != NULL) {
-		if (player->deathdate.tm_year * 12 + player->deathdate.tm_mon <= total_months) {
+		if (player->deathdate.tm_year * 12 + player->deathdate.tm_mon <=
+		    total_months) {
 			error = 1;
 			break;
 		}
@@ -199,7 +213,8 @@ int validate_game_data(char **error_message) {
 	error = 0;
 	player = world->playerlist;
 	while (player != NULL) {
-		if (player->birthdate.tm_year * 12 + player->birthdate.tm_mon > total_months) {
+		if (player->birthdate.tm_year * 12 + player->birthdate.tm_mon >
+		    total_months) {
 			error = 1;
 			break;
 		}
@@ -215,7 +230,9 @@ int validate_game_data(char **error_message) {
 	tile_t *tile = NULL;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (piece->id != world->grid->tiles[piece->height][piece->width]->piece->id) {
+		if (piece->id !=
+		    world->grid->tiles[piece->height][piece->width]->piece->
+		    id) {
 			error = 1;
 			break;
 		}
@@ -230,7 +247,8 @@ int validate_game_data(char **error_message) {
 		for (j = 0; j < world->grid->width; j++) {
 			tile = world->grid->tiles[i][j];
 			if (tile->piece != NULL) {
-				if (tile->piece->height != i || tile->piece->width != j) {
+				if (tile->piece->height != i
+				    || tile->piece->width != j) {
 					error = 1;
 					break;
 				}
@@ -253,7 +271,8 @@ int validate_game_data(char **error_message) {
 			}
 		}
 		if (error == 1) {
-			msg = "Inconsistency between lord and vassal rank detected.";
+			msg =
+			    "Inconsistency between lord and vassal rank detected.";
 			goto error;
 		}
 		player = player->next;
@@ -262,11 +281,10 @@ int validate_game_data(char **error_message) {
 	/* If we are here, then all checks passed */
 	return 0;
 
-error:
+ error:
 	if (error_message) {
 		*error_message = malloc(strlen(msg) + 1);
 		memcpy(*error_message, msg, strlen(msg) + 1);
 	}
 	return 1;
 }
-

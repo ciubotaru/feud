@@ -27,4 +27,4 @@ WINDOW *validate_dialog();
 
 WINDOW *edit_time_dialog();
 
-#endif /* EDITOR_H */
+#endif				/* EDITOR_H */
