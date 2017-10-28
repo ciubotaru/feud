@@ -21,23 +21,23 @@ void editor_start_menu()
 	wprintw(local_win, "  To exit, press 'q'.");
 
 	int ch;
-	ch = wgetch(local_win);
-	switch (ch) {
-	case 'o':
-		delwin(local_win);
-		current_screen = MAP_EDITOR;
-		break;
-	case 'c':
-		delwin(local_win);
-		current_screen = NEW_GAME;
-		break;
-	case 'q':
-		delwin(local_win);
-		current_screen = 99;
-		break;
+	while (1) {
+		ch = wgetch(local_win);
+		switch (ch) {
+		case 'o':
+			delwin(local_win);
+			current_screen = MAP_EDITOR;
+			return;
+		case 'c':
+			delwin(local_win);
+			current_screen = NEW_GAME;
+			return;
+		case 'q':
+			delwin(local_win);
+			current_screen = 99;
+			return;
+		}
 	}
-
-	return;
 }
 
 void map_editor()
