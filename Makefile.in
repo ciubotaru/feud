@@ -1,0 +1,32 @@
+CC=@CC@
+datarootdir=@datarootdir@
+prefix=@prefix@
+CFLAGS =@CFLAGS@
+OBJS = map.o player.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
+EXECS = feud feud-editor
+
+.PHONY: all clean distclean
+
+all: $(EXECS)
+
+$(OBJS): %.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+feud.o: feud.c
+	$(CC) -c $(CFLAGS) -o feud.o feud.c
+
+feud: $(OBJS) feud.o
+	$(CC) $(CFLAGS) -o feud $(OBJS) feud.o -lncurses -lm
+
+editor.o: editor.c
+	$(CC) -c $(CFLAGS) -o editor.o editor.c
+
+feud-editor: $(OBJS) editor.o
+	$(CC) $(CFLAGS) -o feud-editor $(OBJS) editor.o -lncurses -lm
+
+clean:
+	rm *.o $(EXECS)
+
+distclean: clean
+	rm config.log config.status Makefile
+
