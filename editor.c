@@ -50,7 +50,7 @@ void map_editor()
 	uint16_t h_multiplier = world->grid->cursor_height / 24;
 	uint16_t w_multiplier = world->grid->cursor_width / 48;
 	int i, j;
-	char tile_char;
+	char tile_char = '.';
 	int color_nr = 0;
 	player_t *player = get_player_by_id(world->selected_player);
 	tile_t *tile =
@@ -1303,13 +1303,12 @@ void validate_dialog()
 	local_win = newwin(25, 80, 0, 0);
 	wattrset(local_win, A_BOLD);
 
-	int i, j;
+	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	char *error_message = NULL;
-	int validation_result = validate_game_data(&error_message);
 
 	if (error_message == NULL) {
 		msg = "All checks passed. Game data are valid.";

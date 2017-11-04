@@ -61,11 +61,13 @@ char message[255] = { 0 };
 
 char user_message[255] = { 0 };
 
+/**
 void add_user_message(char *new_text)
 {
 	memset(&user_message, 0, strlen(user_message));
 	strcpy(user_message, new_text);
 }
+**/
 
 int validate_game_data(char **error_message)
 {

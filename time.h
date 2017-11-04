@@ -19,6 +19,4 @@ void set_gametime(uint16_t year, unsigned char mon);
 
 void increment_gametime();
 
-void print_gametime();
-
 #endif				/* GAMETIME_H */

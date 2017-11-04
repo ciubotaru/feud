@@ -39,7 +39,7 @@ void draw_map()
 							   cursor_width];
 	piece_t *piece = tile->piece;
 
-	char tile_char;
+	char tile_char = '.';
 	int color_nr = 0;
 	int player_age_mon = 0;
 	for (i = 24 + h_offset; i > h_offset; i--) {

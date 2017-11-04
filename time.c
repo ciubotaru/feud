@@ -45,9 +45,3 @@ void increment_gametime()
 	} else
 		world->current_time.tm_mon += 1;
 }
-
-void print_gametime()
-{
-	printf("It's %s of year %i.\n", months[world->current_time.tm_mon],
-	       world->current_time.tm_year);
-}

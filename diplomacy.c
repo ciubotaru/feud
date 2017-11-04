@@ -167,34 +167,6 @@ void remove_diplomacy(dipstatus_t * dipstatus)
 	}
 }
 
-char *diplomacy_message(const int dipstatus)
-{
-	char *message;
-	switch (dipstatus) {
-	case NEUTRAL:
-		message = "neutral";
-		break;
-	case ALLIANCE:
-		message = "alliance";
-		break;
-	case WAR:
-		message = "war";
-		break;
-	}
-	return message;
-}
-
-void print_diplomacy_list()
-{
-	dipstatus_t *current = world->diplomacylist;
-	while (current != NULL) {
-		printf("Name1: %s. Name2: %s. Status: %s.\n",
-		       current->player1->name, current->player2->name,
-		       diplomacy_message(current->status));
-		current = current->next;
-	}
-}
-
 void homage(player_t * player, player_t * lord)
 {
 	if (player == NULL || lord == NULL)

@@ -65,34 +65,6 @@ player_t *add_player(const char *name)
 	return current->next;
 }
 
-void print_player_list()
-{
-	if (world->playerlist == NULL)
-		return;
-	player_t *current = world->playerlist;
-	while (current != NULL) {
-		uint16_t age =
-		    (world->current_time.tm_year * 12 +
-		     world->current_time.tm_mon -
-		     current->birthdate.tm_year * 12 -
-		     current->birthdate.tm_mon) / 12;
-		char *age_ch;
-		if (age < 20)
-			age_ch = "child";
-		else if (age < 40)
-			age_ch = "young";
-		else if (age < 60)
-			age_ch = "middle-aged";
-		else if (age < 80)
-			age_ch = "old";
-		else
-			age_ch = "very old";
-		printf("ID: %i. Name: %s. Money: %i. Age: %s.\n", current->id,
-		       current->name, current->money, age_ch);
-		current = current->next;
-	}
-}
-
 void remove_player(player_t * player)
 {
 	if (player == NULL)
@@ -408,7 +380,7 @@ void check_death()
 			add_to_cronicle("%s %s lost all his land.\n",
 					ranklist[current_player->rank],
 					current_player->name);
-			add_user_message(message);
+			add_to_cronicle(message);
 			succession(current_player);
 			remove_player(current_player);
 		}
@@ -417,7 +389,7 @@ void check_death()
 			add_to_cronicle("%s %s was killed.\n",
 					ranklist[current_player->rank],
 					current_player->name);
-			add_user_message(message);
+			add_to_cronicle(message);
 			succession(current_player);
 			remove_player(current_player);
 		}
@@ -429,7 +401,7 @@ void check_death()
 			add_to_cronicle("%s %s died of old age.\n",
 					ranklist[current_player->rank],
 					current_player->name);
-			add_user_message(message);
+			add_to_cronicle(message);
 			succession(current_player);
 			remove_player(current_player);
 		}

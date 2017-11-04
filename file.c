@@ -65,6 +65,7 @@ int add_to_cronicle(char *format, ...)
 	fwrite(date_char, sizeof(char), strlen(date_char), fp);
 
 	int bytes_written = fwrite(message, sizeof(char), strlen(message), fp);
+	fclose(fp);
 	if (bytes_written == 0)
 		return 1;
 	return 0;

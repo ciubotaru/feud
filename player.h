@@ -31,8 +31,6 @@ typedef struct player {
 
 player_t *add_player(const char *name);
 
-void print_player_list();
-
 void remove_player(player_t * player);
 
 void clear_player_list();

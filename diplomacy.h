@@ -38,10 +38,6 @@ unsigned char get_diplomacy(player_t * name1, player_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
 
-void print_diplomacy_list();
-
-char *diplomacy_message(const int dipstatus);
-
 void homage(player_t * player, player_t * lord);
 
 void promote_soldier(player_t * player, piece_t * piece, region_t * region,
