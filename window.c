@@ -38,7 +38,8 @@ char *screens[] = {
 	[VALIDATE_DIALOG] = "VALIDATE GAME DATA",
 	[HELP_DIALOG] = "HELP",
 	[INFORMATION] = "INFORMATION",
-	[GAME_OVER] = "GAME OVER",
+	[SELF_DECLARATION_DIALOG] = "BECOME A KING",
+	[GAME_OVER] = "GAME OVER"
 };
 
 int check_termsize()

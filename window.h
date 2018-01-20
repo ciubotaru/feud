@@ -36,9 +36,10 @@
 #define VALIDATE_DIALOG 22
 #define HELP_DIALOG 23
 #define INFORMATION 24
-#define GAME_OVER 25
+#define SELF_DECLARATION_DIALOG 25
+#define GAME_OVER 26
 
-char *screens[26];
+char *screens[27];
 
 int current_screen;
 

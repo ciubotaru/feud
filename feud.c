@@ -308,6 +308,9 @@ void draw_map()
 	case 'h':		// name a successor
 		current_screen = HEIR_DIALOG;
 		break;
+	case 'k':		// declare yourself king
+		current_screen = SELF_DECLARATION_DIALOG;
+		break;
 	case 'm':		// give money
 		/* check if we have money */
 		if (player->money > 0)
@@ -363,6 +366,8 @@ void draw_map()
 		break;
 	case '?':
 		current_screen = HELP_DIALOG;
+		break;
+	default:	// ignore all other keys
 		break;
 	}
 	return;
@@ -1758,20 +1763,76 @@ void help_dialog()
 	mvwprintw(local_win, 7, 2, "'f' -- feudal dialog");
 	mvwprintw(local_win, 8, 2, "'i' -- show game information");
 	mvwprintw(local_win, 9, 2, "'h' -- name a successor");
-	mvwprintw(local_win, 10, 2, "'m' -- give money to another player");
-	mvwprintw(local_win, 11, 2, "'q' -- quit editor");
-	mvwprintw(local_win, 12, 2, "'r' -- give a region to another player");
-	mvwprintw(local_win, 13, 2,
+	mvwprintw(local_win, 10, 2, "'k' -- become a king");
+	mvwprintw(local_win, 11, 2, "'m' -- give money to another player");
+	mvwprintw(local_win, 12, 2, "'q' -- quit editor");
+	mvwprintw(local_win, 13, 2, "'r' -- give a region to another player");
+	mvwprintw(local_win, 14, 2,
 		  "'w' -- toggle walkability of current tile");
-	mvwprintw(local_win, 14, 2, "'s' -- save game to file");
-	mvwprintw(local_win, 15, 2, "'t' -- take money (if dice rolls 6)");
-	mvwprintw(local_win, 16, 2, "'u' -- place a soldier on current tile");
-	mvwprintw(local_win, 17, 2,
+	mvwprintw(local_win, 15, 2, "'s' -- save game to file");
+	mvwprintw(local_win, 16, 2, "'t' -- take money (if dice rolls 6)");
+	mvwprintw(local_win, 17, 2, "'u' -- place a soldier on current tile");
+	mvwprintw(local_win, 18, 2,
 		  "'v' -- toggle between 'move piece' and 'explore map' modes");
-	mvwprintw(local_win, 18, 2, "'?' -- show this help");
+	mvwprintw(local_win, 19, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
 	get_input(local_win);
+	current_screen = MAIN_SCREEN;
+}
+
+void self_declaration_dialog() {
+	/**
+	 * A player can declare themselves a king if they:
+	 * - have enough land (5 regions) for a kingdom
+	 * - have no sovereign
+	 * - have enough money for coronation (1 for every rank "upgrade")
+	 * - are not a king yet
+	 **/
+	WINDOW *local_win = NULL;
+
+	local_win = newwin(25, 80, 0, 0);
+	wattrset(local_win, A_BOLD);
+
+	int i;
+	curs_set(FALSE);
+	noecho();
+
+	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
+		wprintw(local_win, " ");
+	wprintw(local_win, "%s\n\n", screens[current_screen]);
+
+	unsigned char eligible = 0;
+	player_t *active_player = get_player_by_id(world->selected_player);
+	uint16_t nr_regions = count_regions_by_owner(active_player);
+	player_t *lord = active_player->lord;
+	uint16_t money = get_money(active_player);
+	unsigned char rank = get_player_rank(active_player);
+	if (rank == KING) {
+		mvwprintw(local_win, 2, 2, "You are already a king!");
+	}
+	else if (lord != NULL) {
+		mvwprintw(local_win, 2, 2, "Your sovereign does not endorse this!");
+	}
+	else if (nr_regions < 1) {
+		mvwprintw(local_win, 2, 2, "You don't have enough land to create a kingdom (need 5 regions)!");
+	}
+	else if (money < KING - rank) {
+		mvwprintw(local_win, 2, 2, "You don't have enough money for the coronation!");
+	}
+	else {
+		mvwprintw(local_win, 2, 2, "Press 'y' to declare yourself a king!");
+		eligible = 1;
+	}
+	int user_move = get_input(local_win);
+	if (eligible && user_move == 'y') {
+		add_to_cronicle
+				    ("%s %s declared themselves a king.\n",
+				     ranklist[active_player->rank],
+				     active_player->name);
+		set_player_rank(active_player, KING);
+		set_money(active_player, money - KING + rank);
+	}
 	current_screen = MAIN_SCREEN;
 }
 
@@ -1880,11 +1941,17 @@ int main()
 		case HELP_DIALOG:
 			help_dialog();
 			break;
+		case SELF_DECLARATION_DIALOG:
+			self_declaration_dialog();
+			break;
 		case 99:
 			destroy_world();
 			endwin();
 //                              printf ("Thanks for playing!\n");
 			return 0;
+			break;
+		default: // return to main screen
+			current_screen = MAIN_SCREEN;
 			break;
 		}
 	}
