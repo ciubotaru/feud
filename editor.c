@@ -940,6 +940,7 @@ void rename_region_dialog()
 		return;
 	}
 	change_region_name(name, region);
+	sort_region_list();
 	current_screen = REGIONS_DIALOG;
 	return;
 }

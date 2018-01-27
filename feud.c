@@ -559,7 +559,8 @@ void rename_region_dialog()
 				error = 1;
 			break;
 		case 1:
-			strcpy(region->name, name);
+			change_region_name(name, region);
+			sort_region_list();
 			current_screen = REGIONS_DIALOG;
 			return;
 			break;
