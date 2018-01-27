@@ -322,6 +322,30 @@ void remove_region(region_t * region)
 	}
 }
 
+void sort_region_list() {
+	if (world->regionlist == NULL || world->regionlist->next == NULL) return;
+	int permutations;
+	region_t *previous, *current, *next;
+	do {
+		current = world->regionlist;
+		previous = NULL;
+		next = current->next;
+		permutations = 0;
+		while (next != NULL) {
+			if (strcmp(current->name, next->name) > 0) {
+				permutations++;
+				if (previous != NULL) previous->next = next;
+				else world->regionlist = next;
+				current->next = next->next;
+				next->next = current;
+			}
+			previous = current;
+			current = next;
+			next = next->next;
+		}
+	} while (permutations > 0);
+}
+
 void clear_region_list()
 {
 	if (world->regionlist == NULL)

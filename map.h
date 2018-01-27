@@ -53,6 +53,8 @@ void clear_region(region_t * region);
 
 void remove_region(region_t * region);
 
+void sort_region_list();
+
 void clear_region_list();
 
 uint16_t count_tiles_by_owner(player_t * owner);

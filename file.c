@@ -425,6 +425,7 @@ unsigned int load_game()
 	update_money_ranking();
 	update_army_ranking();
 	update_land_ranking();
+	sort_region_list();
 	return 0;
 }
 

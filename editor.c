@@ -446,6 +446,7 @@ void new_game_dialog()
 
 	if (region_size > 0) {
 		voronoi();
+		sort_region_list();
 	}
 
 	world->current_time.tm_year = y;
@@ -730,6 +731,7 @@ void regions_dialog()
 		}
 		if (current != NULL) {
 			remove_region(current);
+			sort_region_list();
 			if (regionlist_selector > 0) {
 				regionlist_selector--;
 				world->selected_region =
@@ -794,6 +796,7 @@ void add_region_dialog()
 			break;
 		case 1:
 			add_region(name);
+			sort_region_list();
 			current_screen = REGIONS_DIALOG;
 			return;
 			break;
