@@ -1945,6 +1945,7 @@ int main()
 			self_declaration_dialog();
 			break;
 		case 99:
+			use_default_colors();
 			destroy_world();
 			endwin();
 //                              printf ("Thanks for playing!\n");
