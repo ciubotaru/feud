@@ -267,58 +267,14 @@ void remove_region(region_t * region)
 {
 	if (world->regionlist == NULL)
 		return;
-	region_t *current = world->regionlist;
-	region_t *previous = NULL;
 
-	while (current != NULL) {
-		if (current == region) {
-			/** if it's the first element in list, i.e. no previous, AND not the last, then set playerlist to next and free current **/
-			/** if it's the last element AND not the first, then free current and set previous->next to NULL **/
-			/** it there is previous and next, then set previous->next to current->next; free current **/
-			/** if it's the ONLY element then free playerlist **/
-
-			/** check if first **/
-			if (previous == NULL) {
-				/** ... AND last **/
-				if (current->next == NULL) {
-					clear_region(current);
-					free(current);
-					world->regionlist = NULL;
-					return;
-				}
-				/** first, but not last **/
-				else {
-					region_t *tmp = current->next;
-					clear_region(current);
-					free(current);
-					world->regionlist = tmp;
-					return;
-				}
-			}
-			/** not first **/
-			else {
-				/** check if last **/
-				if (current->next == NULL) {
-					clear_region(current);
-					free(current);
-					previous->next = NULL;
-					return;
-				}
-				/** not first, not last **/
-				else {
-					previous->next = current->next;
-					clear_region(current);
-					free(current);
-					return;
-				}
-			}
+	for (region_t **current = &world->regionlist; *current; current = &(*current)->next) {
+		if (*current == region) {
+			region_t *next = (*current)->next;
+			free(*current);
+			*current = next;
+			break;
 		}
-		if (current->next == NULL) {
-			/** not found **/
-			return;
-		}
-		previous = current;
-		current = current->next;
 	}
 }
 

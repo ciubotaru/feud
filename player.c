@@ -112,53 +112,13 @@ void remove_player(player_t * player)
 		current = current->next;
 	}
 
-	current = world->playerlist;
-	player_t *previous = NULL;
-	while (current != NULL) {
-		if (current == player) {
-			/** if it's the first element in list, i.e. no previous, AND not the last, then set playerlist to next and free current **/
-			/** if it's the last element AND not the first, then free current and set previous->next to NULL **/
-			/** it there is previous and next, then set previous->next to current->next; free current **/
-			/** if it's the ONLY element then free playerlist **/
-
-			/** check if first **/
-			if (previous == NULL) {
-				/** ... AND last **/
-				if (current->next == NULL) {
-					free(current);
-					world->playerlist = NULL;
-					return;
-				}
-				/** first, but not last **/
-				else {
-					player_t *tmp = world->playerlist->next;
-					free(world->playerlist);
-					world->playerlist = tmp;
-					return;
-				}
-			}
-			/** not first **/
-			else {
-				/** check if last **/
-				if (current->next == NULL) {
-					free(current);
-					previous->next = NULL;
-					return;
-				}
-				/** not first, not last **/
-				else {
-					previous->next = current->next;
-					free(current);
-					return;
-				}
-			}
+	for (player_t **current = &world->playerlist; *current; current = &(*current)->next) {
+		if (*current == player) {
+			player_t *next = (*current)->next;
+			free(*current);
+			*current = next;
+			break;
 		}
-		if (current->next == NULL) {
-			/** not found **/
-			return;
-		}
-		previous = current;
-		current = current->next;
 	}
 }
 

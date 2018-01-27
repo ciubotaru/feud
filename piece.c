@@ -111,71 +111,13 @@ void remove_piece(piece_t * piece)
 	if (world->grid == NULL || piece == NULL || world->piecelist == NULL)
 		return;
 
-	piece_t *current = world->piecelist;
-	piece_t *previous = NULL;
-
-	while (current != NULL) {
-		if (current == piece) {
-			/** if it's the first element in list, i.e. no previous, AND not the last, then set playerlist to next and free current **/
-			/** if it's the last element AND not the first, then free current and set previous->next to NULL **/
-			/** it there is previous and next, then set previous->next to current->next; free current **/
-			/** if it's the ONLY element then free playerlist **/
-
-			/** check if first **/
-			if (previous == NULL) {
-				/** ... AND last **/
-				if (current->next == NULL) {
-					world->grid->tiles[current->
-							   height][current->
-								   width]->
-					    piece = NULL;
-					free(current);
-					world->piecelist = NULL;
-					return;
-				}
-				/** first, but not last **/
-				else {
-					piece_t *tmp = world->piecelist->next;
-					world->grid->tiles[world->piecelist->
-							   height][world->
-								   piecelist->
-								   width]->
-					    piece = NULL;
-					free(world->piecelist);
-					world->piecelist = tmp;
-					return;
-				}
-			}
-			/** not first **/
-			else {
-				/** check if last **/
-				if (current->next == NULL) {
-					world->grid->tiles[current->
-							   height][current->
-								   width]->
-					    piece = NULL;
-					free(current);
-					previous->next = NULL;
-					return;
-				}
-				/** not first, not last **/
-				else {
-					previous->next = current->next;
-					world->grid->tiles[current->
-							   height][current->
-								   width]->
-					    piece = NULL;
-					free(current);
-					return;
-				}
-			}
+	for (piece_t **current = &world->piecelist; *current; current = &(*current)->next) {
+		if (*current == piece) {
+			piece_t *next = (*current)->next;
+			free(*current);
+			*current = next;
+			break;
 		}
-		if (current->next == NULL) {
-			/** not found **/
-			return;
-		}
-		previous = current;
-		current = current->next;
 	}
 }
 
