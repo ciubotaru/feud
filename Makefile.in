@@ -3,7 +3,7 @@ datarootdir=@datarootdir@
 prefix=@prefix@
 CFLAGS =@CFLAGS@
 OBJS = map.o player.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
-EXECS = feud feud-editor
+EXECS = feud feud-editor feud-ai
 
 .PHONY: all clean distclean
 
@@ -23,6 +23,12 @@ editor.o: editor.c
 
 feud-editor: $(OBJS) editor.o
 	$(CC) $(CFLAGS) -o feud-editor $(OBJS) editor.o -lncurses -lm
+
+ai.o: ai.c
+	$(CC) -c $(CFLAGS) -o ai.o ai.c
+
+feud-ai: $(OBJS) ai.o
+	$(CC) $(CFLAGS) -o feud-ai $(OBJS) ai.o -lncurses -lm
 
 clean:
 	rm *.o $(EXECS)
