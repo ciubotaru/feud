@@ -46,6 +46,7 @@ void print_help_region()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
 	dprintf(STDOUT_FILENO, " region add regionID - create a new region\n");
+	dprintf(STDOUT_FILENO, " region delete regionID - delete a region\n");
 	dprintf(STDOUT_FILENO, " region name regionID regionName - set region name\n");
 	dprintf(STDOUT_FILENO, " region owner regionID playerID - set region owner (to clear ownership, write\nplayerID 0)\n");
 	return;
@@ -304,7 +305,7 @@ void standby()
 				dprintf(STDOUT_FILENO, "Error: Parameter missing (type 'help region' for more info)\n");
 				continue;
 			}
-			/* can be 'add', ... */
+			/* can be 'add', 'delete', 'name' or 'owner' */
 			if (!strcmp(token, "add")) {
 				char *id_ch = strtok(NULL, " \n");
 				if (!id_ch) {
@@ -318,6 +319,22 @@ void standby()
 				}
 				region_t *region = add_region(id_ch);
 				region->id = id;
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "delete")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				region_t *region = get_region_by_id(id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO, "Error: invalid RegionID\n");
+					continue;
+				}
+				remove_region(region);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
@@ -338,7 +355,6 @@ void standby()
 					dprintf(STDOUT_FILENO, "Error: RegionName missing (type 'help player' for more info)\n");
 					continue;
 				}
-printf("Read %s\n", name);
 				if (!strcmp(region->name, name)) {
 					dprintf(STDOUT_FILENO, "ack\n");
 					continue;
