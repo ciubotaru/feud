@@ -31,10 +31,27 @@ void reset()
 	create_world();
 }
 
+void print_help(const char *topic)
+{
+	if (topic == NULL) {
+		dprintf(STDOUT_FILENO, "load - load game from file\n");
+		dprintf(STDOUT_FILENO, "new - clear everything\n");
+		dprintf(STDOUT_FILENO, "ping - check if AI is alive\n");
+		dprintf(STDOUT_FILENO, "quit - terminate AI\n");
+		dprintf(STDOUT_FILENO, "save - write current game to file\n");
+		dprintf(STDOUT_FILENO, "for details, type 'help [command]'\n");
+		return;
+	}
+	if (strcmp(topic, "new") == 0) {
+		dprintf(STDOUT_FILENO,
+			"new - clear everything and reset game environment\n");
+		return;
+	}
+	dprintf(STDOUT_FILENO, "%s: [to be added]\n", topic);
+}
+
 void standby()
 {
-	char command[MAXLINE] = { 0 };
-
 	while (1) {
 		read_stdin();
 		if (stdin_buffer->size == 0
@@ -45,27 +62,34 @@ void standby()
 			stdin_buffer->size = 0;
 			continue;
 		}
-		strtok(stdin_buffer->string, "\n");	/* remove trailing newline */
-		sscanf(stdin_buffer->string, "%s", command);
+		char *command = strdup(stdin_buffer->string);
 		stdin_buffer->size = 0;
-		if (!strcmp(command, "quit")) {
+		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!strcmp(token, "help")) {
+			token = strtok(NULL, " \n");
+			print_help(token);
+			continue;
+		}
+		if (!strcmp(token, "load")) {
+			load_game();
+			dprintf(STDOUT_FILENO, "ack\n");
+			continue;
+		}
+		if (!strcmp(token, "new")) {
+			reset();
+			dprintf(STDOUT_FILENO, "ack\n");
+			continue;
+		}
+		if (!strcmp(token, "ping")) {
+			dprintf(STDOUT_FILENO, "pong\n");
+			continue;
+		}
+		if (!strcmp(token, "quit")) {
 			dprintf(STDOUT_FILENO, "Quitting...\n");
 			stage = -1;
 			return;
 		}
-		if (!strcmp(command, "ping")) {
-			dprintf(STDOUT_FILENO, "pong\n");
-			continue;
-		}
-		if (!strcmp(command, "new")) {
-			reset();
-			dprintf(STDOUT_FILENO, "ack\n");
-			continue;
-		} if (!strcmp(command, "load")) {
-			load_game();
-			dprintf(STDOUT_FILENO, "ack\n");
-			continue;
-		} if (!strcmp(command, "save")) {
+		if (!strcmp(token, "save")) {
 			save_game();
 			dprintf(STDOUT_FILENO, "ack\n");
 			continue;
