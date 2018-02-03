@@ -573,7 +573,7 @@ void add_player_dialog()
 	int error = 0;
 	uint16_t money = 0;
 	char name[17] = { 0 };
-	char money_ch[4] = { 0 };
+	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 	unsigned char rank = 0;
 
 	player_t *player = NULL;
@@ -626,12 +626,12 @@ void add_player_dialog()
 			echo();
 			if (error == 1)
 				mvwprintw(local_win, 10, 2,
-					  "Error. Try another number (0-999):       \n\n  ");
+					  "Error. Try another number (0-%s):       \n\n  ", MONEY_MAX);
 			else
 				mvwprintw(local_win, 10, 2,
-					  "Type the initial amount of money (0-999):\n\n  ");
+					  "Type the initial amount of money (0-%s):\n\n  ", MONEY_MAX);
 			money_ch[0] = '\0';
-			wgetnstr(local_win, money_ch, 3);
+			wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 			if (strlen(money_ch) == 0) {
 				error = 1;
 				break;
@@ -1090,15 +1090,15 @@ void change_player_money_dialog()
 	int error = 0;
 	player_t *player = get_player_by_id(world->selected_player);
 	uint16_t money = 0;
-	char money_ch[4] = { 0 };
+	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 
 	while (1) {
 		wmove(local_win, 3, 0);
 		wclrtoeol(local_win);
 		mvwprintw(local_win, 2, 2,
-			  "Current amount is '%d'. Type new amount (0-999), or press Enter to return.\n  New amount: ",
-			  get_money(player));
-		wgetnstr(local_win, money_ch, 3);
+			  "Current amount is '%d'. Type new amount (0-%s), or press Enter to return.\n  New amount: ",
+			  get_money(player), MONEY_MAX);
+		wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 		if (strlen(money_ch) == 0) {
 			current_screen = EDIT_PLAYER_DIALOG;
 			return;

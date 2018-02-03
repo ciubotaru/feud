@@ -328,8 +328,8 @@ void draw_map()
 		save_game();
 		break;
 	case 't':		// take money (when 6)
-		if (world->moves_left == 6) {
-			player->money++;
+		if (world->moves_left == 6 && get_money(player) < MONEY_MAX) {
+			set_money(player, get_money(player) + 1);
 			world->moves_left = 0;
 			update_money_ranking();
 		}
@@ -682,7 +682,7 @@ void give_money_dialog()
 	player_t *receiving_player = NULL;
 	int playerlist_selector;
 	uint16_t money = 0;
-	char money_ch[4] = { 0 };
+	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 
 	while (1) {
 		switch (stage) {
@@ -704,7 +704,7 @@ void give_money_dialog()
 				wprintw(local_win,
 					"  Type the amount to be given (1-%d), or press Enter to dismiss:\n\n  ",
 					active_player->money);
-			wgetnstr(local_win, money_ch, 3);
+			wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 			if (strlen(money_ch) == 0) {
 				current_screen = MAIN_SCREEN;
 				return;
@@ -808,10 +808,16 @@ void give_money_dialog()
 			}
 			break;
 		case 2:
-			set_money(active_player,
-				  get_money(active_player) - money);
-			set_money(receiving_player,
-				  get_money(receiving_player) + money);
+			if (get_money(receiving_player) + money > MONEY_MAX) {
+				set_money(active_player, 
+					  get_money(active_player) + get_money(receiving_player) - MONEY_MAX);
+				set_money(receiving_player, MONEY_MAX);
+			} else {
+				set_money(active_player, 
+					  get_money(active_player) - money);
+				set_money(receiving_player,
+					  get_money(receiving_player) + money);
+			}
 			update_money_ranking();
 			current_screen = MAIN_SCREEN;
 			return;

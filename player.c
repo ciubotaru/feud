@@ -140,7 +140,8 @@ void set_money(player_t * player, const uint16_t money)
 {
 	if (player == NULL)
 		return;
-	player->money = money;
+	if (money > MONEY_MAX) player->money = MONEY_MAX;
+	else player->money = money;
 	return;
 }
 
@@ -223,6 +224,8 @@ int transfer_money(player_t * source, player_t * destination, const int amount)
 	/* check if source has enough */
 	if (source->money < amount)
 		return 1;
+	/* check if destination will not exceed the limit */
+	if (destination->money + amount > MONEY_MAX) return 1;
 	source->money -= amount;
 	destination->money += amount;
 	return 0;
@@ -397,7 +400,8 @@ void succession(player_t * player)
 	}
 
 	/* the heir always inherits money */
-	heir->money += player->money;
+	if (heir->money + player->money > MONEY_MAX) heir->money = MONEY_MAX;
+	else heir->money += player->money;
 
 	/* the heir always inherits land */
 	region_t *current_region = world->regionlist;

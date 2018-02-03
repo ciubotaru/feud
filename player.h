@@ -10,6 +10,9 @@
 #define DUKE 3
 #define KING 4
 
+#define MONEY_MAX 999
+#define MONEY_MAX_DIGITS 3
+
 char *const ranklist[5];
 
 typedef struct player {
