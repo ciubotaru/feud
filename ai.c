@@ -46,6 +46,7 @@ void print_help_region()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
 	dprintf(STDOUT_FILENO, " region add regionID - create a new region\n");
+	dprintf(STDOUT_FILENO, " region name regionID regionName - set region name\n");
 	return;
 }
 
@@ -316,6 +317,36 @@ void standby()
 				}
 				region_t *region = add_region(id_ch);
 				region->id = id;
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "name")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				region_t *region = get_region_by_id(id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such region (type 'help region' for more info)\n");
+					continue;
+				}
+				char *name = strtok(NULL, "\n");
+				if (!name) {
+					dprintf(STDOUT_FILENO, "Error: RegionName missing (type 'help player' for more info)\n");
+					continue;
+				}
+printf("Read %s\n", name);
+				if (!strcmp(region->name, name)) {
+					dprintf(STDOUT_FILENO, "ack\n");
+					continue;
+				}
+				if (get_region_by_name(name) != NULL) {
+					dprintf(STDOUT_FILENO, "Error: RegionName not unique\n");
+					continue;
+				}
+				strcpy(region->name, name);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
