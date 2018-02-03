@@ -37,6 +37,7 @@ void print_help_player()
 	dprintf(STDOUT_FILENO, " player add playerID - create a new player\n");
 	dprintf(STDOUT_FILENO, " player name playerID playerName - set player name\n");
 	dprintf(STDOUT_FILENO, " player rank playerID playerRank - set player rank([k]ing, [d]uke, [c]ount or\n[b]aron\n");
+	dprintf(STDOUT_FILENO, " player money playerID amount - set player money (0-%i)\n", MONEY_MAX);
 	return;
 }
 
@@ -237,6 +238,24 @@ void standby()
 				}
 				if (!success) continue;
 				set_player_rank(player, rank);
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "money")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				player_t *player = get_player_by_id(id);
+				if (player == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *money_ch = strtok(NULL, " \n");
+				uint16_t money = (uint16_t) atoi(money_ch);
+				set_money(player, money);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
