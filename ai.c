@@ -61,6 +61,14 @@ void standby()
 			reset();
 			dprintf(STDOUT_FILENO, "ack\n");
 			continue;
+		} if (!strcmp(command, "load")) {
+			load_game();
+			dprintf(STDOUT_FILENO, "ack\n");
+			continue;
+		} if (!strcmp(command, "save")) {
+			save_game();
+			dprintf(STDOUT_FILENO, "ack\n");
+			continue;
 		} else
 			dprintf(STDOUT_FILENO, "Error: Unknown command.\n");
 	}
