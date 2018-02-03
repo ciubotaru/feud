@@ -34,6 +34,7 @@ void reset()
 void print_help_player()
 {
 	dprintf(STDOUT_FILENO, "player add playerID - create a new player\n");
+	dprintf(STDOUT_FILENO, "player name playerID playerName - set player name\n");
 	return;
 }
 
@@ -149,18 +150,51 @@ void standby()
 			}
 			/* can be 'add', 'name', 'rank' or 'money' */
 			if (!strcmp(token, "add")) {
-				token = strtok(NULL, " \n");
-				if (!token) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
 					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help player' for more info)\n");
 					continue;
 				}
-				uint16_t id = (uint16_t) atoi(token);
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (id == 0) {
+					dprintf(STDOUT_FILENO, "Error: bad PlayerID\n");
+					continue;
+				}
 				if (get_player_by_id(id) != NULL) {
 					dprintf(STDOUT_FILENO, "Error: PlayerID not unique\n");
 					continue;
 				}
-				player_t *player = add_player(token);
+				player_t *player = add_player(id_ch);
 				player->id = id;
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "name")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				player_t *player = get_player_by_id(id);
+				if (player == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *name = strtok(NULL, " \n");
+				if (!name) {
+					dprintf(STDOUT_FILENO, "Error: PlayerName missing (type 'help player' for more info)\n");
+					continue;
+				}
+				if (!strcmp(player->name, name)) {
+					dprintf(STDOUT_FILENO, "ack\n");
+					continue;
+				}
+				if (get_player_by_name(name) != NULL) {
+					dprintf(STDOUT_FILENO, "Error: PlayerName not unique\n");
+					continue;
+				}
+				strcpy(player->name, name);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
