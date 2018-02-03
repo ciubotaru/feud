@@ -89,6 +89,7 @@ int set_grid(const char *command) {
 **/
 void standby()
 {
+	char command[MAXLINE];
 	while (1) {
 		read_stdin();
 		if (stdin_buffer->size == 0
@@ -99,7 +100,7 @@ void standby()
 			stdin_buffer->size = 0;
 			continue;
 		}
-		char *command = strdup(stdin_buffer->string);
+		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
 		if (!strcmp(token, "board")) {
