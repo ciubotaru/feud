@@ -47,6 +47,7 @@ void print_help_region()
 	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
 	dprintf(STDOUT_FILENO, " region add regionID - create a new region\n");
 	dprintf(STDOUT_FILENO, " region name regionID regionName - set region name\n");
+	dprintf(STDOUT_FILENO, " region owner regionID playerID - set region owner (to clear ownership, write\nplayerID 0)\n");
 	return;
 }
 
@@ -347,6 +348,34 @@ printf("Read %s\n", name);
 					continue;
 				}
 				strcpy(region->name, name);
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "owner")) {
+				char *region_id_ch = strtok(NULL, " \n");
+				if (!region_id_ch) {
+					dprintf(STDOUT_FILENO, "Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t region_id = (uint16_t) atoi(region_id_ch);
+				region_t *region = get_region_by_id(region_id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such region (type 'help region' for more info)\n");
+					continue;
+				}
+				char *player_id_ch = strtok(NULL, " \n");
+				if (!player_id_ch) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t player_id = (uint16_t) atoi(player_id_ch);
+				player_t *player = NULL;
+				player = get_player_by_id(player_id);
+				if (player_id > 0 && player == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such player (type 'help region' for more info)\n");
+					continue;
+				}
+				change_region_owner(player, region);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
