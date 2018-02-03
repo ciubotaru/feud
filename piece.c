@@ -52,6 +52,9 @@ piece_t *add_piece(const unsigned char type, const uint16_t height,
 	if (world->grid->tiles[height][width]->piece != NULL)
 		return NULL;	/* tile occupied */
 
+	/* only one noble allowed */
+	if ((type == 0) && (get_noble_by_owner(owner) != NULL)) return NULL;
+
 	if (world->piecelist == NULL) {
 		world->piecelist = create_piecelist();
 		fill_piece_details(world->piecelist, type, height, width,
