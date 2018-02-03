@@ -42,6 +42,13 @@ void print_help_player()
 	return;
 }
 
+void print_help_region()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
+	dprintf(STDOUT_FILENO, " region add regionID - create a new region\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
@@ -52,6 +59,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " ping - check if AI is alive\n");
 		dprintf(STDOUT_FILENO, " player [parameters] - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
+		dprintf(STDOUT_FILENO, " region [parameters] - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
@@ -68,6 +76,10 @@ void print_help(const char *topic)
 	}
 	if (strcmp(topic, "player") == 0) {
 		print_help_player();
+		return;
+	}
+	if (strcmp(topic, "region") == 0) {
+		print_help_region();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -283,6 +295,32 @@ void standby()
 			dprintf(STDOUT_FILENO, "Quitting...\n");
 			stage = -1;
 			return;
+		}
+		if (!strcmp(token, "region")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO, "Error: Parameter missing (type 'help region' for more info)\n");
+				continue;
+			}
+			/* can be 'add', ... */
+			if (!strcmp(token, "add")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (get_region_by_id(id) != NULL) {
+					dprintf(STDOUT_FILENO, "Error: RegionID not unique\n");
+					continue;
+				}
+				region_t *region = add_region(id_ch);
+				region->id = id;
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			else dprintf(STDOUT_FILENO, "Error: Unknown parameter (type 'help region' for more info)\n");
+			continue;
 		}
 		if (!strcmp(token, "save")) {
 			save_game();
