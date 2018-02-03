@@ -31,6 +31,13 @@ void reset()
 	create_world();
 }
 
+void print_help_piece()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
+	dprintf(STDOUT_FILENO, " piece add playerID type height width - place a new piece\n");
+	return;
+}
+
 void print_help_player()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'player' command:\n");
@@ -60,6 +67,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " load - load game from file\n");
 		dprintf(STDOUT_FILENO, " new - clear everything\n");
 		dprintf(STDOUT_FILENO, " ping - check if AI is alive\n");
+		dprintf(STDOUT_FILENO, " piece [parameters] - set up pieces (type 'help piece' for more info)\n");
 		dprintf(STDOUT_FILENO, " player [parameters] - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
 		dprintf(STDOUT_FILENO, " region [parameters] - set up a region (type 'help region' for more info)\n");
@@ -75,6 +83,10 @@ void print_help(const char *topic)
 	if (strcmp(topic, "new") == 0) {
 		dprintf(STDOUT_FILENO,
 			"new - clear everything and reset game environment\n");
+		return;
+	}
+	if (strcmp(topic, "piece") == 0) {
+		print_help_piece();
 		return;
 	}
 	if (strcmp(topic, "player") == 0) {
@@ -99,7 +111,6 @@ int set_grid(const uint16_t height, const uint16_t width) {
 		dprintf(STDOUT_FILENO, "Error: internal error (failed to create grid)\n");
 		return 1;
 	}
-	dprintf(STDOUT_FILENO, "ack\n");
 	return 0;
 }
 /**
@@ -141,7 +152,10 @@ void standby()
 					break;
 				}
 			}
-			if (success) set_grid(coords[0], coords[1]);
+			if (success) {
+				set_grid(coords[0], coords[1]);
+				dprintf(STDOUT_FILENO, "ack\n");
+			}
 			continue;
 		}
 		if (!strcmp(token, "help")) {
@@ -162,6 +176,67 @@ void standby()
 		if (!strcmp(token, "ping")) {
 			dprintf(STDOUT_FILENO, "pong\n");
 			continue;
+		}
+		if (!strcmp(token, "piece")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO, "Error: Parameter missing (type 'help piece' for more info)\n");
+				continue;
+			}
+			/* can be 'add', 'delete' or 'move' */
+			if (!strcmp(token, "add")) {
+				char *player_id_ch = strtok(NULL, " \n");
+				if (!player_id_ch) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help piece' for more info)\n");
+					continue;
+				}
+				uint16_t player_id = (uint16_t) atoi(player_id_ch);
+				if (player_id < 1) {
+					dprintf(STDOUT_FILENO, "Error: bad PlayerID\n");
+					continue;
+				}
+				player_t *player = get_player_by_id(player_id);
+				if (player == NULL) {
+					dprintf(STDOUT_FILENO, "Error: invalid PlayerID\n");
+					continue;
+				}
+				char *piece_type_ch = strtok(NULL, " \n");
+				if (!piece_type_ch) {
+					dprintf(STDOUT_FILENO, "Error: PieceType missing (type 'help piece' for more info)\n");
+					continue;
+				}
+				unsigned char piece_type = (unsigned char) atoi(piece_type_ch);
+				if (piece_type > 1) {
+					dprintf(STDOUT_FILENO, "Error: invalid PieceType (type 'help piece' for more info)\n");
+					continue;
+				}
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						print_help("board");
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+					if (coords[i] == 0) {
+						dprintf(STDOUT_FILENO, "Error: invalid piece coordinates (type 'help piece' for more info)\n");
+						success = 0;
+						break;
+					}
+				}
+				if (success) {
+					piece_t *piece = add_piece(piece_type, coords[0], coords[1], player);
+					if (piece) dprintf(STDOUT_FILENO, "ack\n");
+					else dprintf(STDOUT_FILENO, "Error: failed to add piece\n");
+				}
+				continue;
+			}
+			else dprintf(STDOUT_FILENO, "Error: Unknown parameter (type 'help piece' for more info)\n");
+			continue;
+
 		}
 		if (!strcmp(token, "player")) {
 			token = strtok(NULL, " \n");
