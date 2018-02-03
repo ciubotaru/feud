@@ -33,22 +33,25 @@ void reset()
 
 void print_help_player()
 {
-	dprintf(STDOUT_FILENO, "player add playerID - create a new player\n");
-	dprintf(STDOUT_FILENO, "player name playerID playerName - set player name\n");
+	dprintf(STDOUT_FILENO, "Parameters for 'player' command:\n");
+	dprintf(STDOUT_FILENO, " player add playerID - create a new player\n");
+	dprintf(STDOUT_FILENO, " player name playerID playerName - set player name\n");
+	dprintf(STDOUT_FILENO, " player rank playerID playerRank - set player rank([k]ing, [d]uke, [c]ount or\n[b]aron\n");
 	return;
 }
 
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
-		dprintf(STDOUT_FILENO, "board height width - set game board size\n");
-		dprintf(STDOUT_FILENO, "load - load game from file\n");
-		dprintf(STDOUT_FILENO, "new - clear everything\n");
-		dprintf(STDOUT_FILENO, "ping - check if AI is alive\n");
-		dprintf(STDOUT_FILENO, "player [parameters] - set up a player (type 'help player' for more info)\n");
-		dprintf(STDOUT_FILENO, "quit - terminate AI\n");
-		dprintf(STDOUT_FILENO, "save - write current game to file\n");
-		dprintf(STDOUT_FILENO, "for details, type 'help [command]'\n");
+		dprintf(STDOUT_FILENO, "Available commands:\n");
+		dprintf(STDOUT_FILENO, " board height width - set game board size\n");
+		dprintf(STDOUT_FILENO, " load - load game from file\n");
+		dprintf(STDOUT_FILENO, " new - clear everything\n");
+		dprintf(STDOUT_FILENO, " ping - check if AI is alive\n");
+		dprintf(STDOUT_FILENO, " player [parameters] - set up a player (type 'help player' for more info)\n");
+		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
+		dprintf(STDOUT_FILENO, " save - write current game to file\n");
+		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
 	}
 	if (strcmp(topic, "board") == 0) {
@@ -157,7 +160,7 @@ void standby()
 					continue;
 				}
 				uint16_t id = (uint16_t) atoi(id_ch);
-				if (id == 0) {
+				if (id < 1) {
 					dprintf(STDOUT_FILENO, "Error: bad PlayerID\n");
 					continue;
 				}
@@ -196,6 +199,44 @@ void standby()
 					continue;
 				}
 				strcpy(player->name, name);
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			if (!strcmp(token, "rank")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				player_t *player = get_player_by_id(id);
+				if (player == NULL) {
+					dprintf(STDOUT_FILENO, "Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *rank_ch = strtok(NULL, " \n");
+				int rank = 0;
+				int success = 1;
+				switch (rank_ch[0]) {
+					case 'k':
+						rank = 4;
+						break;
+					case 'd':
+						rank = 3;
+						break;
+					case 'c':
+						rank = 2;
+						break;
+					case 'b':
+						rank = 1;
+						break;
+					default:
+						dprintf(STDOUT_FILENO, "Error: invalid rank (type 'help player' for more info)\n");
+						success = 0;
+						break;
+				}
+				if (!success) continue;
+				set_player_rank(player, rank);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
