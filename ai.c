@@ -31,6 +31,12 @@ void reset()
 	create_world();
 }
 
+void print_help_player()
+{
+	dprintf(STDOUT_FILENO, "player add playerID - create a new player\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
@@ -38,6 +44,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, "load - load game from file\n");
 		dprintf(STDOUT_FILENO, "new - clear everything\n");
 		dprintf(STDOUT_FILENO, "ping - check if AI is alive\n");
+		dprintf(STDOUT_FILENO, "player [parameters] - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, "quit - terminate AI\n");
 		dprintf(STDOUT_FILENO, "save - write current game to file\n");
 		dprintf(STDOUT_FILENO, "for details, type 'help [command]'\n");
@@ -51,6 +58,10 @@ void print_help(const char *topic)
 	if (strcmp(topic, "new") == 0) {
 		dprintf(STDOUT_FILENO,
 			"new - clear everything and reset game environment\n");
+		return;
+	}
+	if (strcmp(topic, "player") == 0) {
+		print_help_player();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -70,7 +81,11 @@ int set_grid(const uint16_t height, const uint16_t width) {
 	dprintf(STDOUT_FILENO, "ack\n");
 	return 0;
 }
-
+/**
+int set_grid(const char *command) {
+	
+}
+**/
 void standby()
 {
 	while (1) {
@@ -126,6 +141,32 @@ void standby()
 			dprintf(STDOUT_FILENO, "pong\n");
 			continue;
 		}
+		if (!strcmp(token, "player")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO, "Error: Parameter missing (type 'help player' for more info)\n");
+				continue;
+			}
+			/* can be 'add', 'name', 'rank' or 'money' */
+			if (!strcmp(token, "add")) {
+				token = strtok(NULL, " \n");
+				if (!token) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(token);
+				if (get_player_by_id(id) != NULL) {
+					dprintf(STDOUT_FILENO, "Error: PlayerID not unique\n");
+					continue;
+				}
+				player_t *player = add_player(token);
+				player->id = id;
+				dprintf(STDOUT_FILENO, "ack\n");
+				continue;
+			}
+			else dprintf(STDOUT_FILENO, "Error: Unknown parameter (type 'help player' for more info)\n");
+			continue;
+		}
 		if (!strcmp(token, "quit")) {
 			dprintf(STDOUT_FILENO, "Quitting...\n");
 			stage = -1;
@@ -136,7 +177,7 @@ void standby()
 			dprintf(STDOUT_FILENO, "ack\n");
 			continue;
 		} else
-			dprintf(STDOUT_FILENO, "Error: Unknown command.\n");
+			dprintf(STDOUT_FILENO, "Error: Unknown command (type 'help' for more info)\n");
 	}
 }
 
