@@ -36,7 +36,7 @@ void print_help_piece()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO,
-		" piece add playerID type height width - place a new piece\ntype can be %i for %s or %i for %s\n",
+		" piece add playerID type height width - place a new piece type can be %i for %s or %i for %s\n",
 		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
 	dprintf(STDOUT_FILENO,
 		" piece delete height width - remove a piece at given coordinates\n");
@@ -56,7 +56,7 @@ void print_help_player()
 	dprintf(STDOUT_FILENO,
 		" player name playerID playerName - set player name\n");
 	dprintf(STDOUT_FILENO,
-		" player rank playerID playerRank - set player rank([k]ing, [d]uke, [c]ount or\n[b]aron\n");
+		" player rank playerID playerRank - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
 	return;
 }
 
@@ -68,7 +68,7 @@ void print_help_region()
 	dprintf(STDOUT_FILENO,
 		" region name regionID regionName - set region name\n");
 	dprintf(STDOUT_FILENO,
-		" region owner regionID playerID - set region owner (to clear ownership, write\nplayerID 0)\n");
+		" region owner regionID playerID - set region owner (to clear ownership, write playerID 0)\n");
 	return;
 }
 
@@ -76,7 +76,9 @@ void print_help_tile()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'tile' command:\n");
 	dprintf(STDOUT_FILENO,
-		" tile region height width [regionID] - add a tile to region (to remove tile from\nregion leave regionID empty)\n");
+		" tile region height width [regionID] - add a tile to region (to remove tile from region leave regionID empty)\n");
+	dprintf(STDOUT_FILENO,
+		" tile walkable height width walkability - set tile walkability (0 for unwalkable or 1 for walkable)\n");
 	return;
 }
 
@@ -715,6 +717,38 @@ void standby()
 				dprintf(STDOUT_FILENO, "ack\n");
 				change_tile_region(region, tile);
 				continue;
+			}
+			if (!strcmp(token, "walkable")) {
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height
+					|| coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid tile coordinates (type 'help tile' for more info)\n");
+					continue;
+				}
+				tile_t *tile = world->grid->tiles[coords[0]][coords[1]];
+				char *walkable_ch = strtok(NULL, " \n");
+				if (walkable_ch == NULL) {
+					dprintf(STDOUT_FILENO, "Error: Parameter missing  (type 'help tile' for more info)\n");
+					continue;
+				}
+				unsigned char walkable = (unsigned char) atoi(walkable_ch);
+				if (walkable > 1) {
+					dprintf(STDOUT_FILENO, "Error: Invalid parameter (type 'help tile' for more info)\n");
+					continue;
+				}
+				dprintf(STDOUT_FILENO, "ack\n");
+				tile->walkable = walkable;
 			} else dprintf(STDOUT_FILENO, "Error: Unknown parameter\n");
 			continue;
 		}
