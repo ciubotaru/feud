@@ -112,6 +112,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO,
 			" tile ... - set up a tile (type 'help tile'\nfor more info\n");
 		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
+		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
 		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
 	}
@@ -759,6 +760,17 @@ void standby()
 			}
 			dprintf(STDOUT_FILENO, "ack\n");
 			world->selected_player = player_id;
+			continue;
+		}
+		if (!strcmp(token, "validate")) {
+			char *msg;
+			int result = validate_game_data(&msg);
+			if (result == 0) dprintf(STDOUT_FILENO, "ack\n");
+			else {
+				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
+				free(msg);
+			}
+			continue;
 		} else
 			dprintf(STDOUT_FILENO,
 				"Error: Unknown command (type 'help' for more info)\n");
