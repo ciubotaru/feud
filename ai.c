@@ -95,6 +95,8 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
 		dprintf(STDOUT_FILENO,
 			" region [parameters] - set up a region (type 'help region' for more info)\n");
+		dprintf(STDOUT_FILENO,
+			" roll number - roll a dice (from 1 to 6)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO,
 			" tile [parameters] - add/remove a tile to/from region (type 'help tile'\nfor more info\n");
@@ -300,8 +302,8 @@ void standby()
 					continue;
 				}
 				piece_t *piece =
-				    world->grid->
-				    tiles[coords[0]][coords[1]]->piece;
+				    world->grid->tiles[coords[0]][coords[1]]->
+				    piece;
 				if (!piece)
 					dprintf(STDOUT_FILENO,
 						"Error: piece not found\n");
@@ -332,8 +334,8 @@ void standby()
 					continue;
 				}
 				piece_t *piece =
-				    world->grid->
-				    tiles[coords[0]][coords[1]]->piece;
+				    world->grid->tiles[coords[0]][coords[1]]->
+				    piece;
 				if (!piece) {
 					dprintf(STDOUT_FILENO,
 						"Error: piece not found\n");
@@ -618,6 +620,23 @@ void standby()
 			} else
 				dprintf(STDOUT_FILENO,
 					"Error: Unknown parameter (type 'help region' for more info)\n");
+			continue;
+		}
+		if (!strcmp(token, "roll")) {
+			char *roll_ch = strtok(NULL, " \n");
+			if (!roll_ch) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing\n");
+				continue;
+			}
+			unsigned char roll = (unsigned char)atoi(roll_ch);
+			if (roll < 1 || roll > 6) {
+				dprintf(STDOUT_FILENO,
+					"Error: Bad parameter (must be between 1 and 6)\n");
+				continue;
+			}
+			dprintf(STDOUT_FILENO, "ack\n");
+			world->moves_left = roll;
 			continue;
 		}
 		if (!strcmp(token, "save")) {
