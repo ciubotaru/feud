@@ -1313,6 +1313,7 @@ void validate_dialog()
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	char *error_message = NULL;
+	int validation_result = validate_game_data(&error_message);
 
 	if (error_message == NULL) {
 		msg = "All checks passed. Game data are valid.";
@@ -1955,6 +1956,7 @@ int main()
 			break;
 		case 99:
 			destroy_world();
+			use_default_colors();
 			endwin();
 			return 0;
 			break;
