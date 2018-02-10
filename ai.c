@@ -10,7 +10,7 @@
 #define PROMPT "> "
 
 int stage = -1;
-uint16_t ai_plays_for = -1;
+uint16_t ai_plays_for = 0;
 
 typedef struct {
 	unsigned int size;
@@ -160,11 +160,6 @@ int set_grid(const uint16_t height, const uint16_t width)
 	return 0;
 }
 
-/**
-int set_grid(const char *command) {
-	
-}
-**/
 void standby()
 {
 	char command[MAXLINE];
@@ -209,6 +204,25 @@ void standby()
 				dprintf(STDOUT_FILENO, "ack\n");
 			}
 			continue;
+		}
+		if (!strcmp(token, "go")) {
+			char *msg = NULL;
+			int result = validate_game_data(&msg);
+			if (result != 0) {
+				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
+				free(msg);
+				continue;
+			}
+			if (get_player_by_id(ai_plays_for) == NULL) {
+				dprintf(STDOUT_FILENO, "Error: AI not assigned to any side (run 'play' first)\n");
+				continue;
+			}
+			if (world->selected_player != ai_plays_for) {
+				dprintf(STDOUT_FILENO, "Error: not AI's turn to play\n");
+				continue;
+			}
+			stage = 1;
+			return;
 		}
 		if (!strcmp(token, "help")) {
 			token = strtok(NULL, " \n");
@@ -783,7 +797,7 @@ void standby()
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
-			char *msg;
+			char *msg = NULL;
 			int result = validate_game_data(&msg);
 			if (result == 0) dprintf(STDOUT_FILENO, "ack\n");
 			else {
@@ -795,6 +809,13 @@ void standby()
 			dprintf(STDOUT_FILENO,
 				"Error: Unknown command (type 'help' for more info)\n");
 	}
+}
+
+void think()
+{
+	dprintf(STDOUT_FILENO, "Thinking...\n");
+	stage = 0;
+	return;
 }
 
 int main(int argc, char **argv)
@@ -809,11 +830,9 @@ int main(int argc, char **argv)
 		case 0:
 			standby();
 			break;
-/**
 		case 1:
 			think();
 			break;
-**/
 		default:
 			return 0;
 			break;
