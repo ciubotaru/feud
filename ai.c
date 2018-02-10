@@ -10,6 +10,7 @@
 #define PROMPT "> "
 
 int stage = -1;
+uint16_t ai_plays_for = -1;
 
 typedef struct {
 	unsigned int size;
@@ -101,6 +102,8 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " ping - check if AI is alive\n");
 		dprintf(STDOUT_FILENO,
 			" piece ... - set up pieces (type 'help piece' for more info)\n");
+		dprintf(STDOUT_FILENO,
+			" play <PlayerID> – assign AI to PlayerID\n");
 		dprintf(STDOUT_FILENO,
 			" player ... - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
@@ -363,6 +366,23 @@ void standby()
 			} else
 				dprintf(STDOUT_FILENO,
 					"Error: Unknown parameter (type 'help piece' for more info)\n");
+			continue;
+		}
+		if (!strcmp(token, "play")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing\n");
+				continue;
+			}
+			uint16_t id = (uint16_t) atoi(token);
+			if (id < 1 || get_player_by_id(id) == NULL) {
+				dprintf(STDOUT_FILENO,
+					"Error: bad PlayerID\n");
+				continue;
+			}
+			dprintf(STDOUT_FILENO, "ack\n");
+			ai_plays_for = id;
 			continue;
 		}
 		if (!strcmp(token, "player")) {
