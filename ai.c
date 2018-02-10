@@ -79,6 +79,14 @@ void print_help_tile()
 	return;
 }
 
+void print_help_turn()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'turn' command:\n");
+	dprintf(STDOUT_FILENO,
+		" turn playerID - set player's turn\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
@@ -100,6 +108,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO,
 			" tile [parameters] - add/remove a tile to/from region (type 'help tile'\nfor more info\n");
+		dprintf(STDOUT_FILENO, " turn playerID - set player's turn\n");
 		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
 	}
@@ -127,6 +136,10 @@ void print_help(const char *topic)
 	}
 	if (strcmp(topic, "tile") == 0) {
 		print_help_tile();
+		return;
+	}
+	if (strcmp(topic, "turn") == 0) {
+		print_help_turn();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -689,6 +702,24 @@ void standby()
 			dprintf(STDOUT_FILENO, "ack\n");
 			change_tile_region(region, tile);
 			continue;
+		}
+		if (!strcmp(token, "turn")) {
+			if (world->playerlist == NULL) {
+				dprintf(STDOUT_FILENO, "Error: no player list\n");
+				continue;
+			}
+			char *player_id_ch = strtok(NULL, " \n");
+			if (!player_id_ch) {
+				dprintf(STDOUT_FILENO, "Error: Parameter missing\n");
+				continue;
+			}
+			uint16_t player_id = (uint16_t) atoi(player_id_ch);
+			if (get_player_by_id(player_id) == NULL) {
+				dprintf(STDOUT_FILENO, "Error: no such player (type 'help turn' for more info)\n");
+				continue;
+			}
+			dprintf(STDOUT_FILENO, "ack\n");
+			world->selected_player = player_id;
 		} else
 			dprintf(STDOUT_FILENO,
 				"Error: Unknown command (type 'help' for more info)\n");
