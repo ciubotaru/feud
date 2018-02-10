@@ -36,6 +36,7 @@ void print_help_piece()
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO, " piece add playerID type height width - place a new piece\ntype can be %i for %s or %i for %s\n", NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
 	dprintf(STDOUT_FILENO, " piece delete height width - remove a piece at given coordinates\n");
+	dprintf(STDOUT_FILENO, " piece move height1 width1 height2 width2 - move a piece\n");
 	return;
 }
 
@@ -255,9 +256,34 @@ void standby()
 				}
 				continue;
 			}
+			if (!strcmp(token, "move")) {
+				uint16_t coords[4];
+				int i;
+				int success = 1;
+				for (i = 0; i < 4; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height || coords[1] >= world->grid->width ||  coords[2] >= world->grid->height || coords[3] >= world->grid->width) {
+					dprintf(STDOUT_FILENO, "Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece = world->grid->tiles[coords[0]][coords[1]]->piece;
+				if (!piece) {
+					dprintf(STDOUT_FILENO, "Error: piece not found\n");
+					continue;
+				}
+				int result = move_piece(piece, coords[2], coords[3]);
+				if (result == 0) dprintf(STDOUT_FILENO, "ack\n");
+				else dprintf(STDOUT_FILENO, "Error: illegal move\n");
+				continue;
+			}
 			else dprintf(STDOUT_FILENO, "Error: Unknown parameter (type 'help piece' for more info)\n");
 			continue;
-
 		}
 		if (!strcmp(token, "player")) {
 			token = strtok(NULL, " \n");
