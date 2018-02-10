@@ -36,39 +36,39 @@ void print_help_piece()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO,
-		" piece add playerID type height width - place a new piece type can be %i for %s or %i for %s\n",
+		" piece add <playerID> <type> <height> <width> - place a new piece type can be %i for %s or %i for %s\n",
 		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
 	dprintf(STDOUT_FILENO,
-		" piece delete height width - remove a piece at given coordinates\n");
+		" piece delete <height> <width> - remove a piece at given coordinates\n");
 	dprintf(STDOUT_FILENO,
-		" piece move height1 width1 height2 width2 - move a piece\n");
+		" piece move <height1> <width1> <height2> <width2> - move a piece\n");
 	return;
 }
 
 void print_help_player()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'player' command:\n");
-	dprintf(STDOUT_FILENO, " player add playerID - create a new player\n");
-	dprintf(STDOUT_FILENO, " player delete playerID - delete a player\n");
+	dprintf(STDOUT_FILENO, " player add <playerID> - create a new player\n");
+	dprintf(STDOUT_FILENO, " player delete <playerID> - delete a player\n");
 	dprintf(STDOUT_FILENO,
-		" player money playerID amount - set player money (0-%i)\n",
+		" player money <playerID> <amount> - set player money (0-%i)\n",
 		MONEY_MAX);
 	dprintf(STDOUT_FILENO,
-		" player name playerID playerName - set player name\n");
+		" player name <playerID> <playerName> - set player name\n");
 	dprintf(STDOUT_FILENO,
-		" player rank playerID playerRank - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
+		" player rank <playerID> <playerRank> - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
 	return;
 }
 
 void print_help_region()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
-	dprintf(STDOUT_FILENO, " region add regionID - create a new region\n");
-	dprintf(STDOUT_FILENO, " region delete regionID - delete a region\n");
+	dprintf(STDOUT_FILENO, " region add <regionID> - create a new region\n");
+	dprintf(STDOUT_FILENO, " region delete <regionID> - delete a region\n");
 	dprintf(STDOUT_FILENO,
-		" region name regionID regionName - set region name\n");
+		" region name <regionID> <regionName> - set region name\n");
 	dprintf(STDOUT_FILENO,
-		" region owner regionID playerID - set region owner (to clear ownership, write playerID 0)\n");
+		" region owner <regionID> <playerID> - set region owner (to clear ownership, write playerID 0)\n");
 	return;
 }
 
@@ -76,9 +76,9 @@ void print_help_tile()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'tile' command:\n");
 	dprintf(STDOUT_FILENO,
-		" tile region height width [regionID] - add a tile to region (to remove tile from region leave regionID empty)\n");
+		" tile region <height> <width> [<regionID>] - add a tile to region (to remove tile from region leave regionID empty)\n");
 	dprintf(STDOUT_FILENO,
-		" tile walkable height width walkability - set tile walkability (0 for unwalkable or 1 for walkable)\n");
+		" tile walkable <height> <width> <walkability> - set tile walkability (0 for unwalkable or 1 for walkable)\n");
 	return;
 }
 
@@ -86,7 +86,7 @@ void print_help_turn()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'turn' command:\n");
 	dprintf(STDOUT_FILENO,
-		" turn playerID - set player's turn\n");
+		" turn <playerID> - set player's turn\n");
 	return;
 }
 
@@ -95,34 +95,24 @@ void print_help(const char *topic)
 	if (topic == NULL) {
 		dprintf(STDOUT_FILENO, "Available commands:\n");
 		dprintf(STDOUT_FILENO,
-			" board height width - set game board size\n");
+			" board <height> <width> - set game board size\n");
 		dprintf(STDOUT_FILENO, " load - load game from file\n");
 		dprintf(STDOUT_FILENO, " new - clear everything\n");
 		dprintf(STDOUT_FILENO, " ping - check if AI is alive\n");
 		dprintf(STDOUT_FILENO,
-			" piece [parameters] - set up pieces (type 'help piece' for more info)\n");
+			" piece ... - set up pieces (type 'help piece' for more info)\n");
 		dprintf(STDOUT_FILENO,
-			" player [parameters] - set up a player (type 'help player' for more info)\n");
+			" player ... - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
 		dprintf(STDOUT_FILENO,
-			" region [parameters] - set up a region (type 'help region' for more info)\n");
+			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO,
-			" roll number - roll a dice (from 1 to 6)\n");
+			" roll <number> - roll a dice (from 1 to 6)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO,
-			" tile [parameters] - set up a tile (type 'help tile'\nfor more info\n");
-		dprintf(STDOUT_FILENO, " turn playerID - set player's turn\n");
+			" tile ... - set up a tile (type 'help tile'\nfor more info\n");
+		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
 		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
-		return;
-	}
-	if (strcmp(topic, "board") == 0) {
-		dprintf(STDOUT_FILENO,
-			"board height width - set game board size\n");
-		return;
-	}
-	if (strcmp(topic, "new") == 0) {
-		dprintf(STDOUT_FILENO,
-			"new - clear everything and reset game environment\n");
 		return;
 	}
 	if (strcmp(topic, "piece") == 0) {
