@@ -34,7 +34,8 @@ void reset()
 void print_help_piece()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
-	dprintf(STDOUT_FILENO, " piece add playerID type height width - place a new piece\n");
+	dprintf(STDOUT_FILENO, " piece add playerID type height width - place a new piece\ntype can be %i for %s or %i for %s\n", NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
+	dprintf(STDOUT_FILENO, " piece delete height width - remove a piece at given coordinates\n");
 	return;
 }
 
@@ -216,21 +217,41 @@ void standby()
 				for (i = 0; i < 2; i++) {
 					token = strtok(NULL, " \n");
 					if (!token) {
-						print_help("board");
 						success = 0;
 						break;
 					}
 					coords[i] = (uint16_t) atoi(token);
-					if (coords[i] == 0) {
-						dprintf(STDOUT_FILENO, "Error: invalid piece coordinates (type 'help piece' for more info)\n");
+				}
+				if (!success || coords[0] >= world->grid->height || coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO, "Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece = add_piece(piece_type, coords[0], coords[1], player);
+				if (piece) dprintf(STDOUT_FILENO, "ack\n");
+				else dprintf(STDOUT_FILENO, "Error: failed to add piece\n");
+				continue;
+			}
+			if (!strcmp(token, "delete")) {
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
 						success = 0;
 						break;
 					}
+					coords[i] = (uint16_t) atoi(token);
 				}
-				if (success) {
-					piece_t *piece = add_piece(piece_type, coords[0], coords[1], player);
-					if (piece) dprintf(STDOUT_FILENO, "ack\n");
-					else dprintf(STDOUT_FILENO, "Error: failed to add piece\n");
+				if (!success || coords[0] >= world->grid->height || coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO, "Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece = world->grid->tiles[coords[0]][coords[1]]->piece;
+				if (!piece) dprintf(STDOUT_FILENO, "Error: piece not found\n");
+				else {
+					dprintf(STDOUT_FILENO, "ack\n");
+					remove_piece(piece);
 				}
 				continue;
 			}
