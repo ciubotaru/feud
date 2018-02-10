@@ -7,6 +7,7 @@
 #include "world.h"
 
 #define MAXLINE 1024
+#define PROMPT "> "
 
 int stage = -1;
 
@@ -171,10 +172,14 @@ int set_grid(const char *command) {
 void standby()
 {
 	char command[MAXLINE];
+	unsigned char print_prompt = 1;
 	while (1) {
+		if (print_prompt) dprintf(STDOUT_FILENO, "%s", PROMPT);
+		print_prompt = 1;
 		read_stdin();
 		if (stdin_buffer->size == 0
 		    || stdin_buffer->string[stdin_buffer->size - 1] != '\n') {
+			print_prompt = 0;
 			continue;
 		}
 		if (stdin_buffer->string[0] == '\n') {
