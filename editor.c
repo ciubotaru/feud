@@ -627,10 +627,10 @@ void add_player_dialog()
 			echo();
 			if (error == 1)
 				mvwprintw(local_win, 10, 2,
-					  "Error. Try another number (0-%s):       \n\n  ", MONEY_MAX);
+					  "Error. Try another number (0-%d):       \n\n  ", MONEY_MAX);
 			else
 				mvwprintw(local_win, 10, 2,
-					  "Type the initial amount of money (0-%s):\n\n  ", MONEY_MAX);
+					  "Type the initial amount of money (0-%d):\n\n  ", MONEY_MAX);
 			money_ch[0] = '\0';
 			wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 			if (strlen(money_ch) == 0) {
