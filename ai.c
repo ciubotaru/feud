@@ -5,10 +5,14 @@
 #include <unistd.h>
 #include "world.h"
 
+#define STANDBY 0
+#define THINK 1
+#define GAMEOVER 2
 #define MAXLINE 1024
 #define PROMPT "> "
 
 int stage = -1;
+int side;
 player_t *ai_player = NULL;
 
 typedef struct {
@@ -220,7 +224,7 @@ void standby()
 				dprintf(STDOUT_FILENO, "Error: not AI's turn to play\n");
 				continue;
 			}
-			stage = 1;
+			stage = THINK;
 			return;
 		}
 		if (!strcmp(token, "help")) {
@@ -548,7 +552,7 @@ void standby()
 		}
 		if (!strcmp(token, "quit")) {
 			dprintf(STDOUT_FILENO, "Quitting...\n");
-			stage = -1;
+			stage = GAMEOVER;
 			return;
 		}
 		if (!strcmp(token, "region")) {
@@ -845,7 +849,7 @@ void think()
 		dprintf(STDOUT_FILENO, "done\n");
 		world->moves_left = 0;
 		ai_player->money++;
-		stage = 1; /* wait */
+		stage = STANDBY;
 		return;
 	}
 	while (world->moves_left > 0) {
@@ -913,7 +917,7 @@ void think()
 	world->moves_left = 0;
 	if (ai_player->next != NULL) world->selected_player = ai_player->next;
 	else world->selected_player = world->playerlist;
-	stage = 0;
+	stage = STANDBY;
 	return;
 }
 
@@ -923,13 +927,13 @@ int main(int argc, char **argv)
 	dprintf(STDOUT_FILENO, "Feud AI v0.0.1\n");
 	stdin_buffer = malloc(sizeof(buffer_t));
 	stdin_buffer->size = 0;
-	stage = 0;		/* init stage */
+	stage = STANDBY;
 	while (1) {
 		switch (stage) {
-		case 0:
+		case STANDBY:
 			standby();
 			break;
-		case 1:
+		case THINK:
 			think();
 			break;
 		default:
