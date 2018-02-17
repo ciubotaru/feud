@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <ctype.h>		/* for isdigit */
 #include <unistd.h>
 #include "world.h"
 
@@ -10,7 +9,7 @@
 #define PROMPT "> "
 
 int stage = -1;
-uint16_t ai_plays_for = 0;
+player_t *ai_player = NULL;
 
 typedef struct {
 	unsigned int size;
@@ -213,11 +212,11 @@ void standby()
 				free(msg);
 				continue;
 			}
-			if (get_player_by_id(ai_plays_for) == NULL) {
+			if (ai_player == NULL) {
 				dprintf(STDOUT_FILENO, "Error: AI not assigned to any side (run 'play' first)\n");
 				continue;
 			}
-			if (world->selected_player->id != ai_plays_for) {
+			if (world->selected_player != ai_player) {
 				dprintf(STDOUT_FILENO, "Error: not AI's turn to play\n");
 				continue;
 			}
@@ -390,13 +389,13 @@ void standby()
 				continue;
 			}
 			uint16_t id = (uint16_t) atoi(token);
-			if (id < 1 || get_player_by_id(id) == NULL) {
+			ai_player = get_player_by_id(id);
+			if (ai_player == NULL) {
 				dprintf(STDOUT_FILENO,
 					"Error: bad PlayerID\n");
 				continue;
 			}
 			dprintf(STDOUT_FILENO, "ack\n");
-			ai_plays_for = id;
 			continue;
 		}
 		if (!strcmp(token, "player")) {
@@ -821,7 +820,99 @@ void standby()
 
 void think()
 {
-	dprintf(STDOUT_FILENO, "Thinking...\n");
+	/* if have enough money and free tile, buy a soldier */
+	while (get_money(ai_player) >= COST_SOLDIER) {
+		/* find free tile */
+		int i, j;
+		int done = 0;
+		for (i = 0; i < world->grid->height; i++) {
+			for (j = 0; j < world->grid->width; j++) {
+				if (world->grid->tiles[i][j]->region != NULL && world->grid->tiles[i][j]->region->owner == ai_player && world->grid->tiles[i][j]->piece == NULL && !done) {
+					add_piece(1, i, j, ai_player);
+					set_money(ai_player, get_money(ai_player) - COST_SOLDIER);
+					dprintf(STDOUT_FILENO, "piece add %i 1 %i,%i\n", ai_player->id, i, j);
+					done = 1;
+				}
+			}
+		}
+		/* break if no free tile */
+		if (done == 0) break;
+	}
+
+	/* if rolled 6, always choose money. Stupid, but... */
+	if (world->moves_left == 6) {
+		dprintf(STDOUT_FILENO, "take\n");
+		dprintf(STDOUT_FILENO, "done\n");
+		world->moves_left = 0;
+		ai_player->money++;
+		stage = 1; /* wait */
+		return;
+	}
+	while (world->moves_left > 0) {
+/**
+		float score = evaluate();
+		printf("Evaluation: %f\n", score);
+**/
+		int nr_ai_pieces = count_pieces_by_owner(ai_player) + 1;
+		piece_t *current_piece = world->piecelist;
+		int random_nr;
+		if (nr_ai_pieces > 1) random_nr = rand() % nr_ai_pieces + 1;
+		else random_nr = 1;
+		while (current_piece != NULL) {
+			if (current_piece->owner == ai_player) {
+				random_nr--;
+				if (random_nr == 0) break;
+			}
+			current_piece = current_piece->next;
+		}
+		uint16_t directions_mask = 0;
+		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width)) directions_mask |= 1;
+		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1)) directions_mask |= (1 << 1);
+		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width)) directions_mask |= (1 << 2);
+		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1)) directions_mask |= (1 << 3);
+		uint16_t nr_directions = __builtin_popcount (directions_mask);
+		/* if piece is blocked, skip and choose another one (WHAT IF ALL PIECES are blocked???) */
+		if (nr_directions == 0) continue;
+		random_nr = rand() % nr_directions + 1;
+		int bit = 0;
+		while (random_nr > 0) {
+			if ((directions_mask >> bit) & 1) {
+				random_nr--;
+			}
+			bit++;
+		}
+		switch (bit) {
+			case 1:
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width);
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
+				current_piece->height++;
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				break;
+			case 2:
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1);
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
+				current_piece->width++;
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				break;
+			case 3:
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width);
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
+				current_piece->height--;
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				break;
+			case 4:
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1);
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
+				current_piece->width--;
+				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				break;
+		}
+		world->moves_left--;
+	}
+	dprintf(STDOUT_FILENO, "done\n");
+	world->moves_left = 0;
+	if (ai_player->next != NULL) world->selected_player = ai_player->next;
+	else world->selected_player = world->playerlist;
 	stage = 0;
 	return;
 }
