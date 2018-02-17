@@ -280,6 +280,12 @@ int validate_game_data(char **error_message)
 		player = player->next;
 	}
 
+	/* check if world->selected_player points to an existing player */
+	if (get_player_by_id(world->selected_player) == NULL) {
+		msg = "Selected player does not exist.";
+		goto error;
+	}
+
 	/* If we are here, then all checks passed */
 	return 0;
 
