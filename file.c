@@ -27,6 +27,8 @@
 #define DIPOFFER_METADATA_SIZE (sizeof(uint16_t))	/* nr of dipoffers */
 #define DIPOFFER_UNIT_SIZE (sizeof(uint16_t) * 2 + sizeof(char))	/* from, to, offer */
 
+static uint16_t selected_player_id;
+
 char *strconcat(const char *input1, const char *input2)
 {
 	char *output = malloc(strlen(input1) + strlen(input2) + 1);
@@ -90,7 +92,7 @@ int deserialize_game_metadata(char **buffer, int *pos)
 	uint16_t selected_player_be = 0;
 	memcpy(&selected_player_be, *buffer + 1 + 3 * sizeof(uint16_t),
 	       sizeof(uint16_t));
-	world->selected_player = be16toh(selected_player_be);
+	selected_player_id = be16toh(selected_player_be);
 	memcpy(&moves_left, *buffer + 1 + 4 * sizeof(uint16_t),
 	       sizeof(unsigned char));
 	world->moves_left = moves_left;
@@ -416,8 +418,9 @@ unsigned int load_game()
 	deserialize_dipoffer(&buffer, &pos);
 **/
 	free(buffer);
-	player_t *active_player = get_player_by_id(world->selected_player);
-	piece_t *active_piece = get_noble_by_owner(active_player);
+	world->selected_player = get_player_by_id(selected_player_id);
+	if (!world->selected_player) return 1;
+	piece_t *active_piece = get_noble_by_owner(world->selected_player);
 	if (active_piece != NULL) {
 		world->grid->cursor_height = active_piece->height;
 		world->grid->cursor_width = active_piece->width;
@@ -434,7 +437,7 @@ int serialize_game_metadata(char **buffer)
 	uint16_t year_be = htobe16(world->current_time.tm_year);
 	uint16_t next_player_id_be = htobe16(world->next_player_id);
 	uint16_t next_piece_id_be = htobe16(world->next_piece_id);
-	uint16_t selected_player_be = htobe16(world->selected_player);
+	uint16_t selected_player_be = (world->selected_player ? htobe16(world->selected_player->id) : 0);
 	memcpy(*buffer, &year_be, sizeof(uint16_t));
 	memcpy(*buffer + sizeof(uint16_t), &(world->current_time.tm_mon),
 	       sizeof(unsigned char));

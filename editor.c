@@ -52,7 +52,7 @@ void map_editor()
 	int i, j;
 	char tile_char = '.';
 	int color_nr = 0;
-	player_t *player = get_player_by_id(world->selected_player);
+	player_t *player = world->selected_player;
 	tile_t *tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
@@ -289,12 +289,12 @@ void map_editor()
 		}
 		break;
 	case ' ':
-		player = get_player_by_id(world->selected_player);
+		player = world->selected_player;
 		if (player->next != NULL)
 			player = player->next;
 		else
 			player = world->playerlist;
-		world->selected_player = player->id;
+		world->selected_player = player;
 		piece = get_noble_by_owner(player);
 		if (piece != NULL) {
 			world->grid->cursor_height = piece->height;
@@ -488,14 +488,14 @@ void players_dialog()
 	int section = 0;
 	player_t *current = world->playerlist;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 	while (current != NULL) {
 		section = playerlist_selector / 10;
 		if (counter >= section * 10 && counter < section * 10 + 10
 		    && counter < nr_players) {
 			if (counter == playerlist_selector) {
 				wattron(local_win, COLOR_PAIR(26));
-				world->selected_player = current->id;
+				world->selected_player = current;
 			} else
 				wattron(local_win, COLOR_PAIR(1));
 			mvwprintw(local_win, 8 + counter % 10, 2, "%3d. %s\n",
@@ -523,8 +523,7 @@ void players_dialog()
 			if (playerlist_selector > 0) {
 				playerlist_selector--;
 				world->selected_player =
-				    get_player_by_order(playerlist_selector)->
-				    id;
+				    get_player_by_order(playerlist_selector);
 			}
 		}
 		break;
@@ -535,14 +534,14 @@ void players_dialog()
 		if (playerlist_selector > 0) {
 			playerlist_selector--;
 			world->selected_player =
-			    get_player_by_order(playerlist_selector)->id;
+			    get_player_by_order(playerlist_selector);
 		}
 		break;
 	case 1066:
 		if (playerlist_selector < nr_players - 1) {
 			playerlist_selector++;
 			world->selected_player =
-			    get_player_by_order(playerlist_selector)->id;
+			    get_player_by_order(playerlist_selector);
 		}
 		break;
 	case 'q':
@@ -649,7 +648,7 @@ void add_player_dialog()
 			player = add_player(name);
 			set_money(player, money);
 			set_player_rank(player, rank);
-			world->selected_player = player->id;
+			world->selected_player = player;
 			current_screen = PLAYERS_DIALOG;
 			curs_set(FALSE);
 			noecho();
@@ -818,9 +817,9 @@ void region_to_player()
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	region_t *region = get_region_by_id(world->selected_region);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	while (1) {
 		curs_set(FALSE);
@@ -959,7 +958,7 @@ void edit_player_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	/* we can not get into this function if there's no selected_player, but still */
 	if (active_player == NULL) {
 		current_screen = PLAYERS_DIALOG;
@@ -1049,7 +1048,7 @@ void rename_player_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	player_t *player = get_player_by_id(world->selected_player);
+	player_t *player = world->selected_player;
 
 	while (1) {
 		wmove(local_win, 3, 0);
@@ -1088,7 +1087,7 @@ void change_player_money_dialog()
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	int error = 0;
-	player_t *player = get_player_by_id(world->selected_player);
+	player_t *player = world->selected_player;
 	uint16_t money = 0;
 	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 
@@ -1134,7 +1133,7 @@ void change_player_dates_dialog()
 
 	int error = 0;
 	int stage = 1;
-	player_t *player = get_player_by_id(world->selected_player);
+	player_t *player = world->selected_player;
 	uint16_t birthyear = 0;
 	char birthyear_ch[4] = { 0 };
 	unsigned char birthmon = 0;
@@ -1451,10 +1450,10 @@ void successor_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	player_t *heir = active_player->heir;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	while (1) {
 		curs_set(FALSE);
@@ -1485,7 +1484,7 @@ void successor_dialog()
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == world->selected_player)
+				if (current == world->selected_player)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
 					 && current->id == heir->id)
@@ -1535,10 +1534,10 @@ void homage_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	int set_lord_ok = 0;
 	int unset_lord_ok = 0;
@@ -1665,10 +1664,10 @@ void diplomacy_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	unsigned char alliance_ok, neutral_ok, war_ok;
 

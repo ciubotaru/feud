@@ -33,7 +33,7 @@ void draw_map()
 	int16_t h_offset = world->grid->cursor_height - 12;
 	int16_t w_offset = world->grid->cursor_width - 24;
 
-	player_t *player = get_player_by_id(world->selected_player);
+	player_t *player = world->selected_player;
 	tile_t *tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
@@ -259,7 +259,7 @@ void draw_map()
 			player = world->playerlist;
 			increment_gametime();
 		}
-		world->selected_player = player->id;
+		world->selected_player = player;
 		piece = get_noble_by_owner(player);
 		world->grid->cursor_height = piece->height;
 		world->grid->cursor_width = piece->width;
@@ -344,7 +344,7 @@ void draw_map()
 			**/
 		if (current_mode == VIEW && tile->region != NULL
 		    && tile->region->owner != NULL
-		    && tile->region->owner->id == world->selected_player
+		    && tile->region->owner->id == world->selected_player->id
 		    && player->money >= COST_SOLDIER && tile->walkable
 		    && piece == NULL) {
 			add_piece(1, world->grid->cursor_height,
@@ -358,8 +358,7 @@ void draw_map()
 		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
 		if (current_mode == 0) {
 			piece =
-			    get_noble_by_owner(get_player_by_id
-					       (world->selected_player));
+			    get_noble_by_owner(world->selected_player);
 			world->grid->cursor_height = piece->height;
 			world->grid->cursor_width = piece->width;
 		}
@@ -388,7 +387,7 @@ void regions_dialog()
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	region_t *current_region = world->regionlist;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 
 	int nr_regions = count_regions_by_owner(active_player);
 
@@ -408,12 +407,12 @@ void regions_dialog()
 	**/
 	if (get_region_by_id(world->selected_region) == NULL
 	    || get_region_by_id(world->selected_region)->owner == NULL
-	    || get_region_by_id(world->selected_region)->owner->id !=
+	    || get_region_by_id(world->selected_region)->owner !=
 	    world->selected_player) {
 		current_region = world->regionlist;
 		while (current_region != NULL) {
 			if (current_region->owner != NULL
-			    && current_region->owner->id ==
+			    && current_region->owner ==
 			    world->selected_player) {
 				world->selected_region = current_region->id;
 				break;
@@ -428,7 +427,7 @@ void regions_dialog()
 	int regionlist_selector = 0;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner->id == world->selected_player) {
+		    && current_region->owner == world->selected_player) {
 			if (current_region->id == world->selected_region)
 				break;
 			else
@@ -441,7 +440,7 @@ void regions_dialog()
 	section = regionlist_selector / 10;
 	while (current_region != NULL) {
 		if (current_region->owner == NULL
-		    || current_region->owner->id != world->selected_player) {
+		    || current_region->owner != world->selected_player) {
 			current_region = current_region->next;
 			;
 			continue;
@@ -471,7 +470,7 @@ void regions_dialog()
 			current_region = world->regionlist;
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
-				    && current_region->owner->id ==
+				    && current_region->owner ==
 				    world->selected_player) {
 					if (counter == regionlist_selector) {
 						world->selected_region =
@@ -491,7 +490,7 @@ void regions_dialog()
 			current_region = world->regionlist;
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
-				    && current_region->owner->id ==
+				    && current_region->owner ==
 				    world->selected_player) {
 					if (counter == regionlist_selector) {
 						world->selected_region =
@@ -579,8 +578,8 @@ void give_region_dialog()
 	noecho();
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector = get_player_order(selected_player);
 	region_t *region = get_region_by_id(world->selected_region);
 	int give_region_ok = 0;
@@ -678,7 +677,7 @@ void give_money_dialog()
 	int i;
 	int stage = 0;
 	int error = 0;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	player_t *receiving_player = NULL;
 	int playerlist_selector;
 	uint16_t money = 0;
@@ -726,8 +725,7 @@ void give_money_dialog()
 			break;
 		case 1:
 			playerlist_selector =
-			    get_player_order(get_player_by_id
-					     (world->selected_player));
+			    get_player_order(world->selected_player);
 			while (stage == 1) {
 				curs_set(FALSE);
 				noecho();
@@ -768,8 +766,7 @@ void give_money_dialog()
 							  "%3d. %s",
 							  current->id,
 							  current->name);
-						if (current->id ==
-						    world->selected_player)
+						if (current == world->selected_player)
 							wprintw(local_win,
 								" (you)\n");
 						else
@@ -906,10 +903,10 @@ void successor_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	player_t *heir = active_player->heir;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	while (1) {
 		curs_set(FALSE);
@@ -940,7 +937,7 @@ void successor_dialog()
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == world->selected_player)
+				if (current == world->selected_player)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
 					 && current->id == heir->id)
@@ -990,7 +987,7 @@ void feudal_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 //      piece_t *active_player_noble = get_noble_by_owner(active_player);
 	player_t *lord = active_player->lord;
 	tile_t *current_tile =
@@ -1157,10 +1154,10 @@ void homage_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	int pay_homage_ok = 0;
 
@@ -1275,7 +1272,7 @@ void promote_soldier_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	player_t *new_vassal = NULL;
 	tile_t *current_tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
@@ -1286,7 +1283,7 @@ void promote_soldier_dialog()
 	region_t *current_region = world->regionlist;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner->id == world->selected_player) {
+		    && current_region->owner == world->selected_player) {
 			world->selected_region = current_region->id;
 			break;
 		}
@@ -1341,7 +1338,7 @@ void promote_soldier_dialog()
 			int regionlist_selector = 0;
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
-				    && current_region->owner->id ==
+				    && current_region->owner ==
 				    world->selected_player) {
 					if (current_region->id ==
 					    world->selected_region)
@@ -1357,7 +1354,7 @@ void promote_soldier_dialog()
 
 			while (current_region != NULL) {
 				if (current_region->owner == NULL
-				    || current_region->owner->id !=
+				    || current_region->owner !=
 				    world->selected_player) {
 					current_region = current_region->next;
 					;
@@ -1394,8 +1391,7 @@ void promote_soldier_dialog()
 					while (current_region != NULL) {
 						if (current_region->owner !=
 						    NULL
-						    && current_region->owner->
-						    id ==
+						    && current_region->owner ==
 						    world->selected_player) {
 							if (counter ==
 							    regionlist_selector)
@@ -1422,8 +1418,7 @@ void promote_soldier_dialog()
 					while (current_region != NULL) {
 						if (current_region->owner !=
 						    NULL
-						    && current_region->owner->
-						    id ==
+						    && current_region->owner ==
 						    world->selected_player) {
 							if (counter ==
 							    regionlist_selector)
@@ -1479,10 +1474,10 @@ void diplomacy_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = get_player_by_id(world->selected_player);
-	player_t *selected_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
+	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
-	    get_player_order(get_player_by_id(world->selected_player));
+	    get_player_order(world->selected_player);
 
 	unsigned char offer_alliance_ok, quit_alliance_ok, offer_peace_ok,
 	    declare_war_ok, accept_offer_ok, reject_offer_ok, retract_offer_ok;
@@ -1810,7 +1805,7 @@ void self_declaration_dialog() {
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	unsigned char eligible = 0;
-	player_t *active_player = get_player_by_id(world->selected_player);
+	player_t *active_player = world->selected_player;
 	uint16_t nr_regions = count_regions_by_owner(active_player);
 	player_t *lord = active_player->lord;
 	uint16_t money = get_money(active_player);

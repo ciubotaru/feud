@@ -19,7 +19,7 @@ void create_world()
 	**/
 	world->playerlist = NULL;
 	world->next_player_id = 1;
-	world->selected_player = 0;
+	world->selected_player = NULL;
 
 //      world->current_time = NULL;
 	init_gametime();
@@ -281,7 +281,7 @@ int validate_game_data(char **error_message)
 	}
 
 	/* check if world->selected_player points to an existing player */
-	if (get_player_by_id(world->selected_player) == NULL) {
+	if (world->selected_player == NULL) {
 		msg = "Selected player does not exist.";
 		goto error;
 	}

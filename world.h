@@ -15,7 +15,7 @@ typedef struct {
 
 	player_t *playerlist;
 	uint16_t next_player_id;
-	uint16_t selected_player;
+	player_t *selected_player;
 
 	gametime_t current_time;
 

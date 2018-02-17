@@ -217,7 +217,7 @@ void standby()
 				dprintf(STDOUT_FILENO, "Error: AI not assigned to any side (run 'play' first)\n");
 				continue;
 			}
-			if (world->selected_player != ai_plays_for) {
+			if (world->selected_player->id != ai_plays_for) {
 				dprintf(STDOUT_FILENO, "Error: not AI's turn to play\n");
 				continue;
 			}
@@ -793,7 +793,7 @@ void standby()
 				continue;
 			}
 			dprintf(STDOUT_FILENO, "ack\n");
-			world->selected_player = player_id;
+			world->selected_player = get_player_by_id(player_id);
 			continue;
 		}
 		if (!strcmp(token, "validate")) {

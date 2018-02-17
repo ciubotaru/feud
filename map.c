@@ -433,7 +433,7 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 	if (world->grid->tiles[dst_height][dst_width]->walkable == 0)
 		return 0;
 	/* there is a piece on source tile and piece belongs to current player */
-	player_t *current_player = get_player_by_id(world->selected_player);
+	player_t *current_player = world->selected_player;
 	piece_t *src_piece = world->grid->tiles[src_height][src_width]->piece;
 	if (src_piece == NULL || src_piece->owner->id != current_player->id)
 		return 0;
