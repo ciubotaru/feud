@@ -112,6 +112,12 @@ void remove_player(player_t * player)
 		current = current->next;
 	}
 
+	if (player == world->selected_player) {
+		if (player->next != NULL) world->selected_player = player->next;
+		else if (player != world->playerlist) world->selected_player = world->playerlist;
+		else world->selected_player = NULL;
+	}
+
 	for (player_t **current = &world->playerlist; *current; current = &(*current)->next) {
 		if (*current == player) {
 			player_t *next = (*current)->next;
