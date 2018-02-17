@@ -685,8 +685,16 @@ void standby()
 			continue;
 		}
 		if (!strcmp(token, "save")) {
-			save_game();
-			dprintf(STDOUT_FILENO, "ack\n");
+			char *msg;
+			int result = validate_game_data(&msg);
+			if (result == 0) {
+				dprintf(STDOUT_FILENO, "ack\n");
+				save_game();
+			}
+			else {
+				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
+				free(msg);
+			}
 			continue;
 		}
 		if (!strcmp(token, "tile")) {
