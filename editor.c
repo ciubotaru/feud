@@ -6,6 +6,8 @@
 
 #include "world.h"
 
+static region_t *selected_region = NULL;
+
 void editor_start_menu()
 {
 	WINDOW *local_win = newwin(25, 80, 0, 0);
@@ -57,9 +59,9 @@ void map_editor()
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
 	region_t *region = NULL;
-	if (world->selected_region == 0 && world->regionlist != NULL)
-		world->selected_region = world->regionlist->id;
-	region = get_region_by_id(world->selected_region);
+	if (selected_region == NULL && world->regionlist != NULL)
+		selected_region = world->regionlist;
+	region = selected_region;
 	piece_t *piece = tile->piece;
 
 	for (i = 24 * (h_multiplier + 1) - 1; i >= 24 * h_multiplier; i--) {
@@ -282,10 +284,10 @@ void map_editor()
 				region = region->next;
 			else
 				region = world->regionlist;
-			world->selected_region = region->id;
+			selected_region = region;
 		} else if (world->regionlist != NULL) {
 			region = world->regionlist;
-			world->selected_region = region->id;
+			selected_region = region;
 		}
 		break;
 	case ' ':
@@ -685,7 +687,7 @@ void regions_dialog()
 	int section = 0;
 	region_t *current = world->regionlist;
 	int regionlist_selector =
-	    get_region_order(get_region_by_id(world->selected_region));
+	    get_region_order(selected_region);
 	while (current != NULL) {
 		section = regionlist_selector / 10;
 		if (counter >= section * 10 && counter < section * 10 + 10
@@ -706,15 +708,15 @@ void regions_dialog()
 	case 1065:
 		if (regionlist_selector > 0) {
 			--regionlist_selector;
-			world->selected_region =
-			    get_region_by_order(regionlist_selector)->id;
+			selected_region =
+			    get_region_by_order(regionlist_selector);
 		}
 		break;
 	case 1066:
 		if (regionlist_selector < nr_regions - 1) {
 			regionlist_selector++;
-			world->selected_region =
-			    get_region_by_order(regionlist_selector)->id;
+			selected_region =
+			    get_region_by_order(regionlist_selector);
 		}
 		break;
 	case 'a':
@@ -733,9 +735,8 @@ void regions_dialog()
 			sort_region_list();
 			if (regionlist_selector > 0) {
 				regionlist_selector--;
-				world->selected_region =
-				    get_region_by_order(regionlist_selector)->
-				    id;
+				selected_region =
+				    get_region_by_order(regionlist_selector);
 			}
 		}
 		break;
@@ -816,7 +817,7 @@ void region_to_player()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	region_t *region = get_region_by_id(world->selected_region);
+	region_t *region = selected_region;
 	player_t *selected_player = world->selected_player;
 	int playerlist_selector =
 	    get_player_order(world->selected_player);
@@ -927,7 +928,7 @@ void rename_region_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	region_t *region = get_region_by_id(world->selected_region);
+	region_t *region = selected_region;
 	mvwprintw(local_win, 2, 2,
 		  "To rename this region, type new name (press Enter to cancel):\n\n  ");
 	char name[17] = { 0 };

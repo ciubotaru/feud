@@ -33,7 +33,6 @@ void create_world()
 	**/
 	world->regionlist = NULL;
 	world->next_region_id = 1;
-	world->selected_region = 0;
 
 	world->moves_left = 0;
 	world->check_death = 0;

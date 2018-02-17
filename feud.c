@@ -18,6 +18,8 @@ int current_mode = VIEW;
 
 int gameover = 0;
 
+static region_t *selected_region = NULL;
+
 void draw_map()
 {
 	WINDOW *local_win;
@@ -405,16 +407,16 @@ void regions_dialog()
 	 * if selected region is not owned by selected player,
 	 * set to first region owned by active player
 	**/
-	if (get_region_by_id(world->selected_region) == NULL
-	    || get_region_by_id(world->selected_region)->owner == NULL
-	    || get_region_by_id(world->selected_region)->owner !=
+	if (selected_region == NULL
+	    || selected_region->owner == NULL
+	    || selected_region->owner !=
 	    world->selected_player) {
 		current_region = world->regionlist;
 		while (current_region != NULL) {
 			if (current_region->owner != NULL
 			    && current_region->owner ==
 			    world->selected_player) {
-				world->selected_region = current_region->id;
+				selected_region = current_region;
 				break;
 			}
 			current_region = current_region->next;
@@ -428,7 +430,7 @@ void regions_dialog()
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
 		    && current_region->owner == world->selected_player) {
-			if (current_region->id == world->selected_region)
+			if (current_region == selected_region)
 				break;
 			else
 				regionlist_selector++;
@@ -473,8 +475,7 @@ void regions_dialog()
 				    && current_region->owner ==
 				    world->selected_player) {
 					if (counter == regionlist_selector) {
-						world->selected_region =
-						    current_region->id;
+						selected_region = current_region;
 						break;
 					}
 					counter++;
@@ -493,8 +494,7 @@ void regions_dialog()
 				    && current_region->owner ==
 				    world->selected_player) {
 					if (counter == regionlist_selector) {
-						world->selected_region =
-						    current_region->id;
+						selected_region = current_region;
 						break;
 					}
 					counter++;
@@ -534,7 +534,7 @@ void rename_region_dialog()
 
 	int stage = 0;
 	int error = 0;
-	region_t *region = get_region_by_id(world->selected_region);
+	region_t *region = selected_region;
 	char name[17] = { 0 };
 	while (1) {
 		switch (stage) {
@@ -581,7 +581,7 @@ void give_region_dialog()
 	player_t *active_player = world->selected_player;
 	player_t *selected_player = world->selected_player;
 	int playerlist_selector = get_player_order(selected_player);
-	region_t *region = get_region_by_id(world->selected_region);
+	region_t *region = selected_region;
 	int give_region_ok = 0;
 
 	while (1) {
@@ -1279,12 +1279,12 @@ void promote_soldier_dialog()
 							   cursor_width];
 	piece_t *current_piece = current_tile->piece;	/* assumed to be our soldier */
 
-	/* set world->selected_region to our region */
+	/* set selected_region to our region */
 	region_t *current_region = world->regionlist;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
 		    && current_region->owner == world->selected_player) {
-			world->selected_region = current_region->id;
+			selected_region = current_region;
 			break;
 		}
 		current_region = current_region->next;
@@ -1340,8 +1340,7 @@ void promote_soldier_dialog()
 				if (current_region->owner != NULL
 				    && current_region->owner ==
 				    world->selected_player) {
-					if (current_region->id ==
-					    world->selected_region)
+					if (current_region == selected_region)
 						break;
 					else
 						regionlist_selector++;
@@ -1396,11 +1395,7 @@ void promote_soldier_dialog()
 							if (counter ==
 							    regionlist_selector)
 							{
-								world->
-								    selected_region
-								    =
-								    current_region->
-								    id;
+								selected_region = current_region;
 								break;
 							}
 							counter++;
@@ -1423,11 +1418,7 @@ void promote_soldier_dialog()
 							if (counter ==
 							    regionlist_selector)
 							{
-								world->
-								    selected_region
-								    =
-								    current_region->
-								    id;
+								selected_region = current_region;
 								break;
 							}
 							counter++;
@@ -1447,8 +1438,7 @@ void promote_soldier_dialog()
 				set_player_rank(new_vassal, KNIGHT);
 				current_piece->owner = new_vassal;
 				homage(new_vassal, active_player);
-				current_region =
-				    get_region_by_id(world->selected_region);
+				current_region = selected_region;
 				change_region_owner(new_vassal, current_region);
 				add_to_cronicle
 				    ("%s %s granted %s to their new vassal, %s %s.\n",
