@@ -2,7 +2,7 @@ CC=@CC@
 datarootdir=@datarootdir@
 prefix=@prefix@
 CFLAGS =@CFLAGS@
-OBJS = map.o player.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
+OBJS = map.o character.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
 EXECS = feud feud-editor feud-ai feud-server
 
 .PHONY: all clean distclean

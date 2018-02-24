@@ -9,9 +9,9 @@
 #include <stdarg.h>
 #include "world.h"
 
-#define GAME_METADATA_SIZE (2 * sizeof(unsigned char) + 4 * sizeof(uint16_t))	/* year, mon, next player id, next piece id, selected_player, moves left */
-#define PLAYERLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of players */
-#define PLAYERLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char))	/* id, name, money, rank, birth_year, birth_mon, death_year, death_mon */
+#define GAME_METADATA_SIZE (2 * sizeof(unsigned char) + 4 * sizeof(uint16_t))	/* year, mon, next character id, next piece id, selected_character, moves left */
+#define characterLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of characters */
+#define characterLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char))	/* id, name, money, rank, birth_year, birth_mon, death_year, death_mon */
 #define REGIONLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of regions */
 #define REGIONLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t))	/* id, name, owner */
 #define GRID_METADATA_SIZE (sizeof(uint16_t) * 2)	/* grid height and width */
@@ -20,14 +20,14 @@
 #define PIECES_UNIT_SIZE (sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) * 3)	/* id, type, height, width, owner_nr */
 #define FEUDAL_METADATA_SIZE (sizeof(uint16_t))	/* nr of lord-vassal relations */
 #define FEUDAL_UNIT_SIZE (sizeof(uint16_t) * 2)	/* vassal, lord */
-#define HEIR_METADATA_SIZE (sizeof(uint16_t))	/* nr of players with a heir */
+#define HEIR_METADATA_SIZE (sizeof(uint16_t))	/* nr of characters with a heir */
 #define HEIR_UNIT_SIZE (sizeof(uint16_t) * 2)	/* grantor, heir */
 #define DIPLOMACY_METADATA_SIZE (sizeof(uint16_t))	/* nr of dipstatuses */
-#define DIPLOMACY_UNIT_SIZE (sizeof(uint16_t) * 2 + sizeof(char))	/* player1_id, player2_id, status */
+#define DIPLOMACY_UNIT_SIZE (sizeof(uint16_t) * 2 + sizeof(char))	/* character1_id, character2_id, status */
 #define DIPOFFER_METADATA_SIZE (sizeof(uint16_t))	/* nr of dipoffers */
 #define DIPOFFER_UNIT_SIZE (sizeof(uint16_t) * 2 + sizeof(char))	/* from, to, offer */
 
-static uint16_t selected_player_id;
+static uint16_t selected_character_id;
 
 char *strconcat(const char *input1, const char *input2)
 {
@@ -81,18 +81,18 @@ int deserialize_game_metadata(char **buffer, int *pos)
 	memcpy(&year_be, *buffer, sizeof(uint16_t));
 	memcpy(&mon, *buffer + sizeof(uint16_t), 1);
 	set_gametime(be16toh(year_be), mon);
-	uint16_t next_player_id_be = 0;
-	memcpy(&next_player_id_be, *buffer + sizeof(uint16_t) + 1,
+	uint16_t next_character_id_be = 0;
+	memcpy(&next_character_id_be, *buffer + sizeof(uint16_t) + 1,
 	       sizeof(uint16_t));
-	world->next_player_id = be16toh(next_player_id_be);
+	world->next_character_id = be16toh(next_character_id_be);
 	uint16_t next_piece_id_be = 0;
 	memcpy(&next_piece_id_be, *buffer + 1 + 2 * sizeof(uint16_t),
 	       sizeof(uint16_t));
 	world->next_piece_id = be16toh(next_piece_id_be);
-	uint16_t selected_player_be = 0;
-	memcpy(&selected_player_be, *buffer + 1 + 3 * sizeof(uint16_t),
+	uint16_t selected_character_be = 0;
+	memcpy(&selected_character_be, *buffer + 1 + 3 * sizeof(uint16_t),
 	       sizeof(uint16_t));
-	selected_player_id = be16toh(selected_player_be);
+	selected_character_id = be16toh(selected_character_be);
 	memcpy(&moves_left, *buffer + 1 + 4 * sizeof(uint16_t),
 	       sizeof(unsigned char));
 	world->moves_left = moves_left;
@@ -100,35 +100,35 @@ int deserialize_game_metadata(char **buffer, int *pos)
 	return 0;
 }
 
-int deserialize_playerlist(char **buffer, int *pos)
+int deserialize_characterlist(char **buffer, int *pos)
 {
-	player_t *current = NULL;
-	uint16_t nr_players_be = 0;
+	character_t *current = NULL;
+	uint16_t nr_characters_be = 0;
 	int buffer_pos = *pos;
-	memcpy(&nr_players_be, *buffer + buffer_pos, PLAYERLIST_METADATA_SIZE);
-	uint16_t nr_players = be16toh(nr_players_be);
+	memcpy(&nr_characters_be, *buffer + buffer_pos, characterLIST_METADATA_SIZE);
+	uint16_t nr_characters = be16toh(nr_characters_be);
 /**
-	if (nr_players == 0) {
-		buffer_pos = *pos + PLAYERLIST_METADATA_SIZE;
+	if (nr_characters == 0) {
+		buffer_pos = *pos + characterLIST_METADATA_SIZE;
 		*pos = buffer_pos + 1;
 		return;
 	}
 **/
 	int i;
-	buffer_pos = *pos + PLAYERLIST_METADATA_SIZE;
+	buffer_pos = *pos + characterLIST_METADATA_SIZE;
 	uint16_t id_be, money_be, birthdate_year_be, deathdate_year_be;
 	char name[17];
 	int offset = 0;
 
-	for (i = 0; i < nr_players; i++) {
+	for (i = 0; i < nr_characters; i++) {
 		offset = 0;
 		memcpy(&id_be, *buffer + buffer_pos + offset, sizeof(uint16_t));	/* id */
 		offset += sizeof(uint16_t);
 		strcpy(name, *buffer + buffer_pos + offset);
 		offset += 17;
-		current = add_player(name);
+		current = add_character(name);
 		current->id = be16toh(id_be);
-		world->next_player_id--;	//return back after adding a player
+		world->next_character_id--;	//return back after adding a character
 		memcpy(&money_be, *buffer + buffer_pos + offset,
 		       sizeof(uint16_t));
 		offset += sizeof(uint16_t);
@@ -149,7 +149,7 @@ int deserialize_playerlist(char **buffer, int *pos)
 		current->deathdate.tm_year = be16toh(deathdate_year_be);
 		memcpy(&(current->deathdate.tm_mon),
 		       *buffer + buffer_pos + offset, 1);
-		buffer_pos += PLAYERLIST_UNIT_SIZE;
+		buffer_pos += characterLIST_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
 	return 0;
@@ -177,8 +177,8 @@ int deserialize_regionlist(char **buffer, int *pos)
 		current = add_region(name);
 		current->id = be16toh(id_be);
 		current->size = 0;	//be16toh(size_be);
-//              current->owner = get_player_by_id(be16toh(owner_be));
-		change_region_owner(get_player_by_id(be16toh(owner_be)),
+//              current->owner = get_character_by_id(be16toh(owner_be));
+		change_region_owner(get_character_by_id(be16toh(owner_be)),
 				    current);
 		buffer_pos += REGIONLIST_UNIT_SIZE;
 	}
@@ -241,14 +241,14 @@ int deserialize_pieces(char **buffer, int *pos)
 		       sizeof(uint16_t));
 		current =
 		    add_piece(type, be16toh(height_be), be16toh(width_be),
-			      get_player_by_id(be16toh(owner_be)));
+			      get_character_by_id(be16toh(owner_be)));
 		if (!current)
 			return 1;
 		current->id = be16toh(id_be);
 		world->next_piece_id = current->id;
 		world->grid->tiles[be16toh(height_be)][be16toh(width_be)]->
 		    piece = current;
-//if (current->rank > 0) set_player_rank(current->owner, rank);
+//if (current->rank > 0) set_character_rank(current->owner, rank);
 		buffer_pos += PIECES_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -257,7 +257,7 @@ int deserialize_pieces(char **buffer, int *pos)
 
 int deserialize_feudal(char **buffer, int *pos)
 {
-	player_t *current = NULL;
+	character_t *current = NULL;
 	uint16_t nr_feudal_be = 0;
 	int buffer_pos = *pos;
 	memcpy(&nr_feudal_be, *buffer + buffer_pos, FEUDAL_METADATA_SIZE);
@@ -269,9 +269,9 @@ int deserialize_feudal(char **buffer, int *pos)
 
 	for (i = 0; i < nr_feudal; i++) {
 		memcpy(&vassal_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* vassal_id */
-		current = get_player_by_id(be16toh(vassal_id_be));
+		current = get_character_by_id(be16toh(vassal_id_be));
 		memcpy(&lord_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* lord_id */
-		current->lord = get_player_by_id(be16toh(lord_id_be));
+		current->lord = get_character_by_id(be16toh(lord_id_be));
 		buffer_pos += FEUDAL_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -280,7 +280,7 @@ int deserialize_feudal(char **buffer, int *pos)
 
 int deserialize_heir(char **buffer, int *pos)
 {
-	player_t *current = NULL;
+	character_t *current = NULL;
 	uint16_t nr_heir_be = 0;
 	int buffer_pos = *pos;
 	memcpy(&nr_heir_be, *buffer + buffer_pos, HEIR_METADATA_SIZE);
@@ -288,13 +288,13 @@ int deserialize_heir(char **buffer, int *pos)
 
 	int i;
 	buffer_pos = *pos + HEIR_METADATA_SIZE;
-	uint16_t player_id_be, heir_id_be;
+	uint16_t character_id_be, heir_id_be;
 
 	for (i = 0; i < nr_heir; i++) {
-		memcpy(&player_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* player_id */
-		current = get_player_by_id(be16toh(player_id_be));
+		memcpy(&character_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* character_id */
+		current = get_character_by_id(be16toh(character_id_be));
 		memcpy(&heir_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* heir_id */
-		current->heir = get_player_by_id(be16toh(heir_id_be));
+		current->heir = get_character_by_id(be16toh(heir_id_be));
 		buffer_pos += HEIR_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -311,17 +311,17 @@ int deserialize_diplomacy(char **buffer, int *pos)
 
 	int i;
 	buffer_pos = *pos + DIPLOMACY_METADATA_SIZE;
-	uint16_t player1_id_be, player2_id_be;
-	player_t *player1 = NULL, *player2 = NULL;
+	uint16_t character1_id_be, character2_id_be;
+	character_t *character1 = NULL, *character2 = NULL;
 
 	for (i = 0; i < nr_dipstat; i++) {
-		memcpy(&player1_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* player1_id */
-		player1 = get_player_by_id(be16toh(player1_id_be));
-		memcpy(&player2_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* player2_id */
-		player2 = get_player_by_id(be16toh(player2_id_be));
+		memcpy(&character1_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* character1_id */
+		character1 = get_character_by_id(be16toh(character1_id_be));
+		memcpy(&character2_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* character2_id */
+		character2 = get_character_by_id(be16toh(character2_id_be));
 		memcpy(&status, *buffer + buffer_pos + sizeof(uint16_t) * 2,
 		       sizeof(unsigned char));
-		set_diplomacy(player1, player2, (unsigned int)status);
+		set_diplomacy(character1, character2, (unsigned int)status);
 		buffer_pos += DIPLOMACY_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -339,13 +339,13 @@ int deserialize_dipoffer(char **buffer, int *pos)
 	int i;
 	buffer_pos = *pos + DIPOFFER_METADATA_SIZE;
 	uint16_t from_id_be, to_id_be;
-	player_t *from = NULL, *to = NULL;
+	character_t *from = NULL, *to = NULL;
 
 	for (i = 0; i < nr_dipoffer; i++) {
 		memcpy(&from_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* from_id */
-		from = get_player_by_id(be16toh(from_id_be));
+		from = get_character_by_id(be16toh(from_id_be));
 		memcpy(&to_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* to_id */
-		to = get_player_by_id(be16toh(to_id_be));
+		to = get_character_by_id(be16toh(to_id_be));
 		memcpy(&offer, *buffer + buffer_pos + sizeof(uint16_t) * 2,
 		       sizeof(unsigned char));
 		open_offer(from, to, offer);
@@ -393,7 +393,7 @@ unsigned int load_game()
 	int pos = 0;
 	int (*deserialize[9]) () = {
 	&deserialize_game_metadata,
-		    &deserialize_playerlist,
+		    &deserialize_characterlist,
 		    &deserialize_regionlist,
 		    &deserialize_grid,
 		    &deserialize_pieces,
@@ -408,7 +408,7 @@ unsigned int load_game()
 	}
 /**
 	deserialize_game_metadata(&buffer, &pos);
-	deserialize_playerlist(&buffer, &pos);
+	deserialize_characterlist(&buffer, &pos);
 	deserialize_regionlist(&buffer, &pos);
 	deserialize_grid(&buffer, &pos);
 	deserialize_pieces(&buffer, &pos);
@@ -418,9 +418,9 @@ unsigned int load_game()
 	deserialize_dipoffer(&buffer, &pos);
 **/
 	free(buffer);
-	world->selected_player = get_player_by_id(selected_player_id);
-	if (!world->selected_player) return 1;
-	piece_t *active_piece = get_noble_by_owner(world->selected_player);
+	world->selected_character = get_character_by_id(selected_character_id);
+	if (!world->selected_character) return 1;
+	piece_t *active_piece = get_noble_by_owner(world->selected_character);
 	if (active_piece != NULL) {
 		world->grid->cursor_height = active_piece->height;
 		world->grid->cursor_width = active_piece->width;
@@ -435,34 +435,34 @@ unsigned int load_game()
 int serialize_game_metadata(char **buffer)
 {
 	uint16_t year_be = htobe16(world->current_time.tm_year);
-	uint16_t next_player_id_be = htobe16(world->next_player_id);
+	uint16_t next_character_id_be = htobe16(world->next_character_id);
 	uint16_t next_piece_id_be = htobe16(world->next_piece_id);
-	uint16_t selected_player_be = (world->selected_player ? htobe16(world->selected_player->id) : 0);
+	uint16_t selected_character_be = (world->selected_character ? htobe16(world->selected_character->id) : 0);
 	memcpy(*buffer, &year_be, sizeof(uint16_t));
 	memcpy(*buffer + sizeof(uint16_t), &(world->current_time.tm_mon),
 	       sizeof(unsigned char));
 	memcpy(*buffer + sizeof(uint16_t) + sizeof(unsigned char),
-	       &next_player_id_be, sizeof(uint16_t));
+	       &next_character_id_be, sizeof(uint16_t));
 	memcpy(*buffer + sizeof(unsigned char) + 2 * sizeof(uint16_t),
 	       &next_piece_id_be, sizeof(uint16_t));
 	memcpy(*buffer + sizeof(unsigned char) + 3 * sizeof(uint16_t),
-	       &selected_player_be, sizeof(uint16_t));
+	       &selected_character_be, sizeof(uint16_t));
 	memcpy(*buffer + sizeof(unsigned char) + 4 * sizeof(uint16_t),
 	       &(world->moves_left), sizeof(unsigned char));
 	(*buffer)[GAME_METADATA_SIZE] = 'X';
 	return GAME_METADATA_SIZE + 1;
 }
 
-int serialize_playerlist(char **buffer)
+int serialize_characterlist(char **buffer)
 {
-	uint16_t nr_players = count_players();
-	uint16_t nr_players_be = htobe16(nr_players);
+	uint16_t nr_characters = count_characters();
+	uint16_t nr_characters_be = htobe16(nr_characters);
 	int total_len =
-	    PLAYERLIST_METADATA_SIZE + PLAYERLIST_UNIT_SIZE * nr_players;
+	    characterLIST_METADATA_SIZE + characterLIST_UNIT_SIZE * nr_characters;
 	/** id + name + money + birth_year + birth_mon + death_year + death_mon + heir_id **/
-	memcpy(*buffer, &nr_players_be, PLAYERLIST_METADATA_SIZE);
-	int pos = PLAYERLIST_METADATA_SIZE;
-	player_t *current = world->playerlist;
+	memcpy(*buffer, &nr_characters_be, characterLIST_METADATA_SIZE);
+	int pos = characterLIST_METADATA_SIZE;
+	character_t *current = world->characterlist;
 	uint16_t id_be, money_be, birthdate_year_be, deathdate_year_be;
 	int offset = 0;
 	while (current != NULL) {
@@ -490,7 +490,7 @@ int serialize_playerlist(char **buffer)
 		       sizeof(uint16_t));
 		offset += sizeof(uint16_t);
 		memcpy(*buffer + pos + offset, &(current->deathdate.tm_mon), 1);
-		pos += PLAYERLIST_UNIT_SIZE;
+		pos += characterLIST_UNIT_SIZE;
 		current = current->next;
 	}
 	(*buffer)[total_len] = 'X';
@@ -601,7 +601,7 @@ int serialize_feudal(char **buffer, uint16_t nr_feudal)
 	int total_len = FEUDAL_METADATA_SIZE + FEUDAL_UNIT_SIZE * nr_feudal;
 	memcpy(*buffer, &nr_feudal_be, FEUDAL_METADATA_SIZE);
 	int pos = FEUDAL_METADATA_SIZE;
-	player_t *current = world->playerlist;
+	character_t *current = world->characterlist;
 	uint16_t vassal_id_be, lord_id_be;
 	while (current != NULL) {
 		if (current->lord != NULL) {
@@ -624,13 +624,13 @@ int serialize_heir(char **buffer, uint16_t nr_heir)
 	int total_len = HEIR_METADATA_SIZE + HEIR_UNIT_SIZE * nr_heir;
 	memcpy(*buffer, &nr_heir_be, HEIR_METADATA_SIZE);
 	int pos = HEIR_METADATA_SIZE;
-	player_t *current = world->playerlist;
-	uint16_t player_id_be, heir_id_be;
+	character_t *current = world->characterlist;
+	uint16_t character_id_be, heir_id_be;
 	while (current != NULL) {
 		if (current->heir != NULL) {
-			player_id_be = htobe16(current->id);
+			character_id_be = htobe16(current->id);
 			heir_id_be = htobe16(current->heir->id);
-			memcpy(*buffer + pos, &player_id_be, sizeof(uint16_t));
+			memcpy(*buffer + pos, &character_id_be, sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t), &heir_id_be,
 			       sizeof(uint16_t));
 			pos += HEIR_UNIT_SIZE;
@@ -649,12 +649,12 @@ int serialize_diplomacy(char **buffer, uint16_t nr_dipstat)
 	memcpy(*buffer, &nr_dipstat_be, DIPLOMACY_METADATA_SIZE);
 	int pos = DIPLOMACY_METADATA_SIZE;
 	dipstatus_t *current = world->diplomacylist;
-	uint16_t player1_id_be, player2_id_be;
+	uint16_t character1_id_be, character2_id_be;
 	while (current != NULL) {
-		player1_id_be = htobe16(current->player1->id);
-		player2_id_be = htobe16(current->player2->id);
-		memcpy(*buffer + pos, &player1_id_be, sizeof(uint16_t));
-		memcpy(*buffer + pos + sizeof(uint16_t), &player2_id_be,
+		character1_id_be = htobe16(current->character1->id);
+		character2_id_be = htobe16(current->character2->id);
+		memcpy(*buffer + pos, &character1_id_be, sizeof(uint16_t));
+		memcpy(*buffer + pos + sizeof(uint16_t), &character2_id_be,
 		       sizeof(uint16_t));
 		memcpy(*buffer + pos + sizeof(uint16_t) * 2, &(current->status),
 		       sizeof(unsigned char));
@@ -736,23 +736,23 @@ unsigned int save_game()
 		goto ret;
 	}
 
-	char *playerlist_buffer =
+	char *characterlist_buffer =
 	    calloc(1,
-		   PLAYERLIST_METADATA_SIZE +
-		   count_players() * PLAYERLIST_UNIT_SIZE + 1);
-	if (!playerlist_buffer) {
+		   characterLIST_METADATA_SIZE +
+		   count_characters() * characterLIST_UNIT_SIZE + 1);
+	if (!characterlist_buffer) {
 		fclose(fp);
 		retval = 2;
 		goto ret;
 	}
-	bytes = serialize_playerlist(&playerlist_buffer);
+	bytes = serialize_characterlist(&characterlist_buffer);
 	if (!bytes) {
 		fclose(fp);
 		retval = 3;
 		goto ret;
 	}
-	bytes_written = fwrite(playerlist_buffer, sizeof(char), bytes, fp);
-	free(playerlist_buffer);
+	bytes_written = fwrite(characterlist_buffer, sizeof(char), bytes, fp);
+	free(characterlist_buffer);
 	if (!bytes_written) {
 		fclose(fp);
 		retval = 4;
@@ -829,7 +829,7 @@ unsigned int save_game()
 	}
 
 	int nr_feudal = 0;
-	player_t *current = world->playerlist;
+	character_t *current = world->characterlist;
 	while (current != NULL) {
 		if (current->lord != NULL)
 			nr_feudal++;
@@ -857,7 +857,7 @@ unsigned int save_game()
 	}
 
 	int nr_heir = 0;
-	current = world->playerlist;
+	current = world->characterlist;
 	while (current != NULL) {
 		if (current->heir != NULL)
 			nr_heir++;

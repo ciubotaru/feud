@@ -14,12 +14,12 @@ void create_world()
 	world->grid = NULL;
 
 	/**
-	 * start from 1. id = 0 means "no player",
+	 * start from 1. id = 0 means "no character",
 	 * e.g. in region ownership.
 	**/
-	world->playerlist = NULL;
-	world->next_player_id = 1;
-	world->selected_player = NULL;
+	world->characterlist = NULL;
+	world->next_character_id = 1;
+	world->selected_character = NULL;
 
 //      world->current_time = NULL;
 	init_gametime();
@@ -50,8 +50,8 @@ void destroy_world()
 		remove_region(world->regionlist);
 	/* remove pieces */
 	clear_piece_list();
-	/* remove players */
-	clear_player_list();
+	/* remove characters */
+	clear_character_list();
 	/* remove tiles */
 	remove_grid();
 }
@@ -74,7 +74,7 @@ int validate_game_data(char **error_message)
 	char *msg;
 	int error = 0;
 	int i, j;
-	player_t *player = NULL;
+	character_t *character = NULL;
 	region_t *region = NULL;
 	piece_t *piece = NULL;
 	if (world == NULL) {
@@ -90,9 +90,9 @@ int validate_game_data(char **error_message)
 		goto error;
 	}
 
-	/* Stop if there are no players */
-	if (world->playerlist == NULL) {
-		msg = "Playerlist missing.";
+	/* Stop if there are no characters */
+	if (world->characterlist == NULL) {
+		msg = "Hero list missing.";
 		goto error;
 	}
 
@@ -118,54 +118,54 @@ int validate_game_data(char **error_message)
 		region = region->next;
 	}
 
-	/* There should be at least two players */
-	int nr_players = count_players();
-	if (nr_players < 2) {
-		msg = "Less than 2 players.";
+	/* There should be at least two characters */
+	int nr_characters = count_characters();
+	if (nr_characters < 2) {
+		msg = "Less than 2 heroes.";
 		goto error;
 	}
 
-	/* Each player should control at least one region */
-	player = world->playerlist;
-	while (player != NULL) {
+	/* Each character should control at least one region */
+	character = world->characterlist;
+	while (character != NULL) {
 		region = world->regionlist;
 		error = 1;
 		while (region != NULL) {
 			if (region->owner != NULL
-			    && region->owner->id == player->id) {
+			    && region->owner->id == character->id) {
 				error = 0;
 				break;
 			}
 			region = region->next;
 		}
 		if (error == 1) {
-			msg = "Landless player detected.";
+			msg = "Landless hero detected.";
 			goto error;
 		}
-		player = player->next;
+		character = character->next;
 	}
 
-	/* Each player should have at least one unit */
-	player = world->playerlist;
-	while (player != NULL) {
+	/* Each character should have at least one unit */
+	character = world->characterlist;
+	while (character != NULL) {
 		piece = world->piecelist;
 		error = 1;
 		while (piece != NULL) {
 			if (piece->owner != NULL
-			    && piece->owner->id == player->id) {
+			    && piece->owner->id == character->id) {
 				error = 0;
 				break;
 			}
 			piece = piece->next;
 		}
 		if (error == 1) {
-			msg = "Pieceless player detected.";
+			msg = "Pieceless hero detected.";
 			goto error;
 		}
-		player = player->next;
+		character = character->next;
 	}
 
-	/* Each player must have exactly one noble */
+	/* Each character must have exactly one noble */
 	int nr_nobles = 0;
 	piece = world->piecelist;
 	while (piece != NULL) {
@@ -173,8 +173,8 @@ int validate_game_data(char **error_message)
 			nr_nobles++;
 		piece = piece->next;
 	}
-	if (nr_nobles != nr_players) {
-		msg = "Nobles are more/less than players.";
+	if (nr_nobles != nr_characters) {
+		msg = "Nobles are more/less than heroes.";
 		goto error;
 	}
 
@@ -196,34 +196,34 @@ int validate_game_data(char **error_message)
 
 	/* death date should be later than current date */
 	error = 0;
-	player = world->playerlist;
-	while (player != NULL) {
-		if (player->deathdate.tm_year * 12 + player->deathdate.tm_mon <=
+	character = world->characterlist;
+	while (character != NULL) {
+		if (character->deathdate.tm_year * 12 + character->deathdate.tm_mon <=
 		    total_months) {
 			error = 1;
 			break;
 		}
-		player = player->next;
+		character = character->next;
 	}
 	if (error != 0) {
-		msg = "A dead player detected. Recheck!";
+		msg = "A dead hero detected. Recheck!";
 		goto error;
 	}
 
 	/* birth date should be earlier than current date */
 	error = 0;
-	player = world->playerlist;
-	while (player != NULL) {
-		if (player->birthdate.tm_year * 12 + player->birthdate.tm_mon >
+	character = world->characterlist;
+	while (character != NULL) {
+		if (character->birthdate.tm_year * 12 + character->birthdate.tm_mon >
 		    total_months) {
 			error = 1;
 			break;
 		}
 		if (error == 1) {
-			msg = "An unborn player detected.";
+			msg = "An unborn hero detected.";
 			goto error;
 		}
-		player = player->next;
+		character = character->next;
 	}
 
 	/* check if pointers from grid to pieces correspond to piece coords */
@@ -263,10 +263,10 @@ int validate_game_data(char **error_message)
 
 	/* check if all lords are higher ranks than their vassals */
 	error = 0;
-	player = world->playerlist;
-	while (player != NULL) {
-		if (player->lord != NULL) {
-			if (player->lord->rank <= player->rank) {
+	character = world->characterlist;
+	while (character != NULL) {
+		if (character->lord != NULL) {
+			if (character->lord->rank <= character->rank) {
 				error = 1;
 				break;
 			}
@@ -276,12 +276,12 @@ int validate_game_data(char **error_message)
 			    "Inconsistency between lord and vassal rank detected.";
 			goto error;
 		}
-		player = player->next;
+		character = character->next;
 	}
 
-	/* check if world->selected_player points to an existing player */
-	if (world->selected_player == NULL) {
-		msg = "Selected player does not exist.";
+	/* check if world->selected_character points to an existing character */
+	if (world->selected_character == NULL) {
+		msg = "Selected character does not exist.";
 		goto error;
 	}
 

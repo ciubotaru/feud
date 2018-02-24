@@ -54,7 +54,7 @@ void map_editor()
 	int i, j;
 	char tile_char = '.';
 	int color_nr = 0;
-	player_t *player = world->selected_player;
+	character_t *character = world->selected_character;
 	tile_t *tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
@@ -143,26 +143,26 @@ void map_editor()
 	mvwprintw(local_win, 0, 50, "Date: %s of year %d",
 		  months[world->current_time.tm_mon],
 		  world->current_time.tm_year);
-	mvwprintw(local_win, 1, 50, "Nr. players: %d", count_players());
+	mvwprintw(local_win, 1, 50, "Nr. heroes: %d", count_characters());
 	mvwprintw(local_win, 2, 50, "Map size: %dx%d", world->grid->height,
 		  world->grid->width);
 
-	/* player info */
-	if (player != NULL)
-		mvwprintw(local_win, 4, 50, "Sel. pl.: %s (%s)", player->name,
-			  ranklist[player->rank]);
+	/* character info */
+	if (character != NULL)
+		mvwprintw(local_win, 4, 50, "Sel. pl.: %s (%s)", character->name,
+			  ranklist[character->rank]);
 	if (region != NULL)
 		mvwprintw(local_win, 6, 50, "Sel. reg.: %s (%d)", region->name,
 			  region->size);
 	else
 		mvwprintw(local_win, 6, 50, "Sel. reg.: not selected");
 /**
-		player_age_mon = (world->current_time.tm_year - player->birthdate.tm_year) * 12 + (world->current_time.tm_mon - player->birthdate.tm_mon);
-		mvwprintw(local_win, 5, 50, "Age: %d year(s) %d month(s)", player_age_mon / 12, player_age_mon % 12);
-		mvwprintw(local_win, 6, 50, "Money: %d (#%d)", player->money, player->rank_money);
-		mvwprintw(local_win, 7, 50, "Army: %d (#%d)", count_pieces_by_owner(player), player->rank_army);
-		mvwprintw(local_win, 8, 50, "Land: %d (#%d)", count_tiles_by_owner(player), player->rank_land);
-		mvwprintw(local_win, 9, 50, "Heir: %s", (player->heir != NULL ? player->heir->name : "none"));
+		character_age_mon = (world->current_time.tm_year - character->birthdate.tm_year) * 12 + (world->current_time.tm_mon - character->birthdate.tm_mon);
+		mvwprintw(local_win, 5, 50, "Age: %d year(s) %d month(s)", character_age_mon / 12, character_age_mon % 12);
+		mvwprintw(local_win, 6, 50, "Money: %d (#%d)", character->money, character->rank_money);
+		mvwprintw(local_win, 7, 50, "Army: %d (#%d)", count_pieces_by_owner(character), character->rank_army);
+		mvwprintw(local_win, 8, 50, "Land: %d (#%d)", count_tiles_by_owner(character), character->rank_land);
+		mvwprintw(local_win, 9, 50, "Heir: %s", (character->heir != NULL ? character->heir->name : "none"));
 **/
 	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
 
@@ -185,7 +185,7 @@ void map_editor()
 	mvwprintw(local_win, 18, 50, "Owned by: %s",
 		  (piece == NULL ? " " : piece->owner->name));
 /**
-	mvwprintw(local_win, 19, 50, "Diplomacy: %s", (piece == NULL || piece->owner->id == player->id ? " " : dipstatuslist[get_diplomacy(piece->owner, player)]));
+	mvwprintw(local_win, 19, 50, "Diplomacy: %s", (piece == NULL || piece->owner->id == character->id ? " " : dipstatuslist[get_diplomacy(piece->owner, character)]));
 **/
 
 	int ch;
@@ -225,6 +225,9 @@ void map_editor()
 							      cursor_height]
 					   [world->grid->cursor_width]);
 		break;
+	case 'h':
+		current_screen = CHARACTERS_DIALOG;
+		break;
 	case 'n':
 		/* if tile not wlakable, just ignore */
 		if (tile->walkable == 0)
@@ -235,10 +238,7 @@ void map_editor()
 		/* if tile free, add soldier */
 		else
 			add_piece(NOBLE, world->grid->cursor_height,
-				  world->grid->cursor_width, player);
-		break;
-	case 'p':
-		current_screen = PLAYERS_DIALOG;
+				  world->grid->cursor_width, character);
 		break;
 	case 'q':
 		current_screen = 99;
@@ -262,7 +262,7 @@ void map_editor()
 		/* if tile free, add soldier */
 		else
 			add_piece(SOLDIER, world->grid->cursor_height,
-				  world->grid->cursor_width, player);
+				  world->grid->cursor_width, character);
 		break;
 	case 'v':
 		current_screen = VALIDATE_DIALOG;
@@ -291,13 +291,13 @@ void map_editor()
 		}
 		break;
 	case ' ':
-		player = world->selected_player;
-		if (player->next != NULL)
-			player = player->next;
+		character = world->selected_character;
+		if (character->next != NULL)
+			character = character->next;
 		else
-			player = world->playerlist;
-		world->selected_player = player;
-		piece = get_noble_by_owner(player);
+			character = world->characterlist;
+		world->selected_character = character;
+		piece = get_noble_by_owner(character);
 		if (piece != NULL) {
 			world->grid->cursor_height = piece->height;
 			world->grid->cursor_width = piece->width;
@@ -438,8 +438,8 @@ void new_game_dialog()
 		remove_region(world->regionlist);
 	/* remove pieces */
 	clear_piece_list();
-	/* remove players */
-	clear_player_list();
+	/* remove characters */
+	clear_character_list();
 	/* remove tiles */
 	remove_grid();
 
@@ -465,7 +465,7 @@ void new_game_dialog()
 	return;
 }
 
-void players_dialog()
+void characters_dialog()
 {
 	WINDOW *local_win;
 
@@ -479,25 +479,25 @@ void players_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-	wprintw(local_win, "  To add a player, press 'a'.\n");
-	wprintw(local_win, "  To delete a player, press 'd'.\n");
-	wprintw(local_win, "  To edit a player, press 'e'.\n");
+	wprintw(local_win, "  To add a hero, press 'a'.\n");
+	wprintw(local_win, "  To delete a hero, press 'd'.\n");
+	wprintw(local_win, "  To edit a hero, press 'e'.\n");
 	wprintw(local_win, "  To scroll, press up/down keys.\n");
 	wprintw(local_win, "  To return to map editor, press 'q'.\n\n");
 
-	int nr_players = count_players();
+	int nr_characters = count_characters();
 	int counter = 0;
 	int section = 0;
-	player_t *current = world->playerlist;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *current = world->characterlist;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 	while (current != NULL) {
-		section = playerlist_selector / 10;
+		section = characterlist_selector / 10;
 		if (counter >= section * 10 && counter < section * 10 + 10
-		    && counter < nr_players) {
-			if (counter == playerlist_selector) {
+		    && counter < nr_characters) {
+			if (counter == characterlist_selector) {
 				wattron(local_win, COLOR_PAIR(26));
-				world->selected_player = current;
+				world->selected_character = current;
 			} else
 				wattron(local_win, COLOR_PAIR(1));
 			mvwprintw(local_win, 8 + counter % 10, 2, "%3d. %s\n",
@@ -511,43 +511,43 @@ void players_dialog()
 	int user_move = get_input(local_win);
 	switch (user_move) {
 	case 'a':
-		current_screen = ADD_PLAYER_DIALOG;
+		current_screen = ADD_CHARACTER_DIALOG;
 		break;
 	case 'd':
 		counter = 0;
-		current = world->playerlist;
-		while (counter < playerlist_selector) {
+		current = world->characterlist;
+		while (counter < characterlist_selector) {
 			current = current->next;
 			counter++;
 		}
 		if (current != NULL) {
-			remove_player(current);
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
-				world->selected_player =
-				    get_player_by_order(playerlist_selector);
+			remove_character(current);
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
+				world->selected_character =
+				    get_character_by_order(characterlist_selector);
 			}
 		}
 		break;
 	case 'e':
-		current_screen = EDIT_PLAYER_DIALOG;
+		current_screen = EDIT_CHARACTER_DIALOG;
 		break;
 	case 1065:
-		if (playerlist_selector > 0) {
-			playerlist_selector--;
-			world->selected_player =
-			    get_player_by_order(playerlist_selector);
+		if (characterlist_selector > 0) {
+			characterlist_selector--;
+			world->selected_character =
+			    get_character_by_order(characterlist_selector);
 		}
 		break;
 	case 1066:
-		if (playerlist_selector < nr_players - 1) {
-			playerlist_selector++;
-			world->selected_player =
-			    get_player_by_order(playerlist_selector);
+		if (characterlist_selector < nr_characters - 1) {
+			characterlist_selector++;
+			world->selected_character =
+			    get_character_by_order(characterlist_selector);
 		}
 		break;
 	case 'q':
-		playerlist_selector = 0;
+		characterlist_selector = 0;
 		current_screen = MAP_EDITOR;
 		break;
 	default:
@@ -556,7 +556,7 @@ void players_dialog()
 	return;
 }
 
-void add_player_dialog()
+void add_character_dialog()
 {
 	WINDOW *local_win;
 
@@ -577,7 +577,7 @@ void add_player_dialog()
 	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 	unsigned char rank = 0;
 
-	player_t *player = NULL;
+	character_t *character = NULL;
 	while (1) {
 		switch (stage) {
 		case 0:
@@ -586,13 +586,13 @@ void add_player_dialog()
 					  "Name too short or not unique. Type another one:\n\n  ");
 			else
 				mvwprintw(local_win, 2, 2,
-					  "Type a unique name for the new player:         \n\n  ");
+					  "Type a unique name for the new hero:         \n\n  ");
 			wgetnstr(local_win, name, 16);
 			if (strlen(name) == 0) {
-				current_screen = PLAYERS_DIALOG;
+				current_screen = CHARACTERS_DIALOG;
 				return;
 			}
-			if (get_player_by_name(name) == NULL) {
+			if (get_character_by_name(name) == NULL) {
 				stage = 1;
 				error = 0;
 			} else
@@ -606,7 +606,7 @@ void add_player_dialog()
 					  "Error. Choose a valid rank (1-4):       \n\n  ");
 			else
 				mvwprintw(local_win, 6, 2,
-					  "Choose player ranking (1-5 for knight, baron, count, duke or king), default is king:\n\n  ");
+					  "Choose hero ranking (1-5 for knight, baron, count, duke or king), default is king:\n\n  ");
 			rank = wgetch(local_win);
 			if (rank == '1' || rank == '2' || rank == '3'
 			    || rank == '4' || rank == '5') {
@@ -647,11 +647,11 @@ void add_player_dialog()
 			stage = 3;
 			break;
 		case 3:
-			player = add_player(name);
-			set_money(player, money);
-			set_player_rank(player, rank);
-			world->selected_player = player;
-			current_screen = PLAYERS_DIALOG;
+			character = add_character(name);
+			set_money(character, money);
+			set_character_rank(character, rank);
+			world->selected_character = character;
+			current_screen = CHARACTERS_DIALOG;
 			curs_set(FALSE);
 			noecho();
 			return;
@@ -745,7 +745,7 @@ void regions_dialog()
 		return;
 		break;
 	case 'o':
-		current_screen = REGION_PLAYER_DIALOG;
+		current_screen = REGION_CHARACTER_DIALOG;
 		return;
 		break;
 	case 'q':
@@ -785,7 +785,7 @@ void add_region_dialog()
 			char name[17] = { 0 };
 			wgetnstr(local_win, name, 16);
 			if (strlen(name) == 0) {
-				current_screen = PLAYERS_DIALOG;
+				current_screen = CHARACTERS_DIALOG;
 				return;
 			}
 			if (get_region_by_name(name) == NULL) {
@@ -805,7 +805,7 @@ void add_region_dialog()
 	return;
 }
 
-void region_to_player()
+void region_to_character()
 {
 	WINDOW *local_win = NULL;
 
@@ -818,9 +818,9 @@ void region_to_player()
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	region_t *region = selected_region;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	while (1) {
 		curs_set(FALSE);
@@ -831,22 +831,22 @@ void region_to_player()
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 		mvwprintw(local_win, 2, 2,
-			  "To give this region to a player, press Enter.\n");
+			  "To give this region to a hero, press Enter.\n");
 		mvwprintw(local_win, 3, 2,
 			  "To unset region owner, press 'd'.\n");
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
@@ -866,13 +866,13 @@ void region_to_player()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -881,13 +881,13 @@ void region_to_player()
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -896,7 +896,7 @@ void region_to_player()
 			}
 			break;
 		case 10:
-			change_region_owner(selected_player, region);
+			change_region_owner(selected_character, region);
 			current_screen = REGIONS_DIALOG;
 			return;
 			break;
@@ -945,7 +945,7 @@ void rename_region_dialog()
 	return;
 }
 
-void edit_player_dialog()
+void edit_character_dialog()
 {
 	WINDOW *local_win = NULL;
 
@@ -959,29 +959,29 @@ void edit_player_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	player_t *active_player = world->selected_player;
-	/* we can not get into this function if there's no selected_player, but still */
-	if (active_player == NULL) {
-		current_screen = PLAYERS_DIALOG;
+	character_t *active_character = world->selected_character;
+	/* we can not get into this function if there's no selected_character, but still */
+	if (active_character == NULL) {
+		current_screen = CHARACTERS_DIALOG;
 		return;
 	}
-	mvwprintw(local_win, 2, 2, "Name: %s", active_player->name);
-	mvwprintw(local_win, 3, 2, "Rank: %s", ranklist[active_player->rank]);
-	mvwprintw(local_win, 4, 2, "Money: %d", active_player->money);
+	mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
+	mvwprintw(local_win, 3, 2, "Rank: %s", ranklist[active_character->rank]);
+	mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
 	mvwprintw(local_win, 5, 2, "Birthdate: %s of year %i",
-		  months[active_player->birthdate.tm_mon],
-		  active_player->birthdate.tm_year);
+		  months[active_character->birthdate.tm_mon],
+		  active_character->birthdate.tm_year);
 	mvwprintw(local_win, 6, 2, "Deathdate: %s of year %i",
-		  months[active_player->deathdate.tm_mon],
-		  active_player->deathdate.tm_year);
+		  months[active_character->deathdate.tm_mon],
+		  active_character->deathdate.tm_year);
 	mvwprintw(local_win, 7, 2, "Heir: %s",
-		  (active_player->heir ==
-		   NULL ? "none" : active_player->heir->name));
+		  (active_character->heir ==
+		   NULL ? "none" : active_character->heir->name));
 	mvwprintw(local_win, 8, 2, "Lord: %s",
-		  (active_player->lord ==
-		   NULL ? "none" : active_player->lord->name));
+		  (active_character->lord ==
+		   NULL ? "none" : active_character->lord->name));
 
-	mvwprintw(local_win, 10, 2, "To rename player, press 'r'");
+	mvwprintw(local_win, 10, 2, "To rename a hero, press 'r'");
 	mvwprintw(local_win, 11, 2, "To change rank, press '+' or '-'");
 	mvwprintw(local_win, 12, 2, "To change money, press 'm'");
 	mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
@@ -994,17 +994,17 @@ void edit_player_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case '+':
-			if (active_player->rank < KING)
-				active_player->rank++;
+			if (active_character->rank < KING)
+				active_character->rank++;
 			return;
 			break;
 		case '-':
-			if (active_player->rank > KNIGHT)
-				active_player->rank--;
+			if (active_character->rank > KNIGHT)
+				active_character->rank--;
 			return;
 			break;
 		case 'b':
-			current_screen = PLAYER_DATES_DIALOG;
+			current_screen = CHARACTER_DATES_DIALOG;
 			return;
 			break;
 		case 'd':
@@ -1020,22 +1020,22 @@ void edit_player_dialog()
 			return;
 			break;
 		case 'm':
-			current_screen = PLAYER_MONEY_DIALOG;
+			current_screen = CHARACTER_MONEY_DIALOG;
 			return;
 			break;
 		case 'q':
-			current_screen = PLAYERS_DIALOG;
+			current_screen = CHARACTERS_DIALOG;
 			return;
 			break;
 		case 'r':
-			current_screen = RENAME_PLAYER_DIALOG;
+			current_screen = RENAME_CHARACTER_DIALOG;
 			return;
 			break;
 		}
 	}
 }
 
-void rename_player_dialog()
+void rename_character_dialog()
 {
 	WINDOW *local_win = NULL;
 
@@ -1049,23 +1049,23 @@ void rename_player_dialog()
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
-	player_t *player = world->selected_player;
+	character_t *character = world->selected_character;
 
 	while (1) {
 		wmove(local_win, 3, 0);
 		wclrtoeol(local_win);
 		mvwprintw(local_win, 2, 2,
 			  "Current name is '%s'. Type a new name, or press Enter to return.\n  New name: ",
-			  player->name);
+			  character->name);
 		char name[17] = { 0 };
 		wgetnstr(local_win, name, 16);
 		if (strlen(name) == 0) {
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 		}
-		if (get_player_by_name(name) == NULL) {
-			strcpy(player->name, name);
-			current_screen = EDIT_PLAYER_DIALOG;
+		if (get_character_by_name(name) == NULL) {
+			strcpy(character->name, name);
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 		}
 		mvwprintw(local_win, 23, 2,
@@ -1073,7 +1073,7 @@ void rename_player_dialog()
 	}
 }
 
-void change_player_money_dialog()
+void change_character_money_dialog()
 {
 	WINDOW *local_win = NULL;
 
@@ -1088,7 +1088,7 @@ void change_player_money_dialog()
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	int error = 0;
-	player_t *player = world->selected_player;
+	character_t *character = world->selected_character;
 	uint16_t money = 0;
 	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 
@@ -1097,10 +1097,10 @@ void change_player_money_dialog()
 		wclrtoeol(local_win);
 		mvwprintw(local_win, 2, 2,
 			  "Current amount is '%d'. Type new amount (0-%s), or press Enter to return.\n  New amount: ",
-			  get_money(player), MONEY_MAX);
+			  get_money(character), MONEY_MAX);
 		wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 		if (strlen(money_ch) == 0) {
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 		}
 		for (i = 0; i < strlen(money_ch); i++) {
@@ -1110,15 +1110,15 @@ void change_player_money_dialog()
 		}
 		if (!error) {
 			money = atoi(money_ch);
-			set_money(player, money);
-			current_screen = EDIT_PLAYER_DIALOG;
+			set_money(character, money);
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 		}
 		mvwprintw(local_win, 23, 2, "Error. Try another number.");
 	}
 }
 
-void change_player_dates_dialog()
+void change_character_dates_dialog()
 {
 	WINDOW *local_win = NULL;
 
@@ -1134,7 +1134,7 @@ void change_player_dates_dialog()
 
 	int error = 0;
 	int stage = 1;
-	player_t *player = world->selected_player;
+	character_t *character = world->selected_character;
 	uint16_t birthyear = 0;
 	char birthyear_ch[4] = { 0 };
 	unsigned char birthmon = 0;
@@ -1153,12 +1153,12 @@ void change_player_dates_dialog()
 			} else
 				mvwprintw(local_win, 2, 2,
 					  "Current birthdate is '%s of %d'.\n  Type new year (0-999) and month (1-12), or press Enter to skip.\n  Year: ",
-					  months[player->birthdate.tm_mon],
-					  player->birthdate.tm_year);
+					  months[character->birthdate.tm_mon],
+					  character->birthdate.tm_year);
 			wgetnstr(local_win, birthyear_ch, 3);
 			if (strlen(birthyear_ch) == 0) {
 				mvwprintw(local_win, 4, 8, "%d",
-					  player->birthdate.tm_year);
+					  character->birthdate.tm_year);
 				error = 0;
 				stage = 2;
 				break;
@@ -1171,7 +1171,7 @@ void change_player_dates_dialog()
 			}
 			if (!error) {
 				birthyear = atoi(birthyear_ch);
-				player->birthdate.tm_year = birthyear;
+				character->birthdate.tm_year = birthyear;
 				error = 0;
 				stage = 2;
 			}
@@ -1190,7 +1190,7 @@ void change_player_dates_dialog()
 			wgetnstr(local_win, birthmon_ch, 2);
 			if (strlen(birthmon_ch) == 0) {
 				mvwprintw(local_win, 4, 47, "%s",
-					  months[player->birthdate.tm_mon]);
+					  months[character->birthdate.tm_mon]);
 				error = 0;
 				stage = 3;
 				break;
@@ -1206,9 +1206,9 @@ void change_player_dates_dialog()
 				error = 1;
 				break;
 			}
-			player->birthdate.tm_mon = birthmon - 1;
+			character->birthdate.tm_mon = birthmon - 1;
 			mvwprintw(local_win, 4, 47, "%s",
-				  months[player->birthdate.tm_mon]);
+				  months[character->birthdate.tm_mon]);
 			error = 0;
 			stage = 3;
 			break;
@@ -1223,14 +1223,14 @@ void change_player_dates_dialog()
 			} else
 				mvwprintw(local_win, 6, 2,
 					  "Current deathdate is '%s of %d'.\n  Type new year (0-999) and month (1-12), or press Enter to skip.\n  Year: ",
-					  months[player->deathdate.tm_mon],
-					  player->deathdate.tm_year);
+					  months[character->deathdate.tm_mon],
+					  character->deathdate.tm_year);
 			uint16_t deathyear = 0;
 			char deathyear_ch[3] = { 0 };
 			wgetnstr(local_win, deathyear_ch, 3);
 			if (strlen(deathyear_ch) == 0) {
 				mvwprintw(local_win, 8, 8, "%d",
-					  player->deathdate.tm_year);
+					  character->deathdate.tm_year);
 				error = 0;
 				stage = 4;
 				break;
@@ -1243,7 +1243,7 @@ void change_player_dates_dialog()
 			}
 			if (!error) {
 				deathyear = atoi(deathyear_ch);
-				player->deathdate.tm_year = deathyear;
+				character->deathdate.tm_year = deathyear;
 				error = 0;
 				stage = 4;
 			}
@@ -1264,7 +1264,7 @@ void change_player_dates_dialog()
 			wgetnstr(local_win, deathmon_ch, 2);
 			if (strlen(deathmon_ch) == 0) {
 				mvwprintw(local_win, 8, 47, "%s",
-					  months[player->deathdate.tm_mon]);
+					  months[character->deathdate.tm_mon]);
 				error = 0;
 				stage = 5;
 				break;
@@ -1280,9 +1280,9 @@ void change_player_dates_dialog()
 				error = 1;
 				break;
 			}
-			player->deathdate.tm_mon = deathmon - 1;
+			character->deathdate.tm_mon = deathmon - 1;
 			mvwprintw(local_win, 8, 47, "%s",
-				  months[player->deathdate.tm_mon]);
+				  months[character->deathdate.tm_mon]);
 			error = 0;
 			stage = 5;
 			break;
@@ -1292,7 +1292,7 @@ void change_player_dates_dialog()
 			mvwprintw(local_win, 23, 2,
 				  "Changes saved. Press any key to continue.");
 			wgetch(local_win);
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 		}
 	}
@@ -1451,10 +1451,10 @@ void successor_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *heir = active_player->heir;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *heir = active_character->heir;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	while (1) {
 		curs_set(FALSE);
@@ -1464,28 +1464,28 @@ void successor_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		mvwprintw(local_win, 2, 2, "To pick a player, press Enter.\n");
+		mvwprintw(local_win, 2, 2, "To pick a hero, press Enter.\n");
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current == world->selected_player)
+				if (current == world->selected_character)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
 					 && current->id == heir->id)
@@ -1501,26 +1501,26 @@ void successor_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0)
-				playerlist_selector--;
+			if (characterlist_selector > 0)
+				characterlist_selector--;
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1)
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1)
+				characterlist_selector++;
 			break;
 		case 10:
-			heir = get_player_by_order(playerlist_selector);
-			if (heir->id != active_player->id)
-				set_successor(active_player, heir);
+			heir = get_character_by_order(characterlist_selector);
+			if (heir->id != active_character->id)
+				set_successor(active_character, heir);
 			else
-				heir = active_player->heir;
+				heir = active_character->heir;
 			break;
 		case 'd':
 			heir = NULL;
-			set_successor(active_player, heir);
+			set_successor(active_character, heir);
 			break;
 		case 'q':
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 			break;
 		}
@@ -1535,10 +1535,10 @@ void homage_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	int set_lord_ok = 0;
 	int unset_lord_ok = 0;
@@ -1554,18 +1554,18 @@ void homage_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (selected_player->id == active_player->id)
+		if (selected_character->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
-		else if (selected_player->lord != NULL
-			 && selected_player->lord->id == active_player->id)
+		else if (selected_character->lord != NULL
+			 && selected_character->lord->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
-		else if (selected_player->rank <= KNIGHT)
+		else if (selected_character->rank <= KNIGHT)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to a knight]");
-		else if (active_player->lord != NULL
-			 && active_player->lord == selected_player) {
+		else if (active_character->lord != NULL
+			 && active_character->lord == selected_character) {
 			mvwprintw(local_win, 2, 2, "To unset lord, press 'd'");
 			unset_lord_ok = 1;
 		} else {
@@ -1576,23 +1576,23 @@ void homage_dialog()
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == active_player->id)
+				if (current->id == active_character->id)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
@@ -1606,13 +1606,13 @@ void homage_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1621,13 +1621,13 @@ void homage_dialog()
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1637,20 +1637,20 @@ void homage_dialog()
 			break;
 		case 10:
 			if (set_lord_ok) {
-				active_player->lord = selected_player;
-				current_screen = EDIT_PLAYER_DIALOG;
+				active_character->lord = selected_character;
+				current_screen = EDIT_CHARACTER_DIALOG;
 				return;
 			}
 			break;
 		case 'd':
 			if (unset_lord_ok) {
-				active_player->lord = NULL;
-				current_screen = EDIT_PLAYER_DIALOG;
+				active_character->lord = NULL;
+				current_screen = EDIT_CHARACTER_DIALOG;
 				return;
 			}
 			break;
 		case 'q':
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 			break;
 		}
@@ -1665,10 +1665,10 @@ void diplomacy_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	unsigned char alliance_ok, neutral_ok, war_ok;
 
@@ -1686,12 +1686,12 @@ void diplomacy_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_player == selected_player) {
+		if (active_character == selected_character) {
 			dipstatus = NULL;
 			status = 3;	/* self */
 		} else {
 			dipstatus =
-			    get_dipstatus(active_player, selected_player);
+			    get_dipstatus(active_character, selected_character);
 			status = dipstatus->status;
 		}
 		switch (status) {
@@ -1726,30 +1726,30 @@ void diplomacy_dialog()
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
 		while (current != NULL) {
-			if (active_player != current) {
+			if (active_character != current) {
 				current_dipstatus =
-				    get_dipstatus(active_player, current);
+				    get_dipstatus(active_character, current);
 				current_status = current_dipstatus->status;
 			}
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s (", current->id,
 					  current->name);
-				if (current->id == active_player->id)
+				if (current->id == active_character->id)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
@@ -1765,13 +1765,13 @@ void diplomacy_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1780,13 +1780,13 @@ void diplomacy_dialog()
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1796,21 +1796,21 @@ void diplomacy_dialog()
 			break;
 		case 'a':	/* alliance */
 			if (alliance_ok)
-				set_diplomacy(active_player, selected_player,
+				set_diplomacy(active_character, selected_character,
 					      ALLIANCE);
 			break;
 		case 'n':	/* neutral */
 			if (neutral_ok)
-				set_diplomacy(active_player, selected_player,
+				set_diplomacy(active_character, selected_character,
 					      NEUTRAL);
 			break;
 		case 'q':	/* return */
-			current_screen = EDIT_PLAYER_DIALOG;
+			current_screen = EDIT_CHARACTER_DIALOG;
 			return;
 			break;
 		case 'w':	/* declare war */
 			if (war_ok)
-				set_diplomacy(active_player, selected_player,
+				set_diplomacy(active_character, selected_character,
 					      WAR);
 			break;
 		}
@@ -1835,13 +1835,13 @@ void help_dialog()
 	mvwprintw(local_win, 2, 2, "arrows -- move cursor or piece on the map");
 	mvwprintw(local_win, 3, 2, "escape -- return to main menu");
 	mvwprintw(local_win, 4, 2, "tab -- select next piece");
-	mvwprintw(local_win, 5, 2, "space -- select next player");
+	mvwprintw(local_win, 5, 2, "space -- select next hero");
 	mvwprintw(local_win, 6, 2, "'0-6' -- set moves left (roll dice)");
 	mvwprintw(local_win, 7, 2, "'>' -- select next region");
 	mvwprintw(local_win, 8, 2,
 		  "'c' -- add tile to selected region or remove from its current region");
-	mvwprintw(local_win, 9, 2, "'n' -- place a noble on current tile");
-	mvwprintw(local_win, 10, 2, "'p' -- show players dialog");
+	mvwprintw(local_win, 9, 2, "'h' -- show heroes dialog");
+	mvwprintw(local_win, 10, 2, "'n' -- place a noble on current tile");
 	mvwprintw(local_win, 11, 2, "'q' -- quit editor");
 	mvwprintw(local_win, 12, 2, "'r' -- show regions dialog");
 	mvwprintw(local_win, 13, 2, "'s' -- save game to file");
@@ -1904,13 +1904,13 @@ int main()
 				load_game();
 			map_editor();
 			break;
-		case PLAYERS_DIALOG:
+		case CHARACTERS_DIALOG:
 			clear();
-			players_dialog();
+			characters_dialog();
 			break;
-		case ADD_PLAYER_DIALOG:
+		case ADD_CHARACTER_DIALOG:
 			clear();
-			add_player_dialog();
+			add_character_dialog();
 			break;
 		case REGIONS_DIALOG:
 			regions_dialog();
@@ -1918,8 +1918,8 @@ int main()
 		case ADD_REGION_DIALOG:
 			add_region_dialog();
 			break;
-		case REGION_PLAYER_DIALOG:
-			region_to_player();
+		case REGION_CHARACTER_DIALOG:
+			region_to_character();
 			break;
 		case GAME_TIME_DIALOG:
 			edit_time_dialog();
@@ -1927,17 +1927,17 @@ int main()
 		case RENAME_REGION_DIALOG:
 			rename_region_dialog();
 			break;
-		case EDIT_PLAYER_DIALOG:
-			edit_player_dialog();
+		case EDIT_CHARACTER_DIALOG:
+			edit_character_dialog();
 			break;
-		case RENAME_PLAYER_DIALOG:
-			rename_player_dialog();
+		case RENAME_CHARACTER_DIALOG:
+			rename_character_dialog();
 			break;
-		case PLAYER_MONEY_DIALOG:
-			change_player_money_dialog();
+		case CHARACTER_MONEY_DIALOG:
+			change_character_money_dialog();
 			break;
-		case PLAYER_DATES_DIALOG:
-			change_player_dates_dialog();
+		case CHARACTER_DATES_DIALOG:
+			change_character_dates_dialog();
 			break;
 		case HEIR_DIALOG:
 			successor_dialog();

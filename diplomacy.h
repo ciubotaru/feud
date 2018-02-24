@@ -1,7 +1,7 @@
 #ifndef DIPLOMACY_H
 #define DIPLOMACY_H
 
-#include "player.h"
+#include "character.h"
 #include "piece.h"
 #include "map.h"
 
@@ -16,40 +16,40 @@ char *const dipofferlist[2];	/* peace offer and alliance offer */
 char *const dipstatuslist[3];
 
 typedef struct dipoffer {
-	player_t *from;
-	player_t *to;
+	character_t *from;
+	character_t *to;
 	unsigned char offer;
 } dipoffer_t;
 
 typedef struct dipstatus {
-	player_t *player1;
-	player_t *player2;
+	character_t *character1;
+	character_t *character2;
 	unsigned char status;
 	dipoffer_t *pending_offer;
 	struct dipstatus *next;
 } dipstatus_t;
 
-dipstatus_t *set_diplomacy(player_t * name1, player_t * name2,
+dipstatus_t *set_diplomacy(character_t * name1, character_t * name2,
 			   const unsigned int status);
 
-dipstatus_t *get_dipstatus(player_t * name1, player_t * name2);
+dipstatus_t *get_dipstatus(character_t * name1, character_t * name2);
 
-unsigned char get_diplomacy(player_t * name1, player_t * name2);
+unsigned char get_diplomacy(character_t * name1, character_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
 
-void homage(player_t * player, player_t * lord);
+void homage(character_t * character, character_t * lord);
 
-void promote_soldier(player_t * player, piece_t * piece, region_t * region,
+void promote_soldier(character_t * character, piece_t * piece, region_t * region,
 		     char *name);
 
-void promote_vassal(player_t * lord, player_t * vassal);
+void promote_vassal(character_t * lord, character_t * vassal);
 
-uint16_t count_vassals(player_t * player);
+uint16_t count_vassals(character_t * character);
 
-player_t *get_sovereign(player_t * player);
+character_t *get_sovereign(character_t * character);
 
-dipoffer_t *open_offer(player_t * from, player_t * to,
+dipoffer_t *open_offer(character_t * from, character_t * to,
 		       const unsigned int offer);
 
 void close_offer(dipoffer_t * offer, const unsigned int result);

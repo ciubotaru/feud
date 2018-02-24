@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "time.h"
-#include "player.h"
+#include "character.h"
 #include "world.h"
 
 const char *months[] = {

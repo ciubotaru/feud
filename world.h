@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 #include "file.h"
-#include "player.h"
+#include "character.h"
 #include "map.h"
 #include "dice.h"
 #include "piece.h"
@@ -13,9 +13,9 @@
 typedef struct {
 	grid_t *grid;
 
-	player_t *playerlist;
-	uint16_t next_player_id;
-	player_t *selected_player;
+	character_t *characterlist;
+	uint16_t next_character_id;
+	character_t *selected_character;
 
 	gametime_t current_time;
 

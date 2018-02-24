@@ -35,7 +35,7 @@ void draw_map()
 	int16_t h_offset = world->grid->cursor_height - 12;
 	int16_t w_offset = world->grid->cursor_width - 24;
 
-	player_t *player = world->selected_player;
+	character_t *character = world->selected_character;
 	tile_t *tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
@@ -43,7 +43,7 @@ void draw_map()
 
 	char tile_char = '.';
 	int color_nr = 0;
-	int player_age_mon = 0;
+	int character_age_mon = 0;
 	for (i = 24 + h_offset; i > h_offset; i--) {
 		for (j = w_offset; j < 48 + w_offset; j++) {
 /**
@@ -126,26 +126,26 @@ void draw_map()
 	mvwprintw(local_win, 0, 50, "Date: %s of year %d",
 		  months[world->current_time.tm_mon],
 		  world->current_time.tm_year);
-	mvwprintw(local_win, 1, 50, "Nr. players: %d", count_players());
+	mvwprintw(local_win, 1, 50, "Nr. players: %d", count_characters());
 	mvwprintw(local_win, 2, 50, "Map size: %dx%d", world->grid->height,
 		  world->grid->width);
 
-	/* player info */
-	mvwprintw(local_win, 4, 50, "Player: %s (%s)", player->name,
-		  ranklist[player->rank]);
-	player_age_mon =
-	    (world->current_time.tm_year - player->birthdate.tm_year) * 12 +
-	    (world->current_time.tm_mon - player->birthdate.tm_mon);
+	/* character info */
+	mvwprintw(local_win, 4, 50, "Hero: %s (%s)", character->name,
+		  ranklist[character->rank]);
+	character_age_mon =
+	    (world->current_time.tm_year - character->birthdate.tm_year) * 12 +
+	    (world->current_time.tm_mon - character->birthdate.tm_mon);
 	mvwprintw(local_win, 5, 50, "Age: %d year(s) %d month(s)",
-		  player_age_mon / 12, player_age_mon % 12);
-	mvwprintw(local_win, 6, 50, "Money: %d (#%d)", player->money,
-		  player->rank_money);
+		  character_age_mon / 12, character_age_mon % 12);
+	mvwprintw(local_win, 6, 50, "Money: %d (#%d)", character->money,
+		  character->rank_money);
 	mvwprintw(local_win, 7, 50, "Army: %d (#%d)",
-		  count_pieces_by_owner(player), player->rank_army);
+		  count_pieces_by_owner(character), character->rank_army);
 	mvwprintw(local_win, 8, 50, "Land: %d (#%d)",
-		  count_tiles_by_owner(player), player->rank_land);
+		  count_tiles_by_owner(character), character->rank_land);
 	mvwprintw(local_win, 9, 50, "Heir: %s",
-		  (player->heir != NULL ? player->heir->name : "none"));
+		  (character->heir != NULL ? character->heir->name : "none"));
 	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
@@ -167,8 +167,8 @@ void draw_map()
 	mvwprintw(local_win, 18, 50, "Owned by: %s",
 		  (piece == NULL ? " " : piece->owner->name));
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
-	if (piece != NULL && piece->owner->id != player->id) {
-		dipstatus_t *diplomacy = get_dipstatus(piece->owner, player);
+	if (piece != NULL && piece->owner->id != character->id) {
+		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
 		switch (diplomacy->status) {
 		case NEUTRAL:
 			wcolor_set(local_win, 12, NULL);
@@ -254,15 +254,15 @@ void draw_map()
 			}
 **/
 		world->moves_left = get_dice();
-		if (player->next != NULL)
-			player = player->next;
+		if (character->next != NULL)
+			character = character->next;
 		else {
 			/* start the next round and change game date */
-			player = world->playerlist;
+			character = world->characterlist;
 			increment_gametime();
 		}
-		world->selected_player = player;
-		piece = get_noble_by_owner(player);
+		world->selected_character = character;
+		piece = get_noble_by_owner(character);
 		world->grid->cursor_height = piece->height;
 		world->grid->cursor_width = piece->width;
 		current_mode = VIEW;
@@ -276,20 +276,20 @@ void draw_map()
 		break;
 	case 'c':		// claim a region
 		/* first, switch to noble */
-		piece = get_noble_by_owner(player);
+		piece = get_noble_by_owner(character);
 		/* set cursor to noble */
 		set_cursor(piece->height, piece->width);
-		result = claim_region(player, tile->region);
+		result = claim_region(character, tile->region);
 		switch (result) {
 		case 1:	/* claimed from nature */
 			add_to_cronicle("%s %s claimed %s.\n",
-					ranklist[player->rank], player->name,
+					ranklist[character->rank], character->name,
 					tile->region->name);
 			update_land_ranking();
 			break;
 		case 2:	/* conquered from enemy */
 			add_to_cronicle("%s %s conquered %s.\n",
-					ranklist[player->rank], player->name,
+					ranklist[character->rank], character->name,
 					tile->region->name);
 			check_death();
 			update_land_ranking();
@@ -315,7 +315,7 @@ void draw_map()
 		break;
 	case 'm':		// give money
 		/* check if we have money */
-		if (player->money > 0)
+		if (character->money > 0)
 			current_screen = GIVE_MONEY_DIALOG;
 		break;
 	case 'q':		// quit
@@ -330,8 +330,8 @@ void draw_map()
 		save_game();
 		break;
 	case 't':		// take money (when 6)
-		if (world->moves_left == 6 && get_money(player) < MONEY_MAX) {
-			set_money(player, get_money(player) + 1);
+		if (world->moves_left == 6 && get_money(character) < MONEY_MAX) {
+			set_money(character, get_money(character) + 1);
 			world->moves_left = 0;
 			update_money_ranking();
 		}
@@ -346,12 +346,12 @@ void draw_map()
 			**/
 		if (current_mode == VIEW && tile->region != NULL
 		    && tile->region->owner != NULL
-		    && tile->region->owner->id == world->selected_player->id
-		    && player->money >= COST_SOLDIER && tile->walkable
+		    && tile->region->owner->id == world->selected_character->id
+		    && character->money >= COST_SOLDIER && tile->walkable
 		    && piece == NULL) {
 			add_piece(1, world->grid->cursor_height,
-				  world->grid->cursor_width, player);
-			set_money(player, get_money(player) - COST_SOLDIER);
+				  world->grid->cursor_width, character);
+			set_money(character, get_money(character) - COST_SOLDIER);
 			update_money_ranking();
 			update_army_ranking();
 		}
@@ -360,7 +360,7 @@ void draw_map()
 		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
 		if (current_mode == 0) {
 			piece =
-			    get_noble_by_owner(world->selected_player);
+			    get_noble_by_owner(world->selected_character);
 			world->grid->cursor_height = piece->height;
 			world->grid->cursor_width = piece->width;
 		}
@@ -389,9 +389,9 @@ void regions_dialog()
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	region_t *current_region = world->regionlist;
-	player_t *active_player = world->selected_player;
+	character_t *active_character = world->selected_character;
 
-	int nr_regions = count_regions_by_owner(active_player);
+	int nr_regions = count_regions_by_owner(active_character);
 
 	if (nr_regions > 1)
 		wprintw(local_win,
@@ -404,18 +404,18 @@ void regions_dialog()
 	wprintw(local_win, "  To return to map, press 'q'.\n\n");
 
 	/**
-	 * if selected region is not owned by selected player,
-	 * set to first region owned by active player
+	 * if selected region is not owned by selected character,
+	 * set to first region owned by active character
 	**/
 	if (selected_region == NULL
 	    || selected_region->owner == NULL
 	    || selected_region->owner !=
-	    world->selected_player) {
+	    world->selected_character) {
 		current_region = world->regionlist;
 		while (current_region != NULL) {
 			if (current_region->owner != NULL
 			    && current_region->owner ==
-			    world->selected_player) {
+			    world->selected_character) {
 				selected_region = current_region;
 				break;
 			}
@@ -429,7 +429,7 @@ void regions_dialog()
 	int regionlist_selector = 0;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner == world->selected_player) {
+		    && current_region->owner == world->selected_character) {
 			if (current_region == selected_region)
 				break;
 			else
@@ -442,7 +442,7 @@ void regions_dialog()
 	section = regionlist_selector / 10;
 	while (current_region != NULL) {
 		if (current_region->owner == NULL
-		    || current_region->owner != world->selected_player) {
+		    || current_region->owner != world->selected_character) {
 			current_region = current_region->next;
 			;
 			continue;
@@ -473,7 +473,7 @@ void regions_dialog()
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
 				    && current_region->owner ==
-				    world->selected_player) {
+				    world->selected_character) {
 					if (counter == regionlist_selector) {
 						selected_region = current_region;
 						break;
@@ -492,7 +492,7 @@ void regions_dialog()
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
 				    && current_region->owner ==
-				    world->selected_player) {
+				    world->selected_character) {
 					if (counter == regionlist_selector) {
 						selected_region = current_region;
 						break;
@@ -506,7 +506,7 @@ void regions_dialog()
 	case 'e':
 		current_screen = EDIT_REGION_DIALOG;
 		break;
-	case 'g':		/* give to another player */
+	case 'g':		/* give to another character */
 		current_screen = GIVE_REGION_DIALOG;
 		break;
 	case 'q':		/* return to map */
@@ -578,9 +578,9 @@ void give_region_dialog()
 	noecho();
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector = get_player_order(selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector = get_character_order(selected_character);
 	region_t *region = selected_region;
 	int give_region_ok = 0;
 
@@ -591,7 +591,7 @@ void give_region_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s", screens[current_screen]);
 
-		if (selected_player == active_player) {
+		if (selected_character == active_character) {
 			mvwprintw(local_win, 2, 2,
 				  "[You can not give region to yourself]");
 			give_region_ok = 0;
@@ -604,23 +604,23 @@ void give_region_dialog()
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current == active_player)
+				if (current == active_character)
 					wprintw(local_win, " (you)");
 				wattron(local_win, COLOR_PAIR(1));
 			}
@@ -631,28 +631,28 @@ void give_region_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
-				selected_player =
-				    get_player_by_order(playerlist_selector);
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
+				selected_character =
+				    get_character_by_order(characterlist_selector);
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
-				selected_player =
-				    get_player_by_order(playerlist_selector);
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
+				selected_character =
+				    get_character_by_order(characterlist_selector);
 			}
 			break;
 		case 10:
 			if (give_region_ok) {
-				change_region_owner(selected_player, region);
+				change_region_owner(selected_character, region);
 				add_to_cronicle("%s %s granted %s to %s %s.\n",
-						ranklist[active_player->rank],
-						active_player->name,
+						ranklist[active_character->rank],
+						active_character->name,
 						region->name,
-						ranklist[selected_player->rank],
-						selected_player->name);
+						ranklist[selected_character->rank],
+						selected_character->name);
 				update_land_ranking();
 				current_screen = REGIONS_DIALOG;
 				return;
@@ -677,9 +677,9 @@ void give_money_dialog()
 	int i;
 	int stage = 0;
 	int error = 0;
-	player_t *active_player = world->selected_player;
-	player_t *receiving_player = NULL;
-	int playerlist_selector;
+	character_t *active_character = world->selected_character;
+	character_t *receiving_character = NULL;
+	int characterlist_selector;
 	uint16_t money = 0;
 	char money_ch[MONEY_MAX_DIGITS + 1] = { 0 };
 
@@ -698,11 +698,11 @@ void give_money_dialog()
 			if (error == 1)
 				wprintw(local_win,
 					"  Error. Try another number (1-%d):\n\n  ",
-					active_player->money);
+					active_character->money);
 			else
 				wprintw(local_win,
 					"  Type the amount to be given (1-%d), or press Enter to dismiss:\n\n  ",
-					active_player->money);
+					active_character->money);
 			wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 			if (strlen(money_ch) == 0) {
 				current_screen = MAIN_SCREEN;
@@ -716,7 +716,7 @@ void give_money_dialog()
 				}
 			}
 			money = atoi(money_ch);
-			if (money < 1 || money > active_player->money) {
+			if (money < 1 || money > active_character->money) {
 				error = 1;
 				break;
 			}
@@ -724,8 +724,8 @@ void give_money_dialog()
 			error = 0;
 			break;
 		case 1:
-			playerlist_selector =
-			    get_player_order(world->selected_player);
+			characterlist_selector =
+			    get_character_order(world->selected_character);
 			while (stage == 1) {
 				curs_set(FALSE);
 				noecho();
@@ -745,17 +745,17 @@ void give_money_dialog()
 				wprintw(local_win,
 					"  To return, press 'esc'.\n\n");
 
-				int nr_players = count_players();
+				int nr_characters = count_characters();
 				int counter = 0;
 				int section = 0;
-				player_t *current = world->playerlist;
+				character_t *current = world->characterlist;
 				while (current != NULL) {
-					section = playerlist_selector / 10;
+					section = characterlist_selector / 10;
 					if (counter >= section * 10
 					    && counter < section * 10 + 10
-					    && counter < nr_players) {
+					    && counter < nr_characters) {
 						if (counter ==
-						    playerlist_selector) {
+						    characterlist_selector) {
 							wattron(local_win,
 								COLOR_PAIR(26));
 						} else
@@ -766,7 +766,7 @@ void give_money_dialog()
 							  "%3d. %s",
 							  current->id,
 							  current->name);
-						if (current == world->selected_player)
+						if (current == world->selected_character)
 							wprintw(local_win,
 								" (you)\n");
 						else
@@ -782,18 +782,18 @@ void give_money_dialog()
 				int user_move = get_input(local_win);
 				switch (user_move) {
 				case 1065:
-					if (playerlist_selector > 0)
-						playerlist_selector--;
+					if (characterlist_selector > 0)
+						characterlist_selector--;
 					break;
 				case 1066:
-					if (playerlist_selector <
-					    nr_players - 1)
-						playerlist_selector++;
+					if (characterlist_selector <
+					    nr_characters - 1)
+						characterlist_selector++;
 					break;
 				case 10:
-					receiving_player =
-					    get_player_by_order
-					    (playerlist_selector);
+					receiving_character =
+					    get_character_by_order
+					    (characterlist_selector);
 					error = 0;
 					stage = 2;
 					break;
@@ -805,15 +805,15 @@ void give_money_dialog()
 			}
 			break;
 		case 2:
-			if (get_money(receiving_player) + money > MONEY_MAX) {
-				set_money(active_player, 
-					  get_money(active_player) + get_money(receiving_player) - MONEY_MAX);
-				set_money(receiving_player, MONEY_MAX);
+			if (get_money(receiving_character) + money > MONEY_MAX) {
+				set_money(active_character, 
+					  get_money(active_character) + get_money(receiving_character) - MONEY_MAX);
+				set_money(receiving_character, MONEY_MAX);
 			} else {
-				set_money(active_player, 
-					  get_money(active_player) - money);
-				set_money(receiving_player,
-					  get_money(receiving_player) + money);
+				set_money(active_character, 
+					  get_money(active_character) - money);
+				set_money(receiving_character,
+					  get_money(receiving_character) + money);
 			}
 			update_money_ranking();
 			current_screen = MAIN_SCREEN;
@@ -834,7 +834,7 @@ void info_dialog()
 
 	int i;
 	int section = 0;
-	int nr_players = count_players();
+	int nr_characters = count_characters();
 
 	while (1) {
 		wclear(local_win);
@@ -845,17 +845,17 @@ void info_dialog()
 		wprintw(local_win, "  To return, press 'q'.\n\n");
 
 		mvwprintw(local_win, 6, 2, " Nr.");
-		mvwprintw(local_win, 6, 7, "Player Name");
+		mvwprintw(local_win, 6, 7, "Hero's Name");
 		mvwprintw(local_win, 6, 44, "Money");
 		mvwprintw(local_win, 6, 54, "Army");
 		mvwprintw(local_win, 6, 64, "Land");
 
 		int counter = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
+			    && counter < nr_characters) {
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
@@ -882,7 +882,7 @@ void info_dialog()
 				section--;
 			break;
 		case 1066:
-			if (section < (nr_players - 1) / 10)
+			if (section < (nr_characters - 1) / 10)
 				section++;
 			break;
 		case 'q':
@@ -903,10 +903,10 @@ void successor_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *heir = active_player->heir;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *heir = active_character->heir;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	while (1) {
 		curs_set(FALSE);
@@ -921,23 +921,23 @@ void successor_dialog()
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current == world->selected_player)
+				if (current == world->selected_character)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
 					 && current->id == heir->id)
@@ -953,23 +953,23 @@ void successor_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0)
-				playerlist_selector--;
+			if (characterlist_selector > 0)
+				characterlist_selector--;
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1)
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1)
+				characterlist_selector++;
 			break;
 		case 10:
-			heir = get_player_by_order(playerlist_selector);
-			if (heir->id != active_player->id)
-				set_successor(active_player, heir);
+			heir = get_character_by_order(characterlist_selector);
+			if (heir->id != active_character->id)
+				set_successor(active_character, heir);
 			else
-				heir = active_player->heir;
+				heir = active_character->heir;
 			break;
 		case 'd':
 			heir = NULL;
-			set_successor(active_player, heir);
+			set_successor(active_character, heir);
 			break;
 		case 'q':
 			current_screen = MAIN_SCREEN;
@@ -987,15 +987,15 @@ void feudal_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-//      piece_t *active_player_noble = get_noble_by_owner(active_player);
-	player_t *lord = active_player->lord;
+	character_t *active_character = world->selected_character;
+//      piece_t *active_character_noble = get_noble_by_owner(active_character);
+	character_t *lord = active_character->lord;
 	tile_t *current_tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
 	piece_t *current_piece = current_tile->piece;
-	player_t *selected_player = NULL;
-	int playerlist_selector = 0;
+	character_t *selected_character = NULL;
+	int characterlist_selector = 0;
 	int create_vassal_ok = 0;
 	int promote_vassal_ok = 0;
 
@@ -1009,7 +1009,7 @@ void feudal_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		int nr_vassals = count_vassals(active_player);
+		int nr_vassals = count_vassals(active_character);
 
 		if (lord != NULL)
 			mvwprintw(local_win, 2, 2, "Your lord is %s.",
@@ -1026,11 +1026,11 @@ void feudal_dialog()
 		if (nr_vassals == 0)
 			mvwprintw(local_win, 5, 2,
 				  "[You have no vassals to promote]");
-		else if (get_money(active_player) < COST_SOLDIER)
+		else if (get_money(active_character) < COST_SOLDIER)
 			mvwprintw(local_win, 5, 2,
 				  "[Can't promote a vassal. Not enough money.]");
-		else if (selected_player != NULL
-			 && active_player->rank - selected_player->rank <= 1)
+		else if (selected_character != NULL
+			 && active_character->rank - selected_character->rank <= 1)
 			mvwprintw(local_win, 5, 2,
 				  "[Can't promote a vassal. He is one rank below you.]");
 		else {
@@ -1038,19 +1038,19 @@ void feudal_dialog()
 				  "To promote a vassal, press 'p'.");
 			promote_vassal_ok = 1;
 		}
-		if (active_player->rank <= KNIGHT)
+		if (active_character->rank <= KNIGHT)
 			mvwprintw(local_win, 6, 2,
 				  "[Can't create vassal. Your rank is too low.]");
-		else if (count_regions_by_owner(active_player) < 2)
+		else if (count_regions_by_owner(active_character) < 2)
 			mvwprintw(local_win, 6, 2,
 				  "[Can't create vassal. Too few regions.]");
-		else if (get_money(active_player) < COST_SOLDIER)
+		else if (get_money(active_character) < COST_SOLDIER)
 			mvwprintw(local_win, 6, 2,
 				  "[Can't create vassal. Not enough money.]");
 		else if (current_piece == NULL)
 			mvwprintw(local_win, 6, 2,
 				  "[Can't create vassal. No piece selected.]");
-		else if (current_piece->owner->id != active_player->id)
+		else if (current_piece->owner->id != active_character->id)
 			mvwprintw(local_win, 6, 2,
 				  "[Can't create vassal. Selected piece not yours.]");
 		else if (current_piece->type != 1)
@@ -1065,19 +1065,19 @@ void feudal_dialog()
 
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
 			    && counter < nr_vassals) {
-				if (counter == playerlist_selector) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
-					selected_player = current;
+					selected_character = current;
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				if (current->lord != NULL
-				    && current->lord->id == active_player->id) {
+				    && current->lord->id == active_character->id) {
 					mvwprintw(local_win, 9 + counter % 10,
 						  2, "%3d. %s (%s)",
 						  current->id, current->name,
@@ -1092,12 +1092,12 @@ void feudal_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0)
-				playerlist_selector--;
+			if (characterlist_selector > 0)
+				characterlist_selector--;
 			break;
 		case 1066:
-			if (playerlist_selector < nr_vassals - 1)
-				playerlist_selector++;
+			if (characterlist_selector < nr_vassals - 1)
+				characterlist_selector++;
 			break;
 		case 'h':
 			if (lord == NULL)
@@ -1105,30 +1105,30 @@ void feudal_dialog()
 			return;
 			break;
 		case 'f':
-			if (selected_player != NULL) {
-				selected_player->lord = NULL;
+			if (selected_character != NULL) {
+				selected_character->lord = NULL;
 				add_to_cronicle
 				    ("%s %s became a sovereign of his lands.\n",
-				     ranklist[selected_player->rank],
-				     selected_player->name);
-				playerlist_selector = 0;
-				selected_player = NULL;
+				     ranklist[selected_character->rank],
+				     selected_character->name);
+				characterlist_selector = 0;
+				selected_character = NULL;
 			}
 			break;
 		case 'p':
 			if (promote_vassal_ok) {
-				set_money(active_player,
-					  get_money(active_player) -
+				set_money(active_character,
+					  get_money(active_character) -
 					  COST_SOLDIER);
-				set_player_rank(selected_player,
-						get_player_rank(selected_player)
+				set_character_rank(selected_character,
+						get_character_rank(selected_character)
 						+ 1);
 				add_to_cronicle
 				    ("%s %s bestowed the %s title upon their vassal %s.\n",
-				     ranklist[active_player->rank],
-				     active_player->name,
-				     ranklist[selected_player->rank],
-				     selected_player->name);
+				     ranklist[active_character->rank],
+				     active_character->name,
+				     ranklist[selected_character->rank],
+				     selected_character->name);
 			}
 			break;
 		case 'q':
@@ -1154,10 +1154,10 @@ void homage_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	int pay_homage_ok = 0;
 
@@ -1171,14 +1171,14 @@ void homage_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (selected_player->id == active_player->id)
+		if (selected_character->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
-		else if (selected_player->lord != NULL
-			 && selected_player->lord->id == active_player->id)
+		else if (selected_character->lord != NULL
+			 && selected_character->lord->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
-		else if (selected_player->rank <= KNIGHT)
+		else if (selected_character->rank <= KNIGHT)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to a knight]\n");
 		else {
@@ -1189,23 +1189,23 @@ void homage_dialog()
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		while (current != NULL) {
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == active_player->id)
+				if (current->id == active_character->id)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
@@ -1219,13 +1219,13 @@ void homage_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1234,13 +1234,13 @@ void homage_dialog()
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1250,7 +1250,7 @@ void homage_dialog()
 			break;
 		case 10:
 			if (pay_homage_ok) {
-				homage(active_player, selected_player);
+				homage(active_character, selected_character);
 				current_screen = FEUDAL_DIALOG;
 				return;
 			}
@@ -1265,15 +1265,15 @@ void homage_dialog()
 
 void promote_soldier_dialog()
 {
-	/* replace currently selected piece with a new player */
+	/* replace currently selected piece with a new character */
 	WINDOW *local_win = NULL;
 
 	local_win = newwin(25, 80, 0, 0);
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *new_vassal = NULL;
+	character_t *active_character = world->selected_character;
+	character_t *new_vassal = NULL;
 	tile_t *current_tile =
 	    world->grid->tiles[world->grid->cursor_height][world->grid->
 							   cursor_width];
@@ -1283,7 +1283,7 @@ void promote_soldier_dialog()
 	region_t *current_region = world->regionlist;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner == world->selected_player) {
+		    && current_region->owner == world->selected_character) {
 			selected_region = current_region;
 			break;
 		}
@@ -1293,7 +1293,7 @@ void promote_soldier_dialog()
 	int stage = 0;
 	int error = 0;
 	char name[17] = { 0 };
-	int nr_regions = count_regions_by_owner(active_player);
+	int nr_regions = count_regions_by_owner(active_character);
 	while (1) {
 		switch (stage) {
 		case 0:
@@ -1310,7 +1310,7 @@ void promote_soldier_dialog()
 				current_screen = FEUDAL_DIALOG;
 				return;
 			}
-			if (get_player_by_name(name) == NULL) {
+			if (get_character_by_name(name) == NULL) {
 				stage = 1;
 				error = 0;
 			} else
@@ -1339,7 +1339,7 @@ void promote_soldier_dialog()
 			while (current_region != NULL) {
 				if (current_region->owner != NULL
 				    && current_region->owner ==
-				    world->selected_player) {
+				    world->selected_character) {
 					if (current_region == selected_region)
 						break;
 					else
@@ -1354,7 +1354,7 @@ void promote_soldier_dialog()
 			while (current_region != NULL) {
 				if (current_region->owner == NULL
 				    || current_region->owner !=
-				    world->selected_player) {
+				    world->selected_character) {
 					current_region = current_region->next;
 					;
 					continue;
@@ -1391,7 +1391,7 @@ void promote_soldier_dialog()
 						if (current_region->owner !=
 						    NULL
 						    && current_region->owner ==
-						    world->selected_player) {
+						    world->selected_character) {
 							if (counter ==
 							    regionlist_selector)
 							{
@@ -1414,7 +1414,7 @@ void promote_soldier_dialog()
 						if (current_region->owner !=
 						    NULL
 						    && current_region->owner ==
-						    world->selected_player) {
+						    world->selected_character) {
 							if (counter ==
 							    regionlist_selector)
 							{
@@ -1433,17 +1433,17 @@ void promote_soldier_dialog()
 				return;
 				break;
 			case 10:
-				new_vassal = add_player(name);
+				new_vassal = add_character(name);
 				current_piece->type = NOBLE;
-				set_player_rank(new_vassal, KNIGHT);
+				set_character_rank(new_vassal, KNIGHT);
 				current_piece->owner = new_vassal;
-				homage(new_vassal, active_player);
+				homage(new_vassal, active_character);
 				current_region = selected_region;
 				change_region_owner(new_vassal, current_region);
 				add_to_cronicle
 				    ("%s %s granted %s to their new vassal, %s %s.\n",
-				     ranklist[active_player->rank],
-				     active_player->name, current_region->name,
+				     ranklist[active_character->rank],
+				     active_character->name, current_region->name,
 				     ranklist[new_vassal->rank],
 				     new_vassal->name);
 				current_screen = FEUDAL_DIALOG;
@@ -1464,10 +1464,10 @@ void diplomacy_dialog()
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	player_t *active_player = world->selected_player;
-	player_t *selected_player = world->selected_player;
-	int playerlist_selector =
-	    get_player_order(world->selected_player);
+	character_t *active_character = world->selected_character;
+	character_t *selected_character = world->selected_character;
+	int characterlist_selector =
+	    get_character_order(world->selected_character);
 
 	unsigned char offer_alliance_ok, quit_alliance_ok, offer_peace_ok,
 	    declare_war_ok, accept_offer_ok, reject_offer_ok, retract_offer_ok;
@@ -1491,20 +1491,20 @@ void diplomacy_dialog()
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_player == selected_player) {
+		if (active_character == selected_character) {
 			dipstatus = NULL;
 			status = 3;	/* self */
 			dipoffer = NULL;
 		} else {
 			dipstatus =
-			    get_dipstatus(active_player, selected_player);
+			    get_dipstatus(active_character, selected_character);
 			status = dipstatus->status;
 			dipoffer = dipstatus->pending_offer;
 		}
 		switch (status) {
 		case NEUTRAL:
 			if (dipoffer != NULL) {
-				if (dipoffer->from == selected_player) {
+				if (dipoffer->from == selected_character) {
 					/* accept or reject */
 					mvwprintw(local_win, 2, 2,
 						  "To accept alliance offer, press 'y'");
@@ -1530,10 +1530,10 @@ void diplomacy_dialog()
 			}
 			break;
 		case ALLIANCE:
-			if ((active_player->lord != NULL
-			     && active_player->lord == selected_player)
-			    || (selected_player->lord != NULL
-				&& selected_player->lord == active_player))
+			if ((active_character->lord != NULL
+			     && active_character->lord == selected_character)
+			    || (selected_character->lord != NULL
+				&& selected_character->lord == active_character))
 				mvwprintw(local_win, 2, 2,
 					  "[You can not break alliance with your lord or vassal]");
 			else {
@@ -1548,7 +1548,7 @@ void diplomacy_dialog()
 			mvwprintw(local_win, 2, 2,
 				  "[You can not make alliance, first negotiate peace]");
 			if (dipoffer != NULL) {
-				if (dipoffer->from == selected_player) {
+				if (dipoffer->from == selected_character) {
 					/* accept or reject */
 					mvwprintw(local_win, 3, 2,
 						  "To accept peace offer, press 'y'");
@@ -1572,33 +1572,33 @@ void diplomacy_dialog()
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_players = count_players();
+		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		player_t *current = world->playerlist;
+		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
 		dipoffer_t *current_dipoffer = NULL;
 		while (current != NULL) {
-			if (active_player != current) {
+			if (active_character != current) {
 				current_dipstatus =
-				    get_dipstatus(active_player, current);
+				    get_dipstatus(active_character, current);
 				current_status = current_dipstatus->status;
 				current_dipoffer =
 				    current_dipstatus->pending_offer;
 			}
-			section = playerlist_selector / 10;
+			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
-			    && counter < nr_players) {
-				if (counter == playerlist_selector) {
+			    && counter < nr_characters) {
+				if (counter == characterlist_selector) {
 					wattron(local_win, COLOR_PAIR(26));
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s (", current->id,
 					  current->name);
-				if (current->id == active_player->id)
+				if (current->id == active_character->id)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
@@ -1611,7 +1611,7 @@ void diplomacy_dialog()
 							 offer],
 							(current_dipoffer->
 							 from ==
-							 active_player ? "sent"
+							 active_character ? "sent"
 							 : "received"));
 				}
 				wprintw(local_win, ")");
@@ -1624,13 +1624,13 @@ void diplomacy_dialog()
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (playerlist_selector > 0) {
-				playerlist_selector--;
+			if (characterlist_selector > 0) {
+				characterlist_selector--;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1639,13 +1639,13 @@ void diplomacy_dialog()
 			}
 			break;
 		case 1066:
-			if (playerlist_selector < nr_players - 1) {
-				playerlist_selector++;
+			if (characterlist_selector < nr_characters - 1) {
+				characterlist_selector++;
 				counter = 0;
-				current = world->playerlist;
+				current = world->characterlist;
 				while (current != NULL) {
-					if (counter == playerlist_selector) {
-						selected_player = current;
+					if (counter == characterlist_selector) {
+						selected_character = current;
 						break;
 					}
 					counter++;
@@ -1655,11 +1655,11 @@ void diplomacy_dialog()
 			break;
 		case 'a':	/* offer alliance */
 			if (offer_alliance_ok) {
-				open_offer(active_player, selected_player,
+				open_offer(active_character, selected_character,
 					   ALLIANCE);
 				dipstatus =
-				    get_dipstatus(active_player,
-						  selected_player);
+				    get_dipstatus(active_character,
+						  selected_character);
 			}
 			break;
 		case 'n':	/* reject offer */
@@ -1668,11 +1668,11 @@ void diplomacy_dialog()
 			break;
 		case 'p':	/* offer peace */
 			if (offer_peace_ok) {
-				open_offer(active_player, selected_player,
+				open_offer(active_character, selected_character,
 					   NEUTRAL);
 				dipstatus =
-				    get_dipstatus(active_player,
-						  selected_player);
+				    get_dipstatus(active_character,
+						  selected_character);
 			}
 			break;
 		case 'q':	/* return */
@@ -1685,26 +1685,26 @@ void diplomacy_dialog()
 			break;
 		case 'w':	/* declare war */
 			if (declare_war_ok) {
-				set_diplomacy(active_player, selected_player,
+				set_diplomacy(active_character, selected_character,
 					      WAR);
 				add_to_cronicle
 				    ("%s %s declared war on %s %s.\n",
-				     ranklist[active_player->rank],
-				     active_player->name,
-				     ranklist[selected_player->rank],
-				     selected_player->name);
+				     ranklist[active_character->rank],
+				     active_character->name,
+				     ranklist[selected_character->rank],
+				     selected_character->name);
 			}
 			break;
 		case 'x':	/* quit alliance */
 			if (quit_alliance_ok) {
-				set_diplomacy(active_player, selected_player,
+				set_diplomacy(active_character, selected_character,
 					      NEUTRAL);
 				add_to_cronicle
 				    ("%s %s broke their alliance with %s %s.\n",
-				     ranklist[active_player->rank],
-				     active_player->name,
-				     ranklist[selected_player->rank],
-				     selected_player->name);
+				     ranklist[active_character->rank],
+				     active_character->name,
+				     ranklist[selected_character->rank],
+				     selected_character->name);
 			}
 			break;
 		case 'y':	/* accept offer */
@@ -1713,17 +1713,17 @@ void diplomacy_dialog()
 				if (dipstatus->status == ALLIANCE)
 					add_to_cronicle
 					    ("%s %s and %s %s concluded an alliance.\n",
-					     ranklist[active_player->rank],
-					     active_player->name,
-					     ranklist[selected_player->rank],
-					     selected_player->name);
+					     ranklist[active_character->rank],
+					     active_character->name,
+					     ranklist[selected_character->rank],
+					     selected_character->name);
 				else
 					add_to_cronicle
 					    ("%s %s and %s %s signed a peace treaty.\n",
-					     ranklist[active_player->rank],
-					     active_player->name,
-					     ranklist[selected_player->rank],
-					     selected_player->name);
+					     ranklist[active_character->rank],
+					     active_character->name,
+					     ranklist[selected_character->rank],
+					     selected_character->name);
 //                                      dipstatus = NULL; /* not needed ? */
 			}
 			break;
@@ -1795,11 +1795,11 @@ void self_declaration_dialog() {
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
 	unsigned char eligible = 0;
-	player_t *active_player = world->selected_player;
-	uint16_t nr_regions = count_regions_by_owner(active_player);
-	player_t *lord = active_player->lord;
-	uint16_t money = get_money(active_player);
-	unsigned char rank = get_player_rank(active_player);
+	character_t *active_character = world->selected_character;
+	uint16_t nr_regions = count_regions_by_owner(active_character);
+	character_t *lord = active_character->lord;
+	uint16_t money = get_money(active_character);
+	unsigned char rank = get_character_rank(active_character);
 	if (rank == KING) {
 		mvwprintw(local_win, 2, 2, "You are already a king!");
 	}
@@ -1820,10 +1820,10 @@ void self_declaration_dialog() {
 	if (eligible && user_move == 'y') {
 		add_to_cronicle
 				    ("%s %s declared themselves a king.\n",
-				     ranklist[active_player->rank],
-				     active_player->name);
-		set_player_rank(active_player, KING);
-		set_money(active_player, money - KING + rank);
+				     ranklist[active_character->rank],
+				     active_character->name);
+		set_character_rank(active_character, KING);
+		set_money(active_character, money - KING + rank);
 	}
 	current_screen = MAIN_SCREEN;
 }

@@ -28,7 +28,7 @@ piece_t *create_piecelist()
 
 static void fill_piece_details(piece_t * piece, const unsigned char type,
 			       const uint16_t height, const uint16_t width,
-			       player_t * owner)
+			       character_t * owner)
 {
 	piece->id = world->next_piece_id;
 	piece->type = type;
@@ -41,7 +41,7 @@ static void fill_piece_details(piece_t * piece, const unsigned char type,
 }
 
 piece_t *add_piece(const unsigned char type, const uint16_t height,
-		   const uint16_t width, player_t * owner)
+		   const uint16_t width, character_t * owner)
 {
 	if (owner == NULL)
 		return NULL;	/* bad owner */
@@ -76,7 +76,7 @@ piece_t *add_piece(const unsigned char type, const uint16_t height,
 	return current->next;
 }
 
-piece_t *get_noble_by_owner(player_t * owner)
+piece_t *get_noble_by_owner(character_t * owner)
 {
 	if (owner == NULL)
 		return NULL;
@@ -92,16 +92,16 @@ piece_t *get_noble_by_owner(player_t * owner)
 
 piece_t *next_piece(piece_t * start_piece)
 {
-	player_t *active_player = start_piece->owner;
+	character_t *active_character = start_piece->owner;
 	piece_t *current = start_piece;
 	while (current != NULL) {
 		if (current->next != NULL)
 			current = current->next;
 		else {
 			current = world->piecelist;
-//                      increment_gametime(); /* cycling around pieces of same player should not change time */
+//                      increment_gametime(); /* cycling around pieces of same character should not change time */
 		}
-		if (current->owner->id == active_player->id)
+		if (current->owner->id == active_character->id)
 			return current;
 	}
 	return NULL;
@@ -109,7 +109,7 @@ piece_t *next_piece(piece_t * start_piece)
 
 void remove_piece(piece_t * piece)
 {
-	/* TODO if it was a noble, remove all player's soldiers, land ownership, diplomacy etc. AND the player himself */
+	/* TODO if it was a noble, remove all character's soldiers, land ownership, diplomacy etc. AND the character himself */
 
 	if (world->grid == NULL || piece == NULL || world->piecelist == NULL)
 		return;
@@ -146,7 +146,7 @@ uint16_t count_pieces()
 	return count;
 }
 
-uint16_t count_pieces_by_owner(player_t * owner)
+uint16_t count_pieces_by_owner(character_t * owner)
 {
 	uint16_t count = 0;
 	piece_t *current = world->piecelist;
@@ -160,28 +160,28 @@ uint16_t count_pieces_by_owner(player_t * owner)
 
 void update_army_ranking()
 {
-	player_t *player = NULL;
-	player_t *player2 = NULL;
+	character_t *character = NULL;
+	character_t *character2 = NULL;
 
 	/* reset ranks to 1 */
-	player = world->playerlist;
-	while (player != NULL) {
-		player->rank_army = 1;
-		player = player->next;
+	character = world->characterlist;
+	while (character != NULL) {
+		character->rank_army = 1;
+		character = character->next;
 	}
 	/* rewind to start */
-	player = world->playerlist;
+	character = world->characterlist;
 
-	while (player != NULL) {
-		player2 = world->playerlist;
-		while (player2->id != player->id) {
-			if (count_pieces_by_owner(player) <=
-			    count_pieces_by_owner(player2))
-				player->rank_army++;
+	while (character != NULL) {
+		character2 = world->characterlist;
+		while (character2->id != character->id) {
+			if (count_pieces_by_owner(character) <=
+			    count_pieces_by_owner(character2))
+				character->rank_army++;
 			else
-				player2->rank_army++;
-			player2 = player2->next;
+				character2->rank_army++;
+			character2 = character2->next;
 		}
-		player = player->next;
+		character = character->next;
 	}
 }

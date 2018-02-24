@@ -11,10 +11,10 @@ ai_connection_t *create_connectionlist()
 	return connection_list;
 }
 
-void add_connection_details(ai_connection_t * connection, player_t * player)
+void add_connection_details(ai_connection_t * connection, character_t * character)
 {
-	connection->id = player->id;
-	connection->player = player;
+	connection->id = character->id;
+	connection->character = character;
 	connection->stdin_buffer = malloc(sizeof(buffer_t));
 	connection->stdout_buffer = malloc(sizeof(buffer_t));
 	connection->next = NULL;
@@ -64,11 +64,11 @@ void create_pipe(ai_connection_t *connection, pid_t pid) {
 	}
 }
 
-ai_connection_t *add_connection(player_t * player)
+ai_connection_t *add_connection(character_t * character)
 {
 	if (connection_list == NULL) {
 		connection_list = create_connectionlist();
-		add_connection_details(connection_list, player);
+		add_connection_details(connection_list, character);
 		pid_t pid = fork();
 		create_pipe(connection_list, pid);
 		int fd = find_free_fd();
@@ -78,7 +78,7 @@ ai_connection_t *add_connection(player_t * player)
 		return connection_list;
 	}
 
-	ai_connection_t *current = get_connection_by_player(player);
+	ai_connection_t *current = get_connection_by_character(character);
 
 	if (current != NULL) return current;
 
@@ -93,7 +93,7 @@ ai_connection_t *add_connection(player_t * player)
 	current->next = malloc(sizeof(ai_connection_t));
 	if (!current->next)
 		return NULL;
-	add_connection_details(current->next, player);
+	add_connection_details(current->next, character);
 	pid_t pid = fork();
 	create_pipe(current->next, pid);
 	int fd = find_free_fd();
@@ -136,11 +136,11 @@ int send(ai_connection_t *connection, char *command, int size) {
 	return bytes_sent;
 }
 
-ai_connection_t *get_connection_by_player(player_t *player) {
+ai_connection_t *get_connection_by_character(character_t *character) {
 	if (connection_list == NULL) return NULL;
 	ai_connection_t *current = connection_list;
 	while (current != NULL ) {
-		if (current->player == player) return current;
+		if (current->character == character) return current;
 		current = current->next;
 	}
 	return NULL;
@@ -179,7 +179,7 @@ void print_connections()
 	printf("Active connections:\n");
 	ai_connection_t *current = connection_list;
 	while (current != NULL) {
-		printf("%i: %s\n", current->fd, current->player->name);
+		printf("%i: %s\n", current->fd, current->character->name);
 		current = current->next;
 	}
 }

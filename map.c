@@ -127,23 +127,23 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	}
 }
 
-void change_region_owner(player_t * new_player, region_t * region)
+void change_region_owner(character_t * new_character, region_t * region)
 {
 	/* same owner */
-	if (region->owner != NULL && new_player != NULL
-	    && region->owner->id == new_player->id) {
+	if (region->owner != NULL && new_character != NULL
+	    && region->owner->id == new_character->id) {
 		return;
 	}
 	/* if region is not assigned AND new owner is real */
-	if (region->owner == NULL && new_player != NULL) {
-		region->owner = new_player;
+	if (region->owner == NULL && new_character != NULL) {
+		region->owner = new_character;
 	}
-	/* reassign region from one player to another */
-	else if (region->owner != NULL && new_player != NULL) {
-		region->owner = new_player;
+	/* reassign region from one character to another */
+	else if (region->owner != NULL && new_character != NULL) {
+		region->owner = new_character;
 	}
 	/* remove tile from region */
-	else if (new_player == NULL) {
+	else if (new_character == NULL) {
 		region->owner = NULL;
 	}
 }
@@ -161,7 +161,7 @@ void change_region_name(char *new_name, region_t * region)
 	strcpy(region->name, new_name);
 }
 
-unsigned char claim_region(player_t * player, region_t * region)
+unsigned char claim_region(character_t * character, region_t * region)
 {
 	/**
 	 * return value:
@@ -169,19 +169,19 @@ unsigned char claim_region(player_t * player, region_t * region)
 	 * 1 -- claimed from nature
 	 * 2 -- conquered from enemy
 	**/
-	if (player == NULL || region == NULL)
+	if (character == NULL || region == NULL)
 		return 0;
 
-	player_t *current_owner = region->owner;
+	character_t *current_owner = region->owner;
 
 	/* if the region is free, take it and stop here */
 	if (current_owner == NULL) {
-		change_region_owner(player, region);
+		change_region_owner(character, region);
 		return 1;
 	}
 
 	/* if region is already ours, stop here */
-	if (current_owner == player)
+	if (current_owner == character)
 		return 0;
 
 	/* if current owner is in the region, stop here */
@@ -193,8 +193,8 @@ unsigned char claim_region(player_t * player, region_t * region)
 		return 0;
 
 	/* if we are at war with current owner, take it */
-	if (get_diplomacy(current_owner, player) == WAR) {
-		change_region_owner(player, region);
+	if (get_diplomacy(current_owner, character) == WAR) {
+		change_region_owner(character, region);
 		/* if previous owner has no other regions, he lost */
 		world->check_death = 1;
 		return 2;
@@ -312,7 +312,7 @@ void clear_region_list()
 	world->regionlist = NULL;
 }
 
-uint16_t count_tiles_by_owner(player_t * owner)
+uint16_t count_tiles_by_owner(character_t * owner)
 {
 	uint16_t count = 0;
 	region_t *current = world->regionlist;
@@ -324,7 +324,7 @@ uint16_t count_tiles_by_owner(player_t * owner)
 	return count;
 }
 
-uint16_t count_regions_by_owner(player_t * owner)
+uint16_t count_regions_by_owner(character_t * owner)
 {
 	uint16_t count = 0;
 	region_t *current = world->regionlist;
@@ -349,29 +349,29 @@ int count_regions()
 
 void update_land_ranking()
 {
-	player_t *player = NULL;
-	player_t *player2 = NULL;
+	character_t *character = NULL;
+	character_t *character2 = NULL;
 
 	/* reset ranks to 1 */
-	player = world->playerlist;
-	while (player != NULL) {
-		player->rank_land = 1;
-		player = player->next;
+	character = world->characterlist;
+	while (character != NULL) {
+		character->rank_land = 1;
+		character = character->next;
 	}
 	/* rewind to start */
-	player = world->playerlist;
+	character = world->characterlist;
 
-	while (player != NULL) {
-		player2 = world->playerlist;
-		while (player2->id != player->id) {
-			if (count_tiles_by_owner(player) <=
-			    count_tiles_by_owner(player2))
-				player->rank_land++;
+	while (character != NULL) {
+		character2 = world->characterlist;
+		while (character2->id != character->id) {
+			if (count_tiles_by_owner(character) <=
+			    count_tiles_by_owner(character2))
+				character->rank_land++;
 			else
-				player2->rank_land++;
-			player2 = player2->next;
+				character2->rank_land++;
+			character2 = character2->next;
 		}
-		player = player->next;
+		character = character->next;
 	}
 }
 
@@ -432,18 +432,18 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 	/* destination is walkable */
 	if (world->grid->tiles[dst_height][dst_width]->walkable == 0)
 		return 0;
-	/* there is a piece on source tile and piece belongs to current player */
-	player_t *current_player = world->selected_player;
+	/* there is a piece on source tile and piece belongs to current character */
+	character_t *current_character = world->selected_character;
 	piece_t *src_piece = world->grid->tiles[src_height][src_width]->piece;
-	if (src_piece == NULL || src_piece->owner->id != current_player->id)
+	if (src_piece == NULL || src_piece->owner->id != current_character->id)
 		return 0;
 	piece_t *dst_piece = world->grid->tiles[dst_height][dst_width]->piece;
 	if (dst_piece != NULL) {
 		/* no own piece on destination tile */
-		if (dst_piece->owner->id == current_player->id)
+		if (dst_piece->owner->id == current_character->id)
 			return 0;
 		/* no allied piece on destination */
-		if (get_diplomacy(current_player, dst_piece->owner) == 1)
+		if (get_diplomacy(current_character, dst_piece->owner) == 1)
 			return 0;
 	}
 	return 1;
@@ -462,13 +462,13 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 
 	/* if there's a piece at destination, remove it */
 	piece_t *dst_piece = world->grid->tiles[dst_height][dst_width]->piece;
-	player_t *dst_player = NULL;
+	character_t *dst_character = NULL;
 	if (dst_piece != NULL) {
-		dst_player = dst_piece->owner;
-		/* a noble was killed, means a player lost */
+		dst_character = dst_piece->owner;
+		/* a noble was killed, means a character lost */
 		if (dst_piece->type == NOBLE) {
-			succession(dst_player);
-			remove_player(dst_player);
+			succession(dst_character);
+			remove_character(dst_character);
 		} else
 			remove_piece(dst_piece);
 		update_army_ranking();

@@ -13,7 +13,7 @@
 
 int stage = -1;
 int side;
-player_t *ai_player = NULL;
+character_t *ai_character = NULL;
 
 typedef struct {
 	unsigned int size;
@@ -220,11 +220,11 @@ void standby()
 				free(msg);
 				continue;
 			}
-			if (ai_player == NULL) {
+			if (ai_character == NULL) {
 				dprintf(STDOUT_FILENO, "Error: AI not assigned to any side (run 'play' first)\n");
 				continue;
 			}
-			if (world->selected_player != ai_player) {
+			if (world->selected_character != ai_character) {
 				dprintf(STDOUT_FILENO, "Error: not AI's turn to play\n");
 				continue;
 			}
@@ -259,21 +259,21 @@ void standby()
 			}
 			/* can be 'add', 'delete' or 'move' */
 			if (!strcmp(token, "add")) {
-				char *player_id_ch = strtok(NULL, " \n");
-				if (!player_id_ch) {
+				char *character_id_ch = strtok(NULL, " \n");
+				if (!character_id_ch) {
 					dprintf(STDOUT_FILENO,
 						"Error: PlayerID missing (type 'help piece' for more info)\n");
 					continue;
 				}
-				uint16_t player_id =
-				    (uint16_t) atoi(player_id_ch);
-				if (player_id < 1) {
+				uint16_t character_id =
+				    (uint16_t) atoi(character_id_ch);
+				if (character_id < 1) {
 					dprintf(STDOUT_FILENO,
 						"Error: bad PlayerID\n");
 					continue;
 				}
-				player_t *player = get_player_by_id(player_id);
-				if (player == NULL) {
+				character_t *character = get_character_by_id(character_id);
+				if (character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: invalid PlayerID\n");
 					continue;
@@ -310,7 +310,7 @@ void standby()
 				}
 				piece_t *piece =
 				    add_piece(piece_type, coords[0], coords[1],
-					      player);
+					      character);
 				if (piece)
 					dprintf(STDOUT_FILENO, "ack\n");
 				else
@@ -397,8 +397,8 @@ void standby()
 				continue;
 			}
 			uint16_t id = (uint16_t) atoi(token);
-			ai_player = get_player_by_id(id);
-			if (ai_player == NULL) {
+			ai_character = get_character_by_id(id);
+			if (ai_character == NULL) {
 				dprintf(STDOUT_FILENO,
 					"Error: bad PlayerID\n");
 				continue;
@@ -427,13 +427,13 @@ void standby()
 						"Error: bad PlayerID\n");
 					continue;
 				}
-				if (get_player_by_id(id) != NULL) {
+				if (get_character_by_id(id) != NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: PlayerID not unique\n");
 					continue;
 				}
-				player_t *player = add_player(id_ch);
-				player->id = id;
+				character_t *character = add_character(id_ch);
+				character->id = id;
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
@@ -445,13 +445,13 @@ void standby()
 					continue;
 				}
 				uint16_t id = (uint16_t) atoi(id_ch);
-				player_t *player = get_player_by_id(id);
-				if (player == NULL) {
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: invalid PlayerID\n");
 					continue;
 				}
-				remove_player(player);
+				remove_character(character);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
@@ -463,15 +463,15 @@ void standby()
 					continue;
 				}
 				uint16_t id = (uint16_t) atoi(id_ch);
-				player_t *player = get_player_by_id(id);
-				if (player == NULL) {
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: no such player (type 'help player' for more info)\n");
 					continue;
 				}
 				char *money_ch = strtok(NULL, " \n");
 				uint16_t money = (uint16_t) atoi(money_ch);
-				set_money(player, money);
+				set_money(character, money);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
@@ -483,8 +483,8 @@ void standby()
 					continue;
 				}
 				uint16_t id = (uint16_t) atoi(id_ch);
-				player_t *player = get_player_by_id(id);
-				if (player == NULL) {
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: no such player (type 'help player' for more info)\n");
 					continue;
@@ -495,16 +495,16 @@ void standby()
 						"Error: PlayerName missing (type 'help player' for more info)\n");
 					continue;
 				}
-				if (!strcmp(player->name, name)) {
+				if (!strcmp(character->name, name)) {
 					dprintf(STDOUT_FILENO, "ack\n");
 					continue;
 				}
-				if (get_player_by_name(name) != NULL) {
+				if (get_character_by_name(name) != NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: PlayerName not unique\n");
 					continue;
 				}
-				strcpy(player->name, name);
+				strcpy(character->name, name);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			}
@@ -516,8 +516,8 @@ void standby()
 					continue;
 				}
 				uint16_t id = (uint16_t) atoi(id_ch);
-				player_t *player = get_player_by_id(id);
-				if (player == NULL) {
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: no such player (type 'help player' for more info)\n");
 					continue;
@@ -546,7 +546,7 @@ void standby()
 				}
 				if (!success)
 					continue;
-				set_player_rank(player, rank);
+				set_character_rank(character, rank);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			} else
@@ -651,22 +651,22 @@ void standby()
 						"Error: no such region (type 'help region' for more info)\n");
 					continue;
 				}
-				char *player_id_ch = strtok(NULL, " \n");
-				if (!player_id_ch) {
+				char *character_id_ch = strtok(NULL, " \n");
+				if (!character_id_ch) {
 					dprintf(STDOUT_FILENO,
 						"Error: PlayerID missing (type 'help region' for more info)\n");
 					continue;
 				}
-				uint16_t player_id =
-				    (uint16_t) atoi(player_id_ch);
-				player_t *player = NULL;
-				player = get_player_by_id(player_id);
-				if (player_id > 0 && player == NULL) {
+				uint16_t character_id =
+				    (uint16_t) atoi(character_id_ch);
+				character_t *character = NULL;
+				character = get_character_by_id(character_id);
+				if (character_id > 0 && character == NULL) {
 					dprintf(STDOUT_FILENO,
 						"Error: no such player (type 'help region' for more info)\n");
 					continue;
 				}
-				change_region_owner(player, region);
+				change_region_owner(character, region);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
 			} else
@@ -793,22 +793,22 @@ void standby()
 			continue;
 		}
 		if (!strcmp(token, "turn")) {
-			if (world->playerlist == NULL) {
+			if (world->characterlist == NULL) {
 				dprintf(STDOUT_FILENO, "Error: no player list\n");
 				continue;
 			}
-			char *player_id_ch = strtok(NULL, " \n");
-			if (!player_id_ch) {
+			char *character_id_ch = strtok(NULL, " \n");
+			if (!character_id_ch) {
 				dprintf(STDOUT_FILENO, "Error: Parameter missing\n");
 				continue;
 			}
-			uint16_t player_id = (uint16_t) atoi(player_id_ch);
-			if (get_player_by_id(player_id) == NULL) {
+			uint16_t character_id = (uint16_t) atoi(character_id_ch);
+			if (get_character_by_id(character_id) == NULL) {
 				dprintf(STDOUT_FILENO, "Error: no such player (type 'help turn' for more info)\n");
 				continue;
 			}
 			dprintf(STDOUT_FILENO, "ack\n");
-			world->selected_player = get_player_by_id(player_id);
+			world->selected_character = get_character_by_id(character_id);
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
@@ -829,16 +829,16 @@ void standby()
 void think()
 {
 	/* if have enough money and free tile, buy a soldier */
-	while (get_money(ai_player) >= COST_SOLDIER) {
+	while (get_money(ai_character) >= COST_SOLDIER) {
 		/* find free tile */
 		int i, j;
 		int done = 0;
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region != NULL && world->grid->tiles[i][j]->region->owner == ai_player && world->grid->tiles[i][j]->piece == NULL && !done) {
-					add_piece(1, i, j, ai_player);
-					set_money(ai_player, get_money(ai_player) - COST_SOLDIER);
-					dprintf(STDOUT_FILENO, "piece add %i 1 %i,%i\n", ai_player->id, i, j);
+				if (world->grid->tiles[i][j]->region != NULL && world->grid->tiles[i][j]->region->owner == ai_character && world->grid->tiles[i][j]->piece == NULL && !done) {
+					add_piece(1, i, j, ai_character);
+					set_money(ai_character, get_money(ai_character) - COST_SOLDIER);
+					dprintf(STDOUT_FILENO, "piece add %i 1 %i,%i\n", ai_character->id, i, j);
 					done = 1;
 				}
 			}
@@ -852,7 +852,7 @@ void think()
 		dprintf(STDOUT_FILENO, "take\n");
 		dprintf(STDOUT_FILENO, "done\n");
 		world->moves_left = 0;
-		ai_player->money++;
+		ai_character->money++;
 		stage = STANDBY;
 		return;
 	}
@@ -861,13 +861,13 @@ void think()
 		float score = evaluate();
 		printf("Evaluation: %f\n", score);
 **/
-		int nr_ai_pieces = count_pieces_by_owner(ai_player) + 1;
+		int nr_ai_pieces = count_pieces_by_owner(ai_character) + 1;
 		piece_t *current_piece = world->piecelist;
 		int random_nr;
 		if (nr_ai_pieces > 1) random_nr = rand() % nr_ai_pieces + 1;
 		else random_nr = 1;
 		while (current_piece != NULL) {
-			if (current_piece->owner == ai_player) {
+			if (current_piece->owner == ai_character) {
 				random_nr--;
 				if (random_nr == 0) break;
 			}
@@ -919,8 +919,8 @@ void think()
 	}
 	dprintf(STDOUT_FILENO, "done\n");
 	world->moves_left = 0;
-	if (ai_player->next != NULL) world->selected_player = ai_player->next;
-	else world->selected_player = world->playerlist;
+	if (ai_character->next != NULL) world->selected_character = ai_character->next;
+	else world->selected_character = world->characterlist;
 	stage = STANDBY;
 	return;
 }
