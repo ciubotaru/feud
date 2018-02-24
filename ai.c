@@ -25,6 +25,10 @@ buffer_t *stdin_buffer;
 void read_stdin()
 {
 	int char_received = fgetc(stdin);
+	if (stdin_buffer->size == MAXLINE) {
+		stdin_buffer->size = 0;
+		return;
+	}
 	stdin_buffer->string[stdin_buffer->size] = char_received;
 	stdin_buffer->string[stdin_buffer->size + 1] = 0;
 	stdin_buffer->size++;
