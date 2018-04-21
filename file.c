@@ -10,8 +10,8 @@
 #include "world.h"
 
 #define GAME_METADATA_SIZE (2 * sizeof(unsigned char) + 4 * sizeof(uint16_t))	/* year, mon, next character id, next piece id, selected_character, moves left */
-#define characterLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of characters */
-#define characterLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char))	/* id, name, money, rank, birth_year, birth_mon, death_year, death_mon */
+#define CHARACTERLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of characters */
+#define CHARACTERLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char) + sizeof(uint16_t) + sizeof(unsigned char))	/* id, name, money, rank, birth_year, birth_mon, death_year, death_mon */
 #define REGIONLIST_METADATA_SIZE (sizeof(uint16_t))	/* nr of regions */
 #define REGIONLIST_UNIT_SIZE (sizeof(uint16_t) + 17 + sizeof(uint16_t))	/* id, name, owner */
 #define GRID_METADATA_SIZE (sizeof(uint16_t) * 2)	/* grid height and width */
@@ -105,17 +105,17 @@ int deserialize_characterlist(char **buffer, int *pos)
 	character_t *current = NULL;
 	uint16_t nr_characters_be = 0;
 	int buffer_pos = *pos;
-	memcpy(&nr_characters_be, *buffer + buffer_pos, characterLIST_METADATA_SIZE);
+	memcpy(&nr_characters_be, *buffer + buffer_pos, CHARACTERLIST_METADATA_SIZE);
 	uint16_t nr_characters = be16toh(nr_characters_be);
 /**
 	if (nr_characters == 0) {
-		buffer_pos = *pos + characterLIST_METADATA_SIZE;
+		buffer_pos = *pos + CHARACTERLIST_METADATA_SIZE;
 		*pos = buffer_pos + 1;
 		return;
 	}
 **/
 	int i;
-	buffer_pos = *pos + characterLIST_METADATA_SIZE;
+	buffer_pos = *pos + CHARACTERLIST_METADATA_SIZE;
 	uint16_t id_be, money_be, birthdate_year_be, deathdate_year_be;
 	char name[17];
 	int offset = 0;
@@ -149,7 +149,7 @@ int deserialize_characterlist(char **buffer, int *pos)
 		current->deathdate.tm_year = be16toh(deathdate_year_be);
 		memcpy(&(current->deathdate.tm_mon),
 		       *buffer + buffer_pos + offset, 1);
-		buffer_pos += characterLIST_UNIT_SIZE;
+		buffer_pos += CHARACTERLIST_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
 	return 0;
@@ -458,10 +458,10 @@ int serialize_characterlist(char **buffer)
 	uint16_t nr_characters = count_characters();
 	uint16_t nr_characters_be = htobe16(nr_characters);
 	int total_len =
-	    characterLIST_METADATA_SIZE + characterLIST_UNIT_SIZE * nr_characters;
+	    CHARACTERLIST_METADATA_SIZE + CHARACTERLIST_UNIT_SIZE * nr_characters;
 	/** id + name + money + birth_year + birth_mon + death_year + death_mon + heir_id **/
-	memcpy(*buffer, &nr_characters_be, characterLIST_METADATA_SIZE);
-	int pos = characterLIST_METADATA_SIZE;
+	memcpy(*buffer, &nr_characters_be, CHARACTERLIST_METADATA_SIZE);
+	int pos = CHARACTERLIST_METADATA_SIZE;
 	character_t *current = world->characterlist;
 	uint16_t id_be, money_be, birthdate_year_be, deathdate_year_be;
 	int offset = 0;
@@ -490,7 +490,7 @@ int serialize_characterlist(char **buffer)
 		       sizeof(uint16_t));
 		offset += sizeof(uint16_t);
 		memcpy(*buffer + pos + offset, &(current->deathdate.tm_mon), 1);
-		pos += characterLIST_UNIT_SIZE;
+		pos += CHARACTERLIST_UNIT_SIZE;
 		current = current->next;
 	}
 	(*buffer)[total_len] = 'X';
@@ -738,8 +738,8 @@ unsigned int save_game()
 
 	char *characterlist_buffer =
 	    calloc(1,
-		   characterLIST_METADATA_SIZE +
-		   count_characters() * characterLIST_UNIT_SIZE + 1);
+		   CHARACTERLIST_METADATA_SIZE +
+		   count_characters() * CHARACTERLIST_UNIT_SIZE + 1);
 	if (!characterlist_buffer) {
 		fclose(fp);
 		retval = 2;
