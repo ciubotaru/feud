@@ -8,9 +8,8 @@
 
 static region_t *selected_region = NULL;
 
-void editor_start_menu()
+void editor_start_menu(WINDOW *local_win)
 {
-	WINDOW *local_win = newwin(25, 80, 0, 0);
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
@@ -27,26 +26,21 @@ void editor_start_menu()
 		ch = wgetch(local_win);
 		switch (ch) {
 		case 'o':
-			delwin(local_win);
 			current_screen = MAP_EDITOR;
 			return;
 		case 'c':
-			delwin(local_win);
 			current_screen = NEW_GAME;
 			return;
 		case 'q':
-			delwin(local_win);
 			current_screen = 99;
 			return;
 		}
 	}
 }
 
-void map_editor()
+void map_editor(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	uint16_t h_multiplier = world->grid->cursor_height / 24;
@@ -319,11 +313,9 @@ void map_editor()
 	return;
 }
 
-void new_game_dialog()
+void new_game_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
 	noecho();
@@ -465,11 +457,9 @@ void new_game_dialog()
 	return;
 }
 
-void characters_dialog()
+void characters_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
 	noecho();
@@ -556,11 +546,9 @@ void characters_dialog()
 	return;
 }
 
-void add_character_dialog()
+void add_character_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -661,11 +649,9 @@ void add_character_dialog()
 	return;
 }
 
-void regions_dialog()
+void regions_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
 	noecho();
@@ -757,11 +743,9 @@ void regions_dialog()
 	return;
 }
 
-void add_region_dialog()
+void add_region_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -805,11 +789,9 @@ void add_region_dialog()
 	return;
 }
 
-void region_to_character()
+void region_to_character(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	int i;
@@ -914,11 +896,9 @@ void region_to_character()
 	return;
 }
 
-void rename_region_dialog()
+void rename_region_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -945,11 +925,9 @@ void rename_region_dialog()
 	return;
 }
 
-void edit_character_dialog()
+void edit_character_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
 	noecho();
@@ -1035,11 +1013,9 @@ void edit_character_dialog()
 	}
 }
 
-void rename_character_dialog()
+void rename_character_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -1073,11 +1049,9 @@ void rename_character_dialog()
 	}
 }
 
-void change_character_money_dialog()
+void change_character_money_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -1118,11 +1092,9 @@ void change_character_money_dialog()
 	}
 }
 
-void change_character_dates_dialog()
+void change_character_dates_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -1298,15 +1270,12 @@ void change_character_dates_dialog()
 	}
 }
 
-void validate_dialog()
+void validate_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	char *msg;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
+	char *msg;
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
@@ -1337,11 +1306,9 @@ void validate_dialog()
 	return;
 }
 
-void edit_time_dialog()
+void edit_time_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(TRUE);
 	echo();
@@ -1443,11 +1410,9 @@ void edit_time_dialog()
 	return;
 }
 
-void successor_dialog()
+void successor_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	int i;
@@ -1527,11 +1492,9 @@ void successor_dialog()
 	}
 }
 
-void homage_dialog()
+void homage_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	int i;
@@ -1657,11 +1620,9 @@ void homage_dialog()
 	}
 }
 
-void diplomacy_dialog()
+void diplomacy_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	int i;
@@ -1817,11 +1778,9 @@ void diplomacy_dialog()
 	}
 }
 
-void help_dialog()
+void help_dialog(WINDOW *local_win)
 {
-	WINDOW *local_win = NULL;
-
-	local_win = newwin(25, 80, 0, 0);
+	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
 	int i;
@@ -1888,71 +1847,69 @@ int main()
 
 	noecho();
 	curs_set(FALSE);
+	WINDOW *local_win = newwin(25, 80, 0, 0);
 
 	current_screen = 0;
 	while (1) {
 		switch (current_screen) {
 		case MAIN_SCREEN:
-			editor_start_menu();
+			editor_start_menu(local_win);
 			break;
 		case NEW_GAME:
-			clear();
-			new_game_dialog();
+			new_game_dialog(local_win);
 			break;
 		case MAP_EDITOR:
 			if (world->grid == NULL)
 				load_game();
-			map_editor();
+			map_editor(local_win);
 			break;
 		case CHARACTERS_DIALOG:
-			clear();
-			characters_dialog();
+			characters_dialog(local_win);
 			break;
 		case ADD_CHARACTER_DIALOG:
-			clear();
-			add_character_dialog();
+			add_character_dialog(local_win);
 			break;
 		case REGIONS_DIALOG:
-			regions_dialog();
+			regions_dialog(local_win);
 			break;
 		case ADD_REGION_DIALOG:
-			add_region_dialog();
+			add_region_dialog(local_win);
 			break;
 		case REGION_CHARACTER_DIALOG:
-			region_to_character();
+			region_to_character(local_win);
 			break;
 		case GAME_TIME_DIALOG:
-			edit_time_dialog();
+			edit_time_dialog(local_win);
 			break;
 		case RENAME_REGION_DIALOG:
-			rename_region_dialog();
+			rename_region_dialog(local_win);
 			break;
 		case EDIT_CHARACTER_DIALOG:
-			edit_character_dialog();
+			edit_character_dialog(local_win);
 			break;
 		case RENAME_CHARACTER_DIALOG:
-			rename_character_dialog();
+			rename_character_dialog(local_win);
 			break;
 		case CHARACTER_MONEY_DIALOG:
-			change_character_money_dialog();
+			change_character_money_dialog(local_win);
 			break;
 		case CHARACTER_DATES_DIALOG:
-			change_character_dates_dialog();
+			change_character_dates_dialog(local_win);
 			break;
 		case HEIR_DIALOG:
-			successor_dialog();
+			successor_dialog(local_win);
 			break;
 		case FEUDAL_DIALOG:
-			homage_dialog();
+			homage_dialog(local_win);
 			break;
 		case DIPLOMACY_DIALOG:
-			diplomacy_dialog();
+			diplomacy_dialog(local_win);
 			break;
 		case VALIDATE_DIALOG:
-			validate_dialog();
+			validate_dialog(local_win);
 			break;
 		case HELP_DIALOG:
-			help_dialog();
+			help_dialog(local_win);
 			break;
 		case 99:
 			destroy_world();
