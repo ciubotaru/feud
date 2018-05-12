@@ -7,36 +7,10 @@ feud is a turn-based military and political strategy game. It is based on
 medieval-styled board games I used to make and play (mostly with myself) as a
 teenager.
 
-Description
+Game rules
 -----------
 
-Each player controls a feudal faction consisting of a noble (from knight to
-king), his army, money, land, diplomacy. Factions fight each other over land
-control. A player who loses his noble or all his land, loses the game. The game
-ends when there is only one sovereign noble left.
-
-The game is played on a map (orthogonal grid). Map tiles can be walkable (land)
-or unwalkable (walls, water). A group of tiles make up a region. A region can
-either be free or belong to a player. Regions have names.
-
-Currently, there are only nobles and soldiers (ships are planned). A noble has
-a finite lifespan (normally between 60 and 80 years). After a noble dies, a
-heir or lord will inherit the property.
-
-Installation
-------------
-
-To compile feud from source code, type:
-
-$ ./configure --prefix=DIRECTORY
-$ make
-
-The generic way to install the compiled files is:
-
-$ make install
-
-However, one might prefer to use distro-specific installation mechanism (like
-"checkinstall") instead.
+See file named RULES
 
 Usage
 -----
@@ -53,6 +27,11 @@ To create a world, type 'feud-editor', create a map and populate it to your
 liking.
 
 To start the game, type 'feud' and play together with your friend(s).
+
+Installation
+------------
+
+See file named INSTALL
 
 Licensing
 ---------
