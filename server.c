@@ -65,7 +65,19 @@ void print_help_player()
 	dprintf(STDOUT_FILENO,
 		" player name <playerID> <playerName> - set player name\n");
 	dprintf(STDOUT_FILENO,
-		" player rank <playerID> <playerRank> - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
+		" player rank <playerID> <playerRank> - set player rank ([k]ing, [d]uke, [c]ount or [b]aron)\n");
+	return;
+}
+
+void print_help_region()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'region' command:\n");
+	dprintf(STDOUT_FILENO, " region add <regionID> - create a new region\n");
+	dprintf(STDOUT_FILENO, " region delete <regionID> - delete a region\n");
+	dprintf(STDOUT_FILENO,
+		" region name <regionID> <regionName> - set or change region name\n");
+	dprintf(STDOUT_FILENO,
+		" region owner <regionID> <playerID> - set or change region owner (0 for no owner)\n");
 	return;
 }
 
@@ -85,6 +97,8 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO,
 			" player ... - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
+		dprintf(STDOUT_FILENO,
+			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
 //		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
@@ -96,6 +110,10 @@ void print_help(const char *topic)
 	}
 	if (strcmp(topic, "player") == 0) {
 		print_help_player();
+		return;
+	}
+	if (strcmp(topic, "region") == 0) {
+		print_help_region();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -461,6 +479,121 @@ void setup_loop()
 			dprintf(STDOUT_FILENO, "Quitting...\n");
 			stage = -1;
 			return;
+		}
+		if (!strcmp(token, "region")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing (type 'help region' for more info)\n");
+				continue;
+			}
+			/* can be 'add', 'delete', 'name' or 'owner' */
+			if (!strcmp(token, "add")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (get_region_by_id(id) != NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID not unique\n");
+					continue;
+				}
+				region_t *region = add_region(id_ch);
+				region->id = id;
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "delete")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				region_t *region = get_region_by_id(id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid RegionID\n");
+					continue;
+				}
+				remove_region(region);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "name")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				region_t *region = get_region_by_id(id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such region (type 'help region' for more info)\n");
+					continue;
+				}
+				char *name = strtok(NULL, "\n");
+				if (!name) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionName missing (type 'help region' for more info)\n");
+					continue;
+				}
+				if (!strcmp(region->name, name)) {
+					dprintf(STDOUT_FILENO, "OK\n");
+					continue;
+				}
+				if (get_region_by_name(name) != NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionName not unique\n");
+					continue;
+				}
+				strcpy(region->name, name);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "owner")) {
+				char *region_id_ch = strtok(NULL, " \n");
+				if (!region_id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t region_id =
+				    (uint16_t) atoi(region_id_ch);
+				region_t *region = get_region_by_id(region_id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such region (type 'help region' for more info)\n");
+					continue;
+				}
+				char *character_id_ch = strtok(NULL, " \n");
+				if (!character_id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help region' for more info)\n");
+					continue;
+				}
+				uint16_t character_id =
+				    (uint16_t) atoi(character_id_ch);
+				character_t *character = NULL;
+				character = get_character_by_id(character_id);
+				if (character_id > 0 && character == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such player (type 'help region' for more info)\n");
+					continue;
+				}
+				change_region_owner(character, region);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			} else
+				dprintf(STDOUT_FILENO,
+					"Error: Unknown parameter (type 'help region' for more info)\n");
+			continue;
 		}
 		if (!strcmp(token, "save")) {
 			char *msg;
