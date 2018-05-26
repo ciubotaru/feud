@@ -41,6 +41,19 @@ void reset()
 	create_world();
 }
 
+void print_help_piece()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
+	dprintf(STDOUT_FILENO,
+		" piece add <playerID> <type> <height> <width> - place a new piece type can be %i for %s or %i for %s\n",
+		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
+	dprintf(STDOUT_FILENO,
+		" piece delete <height> <width> - remove a piece at given coordinates\n");
+	dprintf(STDOUT_FILENO,
+		" piece move <height1> <width1> <height2> <width2> - move a piece\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
@@ -50,10 +63,18 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " go - start the game\n");
 		dprintf(STDOUT_FILENO, " load - load game from file\n");
 		dprintf(STDOUT_FILENO, " new - clear everything\n");
+		dprintf(STDOUT_FILENO,
+			" piece ... - set up pieces (type 'help piece' for more info)\n");
+		dprintf(STDOUT_FILENO,
+			" ping – pong! (pinging players not implemented yet)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
 //		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
+		return;
+	}
+	if (strcmp(topic, "piece") == 0) {
+		print_help_piece();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -128,6 +149,139 @@ void setup_loop()
 		if (!strcmp(command, "new")) {
 			reset();
 			dprintf(STDOUT_FILENO, "ack\n");
+			continue;
+		}
+		if (!strcmp(token, "piece")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing (type 'help piece' for more info)\n");
+				continue;
+			}
+			/* can be 'add', 'delete' or 'move' */
+			if (!strcmp(token, "add")) {
+				char *character_id_ch = strtok(NULL, " \n");
+				if (!character_id_ch) {
+					dprintf(STDOUT_FILENO,
+							"Error: PlayerID missing (type 'help piece' for more info)\n");
+					continue;
+				}
+				uint16_t character_id =
+					(uint16_t) atoi(character_id_ch);
+				if (character_id < 1) {
+					dprintf(STDOUT_FILENO,
+							"Error: bad PlayerID\n");
+					continue;
+				}
+				character_t *character = get_character_by_id(character_id);
+				if (character == NULL) {
+					dprintf(STDOUT_FILENO,
+							"Error: invalid PlayerID\n");
+					continue;
+				}
+				char *piece_type_ch = strtok(NULL, " \n");
+				if (!piece_type_ch) {
+					dprintf(STDOUT_FILENO,
+							"Error: PieceType missing (type 'help piece' for more info)\n");
+					continue;
+				}
+				unsigned char piece_type =
+					(unsigned char)atoi(piece_type_ch);
+				if (piece_type > 1) {
+					dprintf(STDOUT_FILENO,
+							"Error: invalid PieceType (type 'help piece' for more info)\n");
+					continue;
+				}
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height || coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+							"Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece = add_piece(piece_type, coords[0], coords[1], character);
+				if (piece) dprintf(STDOUT_FILENO, "OK\n");
+				else dprintf(STDOUT_FILENO, "Error: failed to add piece\n");
+				continue;
+			}
+			if (!strcmp(token, "delete")) {
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height
+				    || coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece =
+				    world->grid->tiles[coords[0]][coords[1]]->
+				    piece;
+				if (!piece)
+					dprintf(STDOUT_FILENO,
+						"Error: piece not found\n");
+				else {
+					dprintf(STDOUT_FILENO, "OK\n");
+					remove_piece(piece);
+				}
+				continue;
+			}
+			if (!strcmp(token, "move")) {
+				uint16_t coords[4];
+				int i;
+				int success = 1;
+				for (i = 0; i < 4; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height
+				    || coords[1] >= world->grid->width
+				    || coords[2] >= world->grid->height
+				    || coords[3] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid piece coordinates (type 'help piece' for more info)\n");
+					continue;
+				}
+				piece_t *piece =
+				    world->grid->tiles[coords[0]][coords[1]]->
+				    piece;
+				if (!piece) {
+					dprintf(STDOUT_FILENO,
+						"Error: piece not found\n");
+					continue;
+				}
+				int result =
+				    move_piece(piece, coords[2], coords[3]);
+				if (result == 0)
+					dprintf(STDOUT_FILENO, "OK\n");
+				else
+					dprintf(STDOUT_FILENO,
+						"Error: illegal move\n");
+				continue;
+			} else
+				dprintf(STDOUT_FILENO,
+					"Error: Unknown parameter (type 'help piece' for more info)\n");
 			continue;
 		}
 		if (!strcmp(command, "ping")) {
