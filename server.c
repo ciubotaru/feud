@@ -112,6 +112,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO,
 			" tile ... - set up a tile (type 'help tile' for more info\n");
+		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
 //		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
@@ -710,6 +711,26 @@ void setup_loop()
 				dprintf(STDOUT_FILENO, "OK\n");
 				tile->walkable = walkable;
 			} else dprintf(STDOUT_FILENO, "Error: Unknown parameter\n");
+			continue;
+		}
+		if (!strcmp(token, "turn")) {
+			if (world->characterlist == NULL) {
+				dprintf(STDOUT_FILENO, "Error: no player list\n");
+				continue;
+			}
+			char *character_id_ch = strtok(NULL, " \n");
+			if (!character_id_ch) {
+				dprintf(STDOUT_FILENO, "Error: Parameter missing\n");
+				continue;
+			}
+			uint16_t character_id = (uint16_t) atoi(character_id_ch);
+			if (get_character_by_id(character_id) == NULL) {
+//				dprintf(STDOUT_FILENO, "Error: no such player (type 'help turn' for more info)\n");
+				dprintf(STDOUT_FILENO, "Error: no such player\n");
+				continue;
+			}
+			dprintf(STDOUT_FILENO, "OK\n");
+			world->selected_character = get_character_by_id(character_id);
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
