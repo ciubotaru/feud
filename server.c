@@ -234,12 +234,12 @@ void setup_loop()
 		}
 		if (!strcmp(token, "load")) {
 			load_game();
-			dprintf(STDOUT_FILENO, "ack\n");
+			dprintf(STDOUT_FILENO, "OK\n");
 			continue;
 		}
 		if (!strcmp(command, "new")) {
 			reset();
-			dprintf(STDOUT_FILENO, "ack\n");
+			dprintf(STDOUT_FILENO, "OK\n");
 			continue;
 		}
 		if (!strcmp(token, "piece")) {
@@ -529,8 +529,8 @@ void setup_loop()
 		}
 		if (!strcmp(command, "quit")) {
 			dprintf(STDOUT_FILENO, "Quitting...\n");
-			stage = -1;
-			return;
+			stage = QUIT;
+			continue;
 		}
 		if (!strcmp(token, "region")) {
 			token = strtok(NULL, " \n");
@@ -651,7 +651,7 @@ void setup_loop()
 			char *msg;
 			int result = validate_game_data(&msg);
 			if (result == 0) {
-				dprintf(STDOUT_FILENO, "ack\n");
+				dprintf(STDOUT_FILENO, "OK\n");
 				save_game();
 			}
 			else {
@@ -775,7 +775,7 @@ void setup_loop()
 		if (!strcmp(token, "validate")) {
 			char *msg = NULL;
 			int result = validate_game_data(&msg);
-			if (result == 0) dprintf(STDOUT_FILENO, "ack\n");
+			if (result == 0) dprintf(STDOUT_FILENO, "OK\n");
 			else {
 				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
 				free(msg);
