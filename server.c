@@ -81,6 +81,16 @@ void print_help_region()
 	return;
 }
 
+void print_help_tile()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'tile' command:\n");
+	dprintf(STDOUT_FILENO,
+		" tile region <height> <width> [<regionID>] - add a tile to region (to remove tile from region leave regionID empty)\n");
+	dprintf(STDOUT_FILENO,
+		" tile walkable <height> <width> <walkability> - set tile walkability (0 for unwalkable or 1 for walkable)\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
@@ -100,6 +110,8 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO,
 			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
+		dprintf(STDOUT_FILENO,
+			" tile ... - set up a tile (type 'help tile' for more info\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
 //		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
@@ -114,6 +126,10 @@ void print_help(const char *topic)
 	}
 	if (strcmp(topic, "region") == 0) {
 		print_help_region();
+		return;
+	}
+	if (strcmp(topic, "tile") == 0) {
+		print_help_tile();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -606,6 +622,94 @@ void setup_loop()
 				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
 				free(msg);
 			}
+			continue;
+		}
+		if (!strcmp(token, "tile")) {
+			if (world->grid == NULL) {
+				dprintf(STDOUT_FILENO,
+					"Error: board not set\n");
+				continue;
+			}
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing (type 'help tile' for more info)\n");
+				continue;
+			}
+			/* can be 'region' or 'walkable' */
+			if (!strcmp(token, "region")) {
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height
+					|| coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid tile coordinates (type 'help tile' for more info)\n");
+					continue;
+				}
+				tile_t *tile = world->grid->tiles[coords[0]][coords[1]];
+				char *region_id_ch = strtok(NULL, " \n");
+				if (region_id_ch == NULL) {
+					dprintf(STDOUT_FILENO, "OK\n");
+					change_tile_region(NULL, tile);
+					continue;
+				}
+				if (world->regionlist == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no region list\n");
+					continue;
+				}
+				uint16_t region_id = (uint16_t) atoi(region_id_ch);
+				region_t *region = get_region_by_id(region_id);
+				if (region == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: region not found\n");
+					continue;
+				}
+				dprintf(STDOUT_FILENO, "OK\n");
+				change_tile_region(region, tile);
+				continue;
+			}
+			if (!strcmp(token, "walkable")) {
+				uint16_t coords[2];
+				int i;
+				int success = 1;
+				for (i = 0; i < 2; i++) {
+					token = strtok(NULL, " \n");
+					if (!token) {
+						success = 0;
+						break;
+					}
+					coords[i] = (uint16_t) atoi(token);
+				}
+				if (!success || coords[0] >= world->grid->height
+					|| coords[1] >= world->grid->width) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid tile coordinates (type 'help tile' for more info)\n");
+					continue;
+				}
+				tile_t *tile = world->grid->tiles[coords[0]][coords[1]];
+				char *walkable_ch = strtok(NULL, " \n");
+				if (walkable_ch == NULL) {
+					dprintf(STDOUT_FILENO, "Error: Parameter missing  (type 'help tile' for more info)\n");
+					continue;
+				}
+				unsigned char walkable = (unsigned char) atoi(walkable_ch);
+				if (walkable > 1) {
+					dprintf(STDOUT_FILENO, "Error: Invalid parameter (type 'help tile' for more info)\n");
+					continue;
+				}
+				dprintf(STDOUT_FILENO, "OK\n");
+				tile->walkable = walkable;
+			} else dprintf(STDOUT_FILENO, "Error: Unknown parameter\n");
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
