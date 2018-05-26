@@ -8,7 +8,13 @@
 
 #define MAXLINE 1024
 
-int stage = -1;
+#define SETUP_LOOP 0
+#define GAME_LOOP 1
+#define QUIT -1
+
+#define PROMPT "> "
+
+int stage;
 
 typedef struct {
 	unsigned int size;
@@ -51,13 +57,17 @@ void print_help(const char *topic)
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
 }
 
-void standby()
+void setup_loop()
 {
 	char command[MAXLINE];
-	while (1) {
+	unsigned char print_prompt = 1;
+	while (stage == SETUP_LOOP) {
+		if (print_prompt) dprintf(STDOUT_FILENO, "%s", PROMPT);
+		print_prompt = 1;
 		read_stdin();
 		if (stdin_buffer->size == 0
 		    || stdin_buffer->string[stdin_buffer->size - 1] != '\n') {
+			print_prompt = 0;
 			continue;
 		}
 		if (stdin_buffer->string[0] == '\n') {
@@ -122,26 +132,34 @@ void standby()
 	}
 }
 
+void game_loop()
+{
+	while (stage == GAME_LOOP) {
+		/* we communicate with bots/players here */
+		dprintf(STDOUT_FILENO, "game over\n");
+		dprintf(STDOUT_FILENO, "clearing gamedata ... OK\n");
+		stage = SETUP_LOOP;
+		continue;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	reset();
 	dprintf(STDOUT_FILENO, "Feud Server v0.0.1\n");
 	stdin_buffer = malloc(sizeof(buffer_t));
 	stdin_buffer->size = 0;
-	stage = 0;
+	stage = SETUP_LOOP;
 	while (1) {
 		switch (stage) {
-		case 0:
-			standby();
+		case SETUP_LOOP:
+			setup_loop();
 			break;
-/**
-		case 1:
-			think();
+		case GAME_LOOP:
+			game_loop();
 			break;
-**/
 		default:
 			return 0;
-			break;
 		}
 	}
 	return 0;
