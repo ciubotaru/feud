@@ -45,6 +45,8 @@ void print_help(const char *topic)
 {
 	if (topic == NULL) {
 		dprintf(STDOUT_FILENO, "Available commands:\n");
+		dprintf(STDOUT_FILENO, 
+			" board <height> <width> - set game board size\n");
 		dprintf(STDOUT_FILENO, " go - start the game\n");
 		dprintf(STDOUT_FILENO, " load - load game from file\n");
 		dprintf(STDOUT_FILENO, " new - clear everything\n");
@@ -77,6 +79,38 @@ void setup_loop()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!strcmp(token, "board")) {
+			uint16_t coords[2];
+			int i;
+			int success = 1;
+			for (i = 0; i < 2; i++) {
+				token = strtok(NULL, " \n");
+				if (!token) {
+					dprintf(STDOUT_FILENO,
+						"Error: missing argument\n");
+					success = 0;
+					break;
+				}
+				coords[i] = (uint16_t) atoi(token);
+				if (coords[i] == 0) {
+					dprintf(STDOUT_FILENO,
+						"Error: bad argument\n");
+					success = 0;
+					break;
+				}
+			}
+			if (success) {
+				if (world == NULL) create_world();
+				if (world->grid != NULL) {
+					dprintf(STDOUT_FILENO, "Error: bad command (board already set, use 'new')\n");
+					continue;
+				}
+				grid_t *grid = create_grid(coords[0], coords[1]);
+				if (grid == NULL) dprintf(STDOUT_FILENO, "Error: internal error (failed to create grid)\n");
+				else dprintf(STDOUT_FILENO, "OK\n");
+			}
+			continue;
+		}
 		if (!strcmp(token, "go")) {
 			dprintf(STDOUT_FILENO, "not implemented yet\n");
 			continue;
