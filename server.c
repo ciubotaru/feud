@@ -54,11 +54,26 @@ void print_help_piece()
 	return;
 }
 
+void print_help_player()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'player' command:\n");
+	dprintf(STDOUT_FILENO, " player add <playerID> - create a new player\n");
+	dprintf(STDOUT_FILENO, " player delete <playerID> - delete a player\n");
+	dprintf(STDOUT_FILENO,
+		" player money <playerID> <amount> - set player money (0-%i)\n",
+		MONEY_MAX);
+	dprintf(STDOUT_FILENO,
+		" player name <playerID> <playerName> - set player name\n");
+	dprintf(STDOUT_FILENO,
+		" player rank <playerID> <playerRank> - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
+	return;
+}
+
 void print_help(const char *topic)
 {
 	if (topic == NULL) {
 		dprintf(STDOUT_FILENO, "Available commands:\n");
-		dprintf(STDOUT_FILENO, 
+		dprintf(STDOUT_FILENO,
 			" board <height> <width> - set game board size\n");
 		dprintf(STDOUT_FILENO, " go - start the game\n");
 		dprintf(STDOUT_FILENO, " load - load game from file\n");
@@ -67,6 +82,8 @@ void print_help(const char *topic)
 			" piece ... - set up pieces (type 'help piece' for more info)\n");
 		dprintf(STDOUT_FILENO,
 			" ping – pong! (pinging players not implemented yet)\n");
+		dprintf(STDOUT_FILENO,
+			" player ... - set up a player (type 'help player' for more info)\n");
 		dprintf(STDOUT_FILENO, " quit - terminate AI\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
@@ -75,6 +92,10 @@ void print_help(const char *topic)
 	}
 	if (strcmp(topic, "piece") == 0) {
 		print_help_piece();
+		return;
+	}
+	if (strcmp(topic, "player") == 0) {
+		print_help_player();
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
@@ -286,6 +307,154 @@ void setup_loop()
 		}
 		if (!strcmp(command, "ping")) {
 			dprintf(STDOUT_FILENO, "pong\n");
+			continue;
+		}
+		if (!strcmp(token, "player")) {
+			token = strtok(NULL, " \n");
+			if (!token) {
+				dprintf(STDOUT_FILENO,
+					"Error: Parameter missing (type 'help player' for more info)\n");
+				continue;
+			}
+			/* can be 'add', 'delete', 'money', 'name' or 'rank' */
+			if (!strcmp(token, "add")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (id < 1) {
+					dprintf(STDOUT_FILENO,
+						"Error: bad PlayerID\n");
+					continue;
+				}
+				if (get_character_by_id(id) != NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID not unique\n");
+					continue;
+				}
+				character_t *character = add_character(id_ch);
+				character->id = id;
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "delete")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid PlayerID\n");
+					continue;
+				}
+				remove_character(character);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "money")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *money_ch = strtok(NULL, " \n");
+				uint16_t money = (uint16_t) atoi(money_ch);
+				set_money(character, money);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "name")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *name = strtok(NULL, " \n");
+				if (!name) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerName missing (type 'help player' for more info)\n");
+					continue;
+				}
+				if (!strcmp(character->name, name)) {
+					dprintf(STDOUT_FILENO, "OK\n");
+					continue;
+				}
+				if (get_character_by_name(name) != NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerName not unique\n");
+					continue;
+				}
+				strcpy(character->name, name);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			}
+			if (!strcmp(token, "rank")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing (type 'help player' for more info)\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				character_t *character = get_character_by_id(id);
+				if (character == NULL) {
+					dprintf(STDOUT_FILENO,
+						"Error: no such player (type 'help player' for more info)\n");
+					continue;
+				}
+				char *rank_ch = strtok(NULL, " \n");
+				int rank = 0;
+				int success = 1;
+				switch (rank_ch[0]) {
+				case 'k':
+					rank = 4;
+					break;
+				case 'd':
+					rank = 3;
+					break;
+				case 'c':
+					rank = 2;
+					break;
+				case 'b':
+					rank = 1;
+					break;
+				default:
+					dprintf(STDOUT_FILENO,
+						"Error: invalid rank (type 'help player' for more info)\n");
+					success = 0;
+					break;
+				}
+				if (!success)
+					continue;
+				set_character_rank(character, rank);
+				dprintf(STDOUT_FILENO, "OK\n");
+				continue;
+			} else
+				dprintf(STDOUT_FILENO,
+					"Error: Unknown parameter (type 'help player' for more info)\n");
 			continue;
 		}
 		if (!strcmp(command, "quit")) {
