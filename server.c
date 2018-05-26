@@ -110,6 +110,7 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO,
 			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
+		dprintf(STDOUT_FILENO, " status - print game status\n");
 		dprintf(STDOUT_FILENO,
 			" tile ... - set up a tile (type 'help tile' for more info\n");
 		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
@@ -134,6 +135,40 @@ void print_help(const char *topic)
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
+}
+
+void print_status()
+{
+	dprintf(STDOUT_FILENO, "Game status:\n");
+	if (world == NULL) {
+		dprintf(STDOUT_FILENO, " Game world not created\n");
+		return;
+	}
+	if (world->grid == NULL) {
+		dprintf(STDOUT_FILENO, " Board not created\n");
+		return;
+	}
+	dprintf(STDOUT_FILENO,
+		" Date: %s of year %d\n",
+		months[world->current_time.tm_mon],
+		world->current_time.tm_year);
+	dprintf(STDOUT_FILENO,
+		" Map size: %ix%i\n",
+		world->grid->width,
+		world->grid->height);
+	dprintf(STDOUT_FILENO,
+		" Nr. regions: %i\n",
+		count_regions());
+	dprintf(STDOUT_FILENO,
+		" Nr. players: %i\n",
+		count_characters());
+	dprintf(STDOUT_FILENO,
+		" Active player: %i\n",
+		(world->selected_character ? world->selected_character->id : 0));
+	dprintf(STDOUT_FILENO,
+		" Moves left: %i\n",
+		world->moves_left);
+	return;
 }
 
 void setup_loop()
@@ -623,6 +658,10 @@ void setup_loop()
 				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
 				free(msg);
 			}
+			continue;
+		}
+		if (!strcmp(token, "status")) {
+			print_status();
 			continue;
 		}
 		if (!strcmp(token, "tile")) {
