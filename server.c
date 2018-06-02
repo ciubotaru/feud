@@ -81,6 +81,17 @@ void print_help_region()
 	return;
 }
 
+void print_help_status()
+{
+	dprintf(STDOUT_FILENO, "Parameters for 'status' command:\n");
+	dprintf(STDOUT_FILENO, " status - print game status\n");
+	dprintf(STDOUT_FILENO, " status player - print player status\n");
+	dprintf(STDOUT_FILENO, " status playerlist - print list of players\n");
+	dprintf(STDOUT_FILENO, " status region - print region info\n");
+	dprintf(STDOUT_FILENO, " status regionlist - print list of regions\n");
+	return;
+}
+
 void print_help_tile()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'tile' command:\n");
@@ -130,6 +141,10 @@ void print_help(const char *topic)
 		print_help_region();
 		return;
 	}
+	if (strcmp(topic, "status") == 0) {
+		print_help_status();
+		return;
+	}
 	if (strcmp(topic, "tile") == 0) {
 		print_help_tile();
 		return;
@@ -165,10 +180,41 @@ void print_status()
 	dprintf(STDOUT_FILENO,
 		" Active player: %i\n",
 		(world->selected_character ? world->selected_character->id : 0));
-	dprintf(STDOUT_FILENO,
+	dprintf(STDOUT_FILENO, 
 		" Moves left: %i\n",
 		world->moves_left);
 	return;
+}
+
+void print_status_player(character_t *character) {
+	if (character == NULL) {
+		dprintf(STDOUT_FILENO,
+			"Error: No player with this ID\n");
+		return;
+	}
+	dprintf(STDOUT_FILENO, "ID: %i\n", character->id);
+	dprintf(STDOUT_FILENO, "Name: %s\n", character->name);
+	dprintf(STDOUT_FILENO, "Rank: %s\n", ranklist[character->rank]);
+	dprintf(STDOUT_FILENO, "Nr. regions: %i (%i tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
+	dprintf(STDOUT_FILENO, "Nr. pieces: %i\n", count_pieces_by_owner(character));
+	dprintf(STDOUT_FILENO, "Money: %i\n", get_money(character));
+	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
+	dprintf(STDOUT_FILENO, "Nr. vassals: %i\n", count_vassals(character));
+	if (world->selected_character == character) dprintf(STDOUT_FILENO,
+		" Moves left: %i\n",
+		world->moves_left);
+}
+
+void print_status_region(region_t *region) {
+	if (region == NULL) {
+		dprintf(STDOUT_FILENO,
+			"Error: No region with this ID\n");
+		return;
+	}
+	dprintf(STDOUT_FILENO, "ID: %i\n", region->id);
+	dprintf(STDOUT_FILENO, "Name: %s\n", region->name);
+	dprintf(STDOUT_FILENO, "Size: %i\n", region->size);
+	dprintf(STDOUT_FILENO, "Owner: %s\n", (region->owner ? region->owner->name : "none"));
 }
 
 void setup_loop()
@@ -661,7 +707,74 @@ void setup_loop()
 			continue;
 		}
 		if (!strcmp(token, "status")) {
-			print_status();
+			token = strtok(NULL, " \n");
+			if (!token) {
+				print_status();
+				continue;
+			}
+			if (!strcmp(token, "player")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: PlayerID missing\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (id < 1) {
+					dprintf(STDOUT_FILENO,
+						"Error: bad PlayerID\n");
+					continue;
+				}
+				character_t *character = get_character_by_id(id);
+				print_status_player(character);
+			}
+			else if (!strcmp(token, "playerlist")) {
+				if (world == NULL) {
+					dprintf(STDOUT_FILENO, "World does not exist\n");
+					continue;
+				}
+				if (world->characterlist == NULL) {
+					dprintf(STDOUT_FILENO, "No players\n");
+					continue;
+				}
+				character_t *current_character = world->characterlist;
+				while (current_character != NULL) {
+					dprintf(STDOUT_FILENO, "%i: %s\n", current_character->id, current_character->name);
+					current_character = current_character->next;
+				}
+			}
+			if (!strcmp(token, "region")) {
+				char *id_ch = strtok(NULL, " \n");
+				if (!id_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: RegionID missing\n");
+					continue;
+				}
+				uint16_t id = (uint16_t) atoi(id_ch);
+				if (id < 1) {
+					dprintf(STDOUT_FILENO,
+						"Error: bad RegionID\n");
+					continue;
+				}
+				region_t *region = get_region_by_id(id);
+				print_status_region(region);
+			}
+			else if (!strcmp(token, "regionlist")) {
+				if (world == NULL) {
+					dprintf(STDOUT_FILENO, "World does not exist\n");
+					continue;
+				}
+				if (world->regionlist == NULL) {
+					dprintf(STDOUT_FILENO, "No regions\n");
+					continue;
+				}
+				region_t *current_region = world->regionlist;
+				while (current_region != NULL) {
+					dprintf(STDOUT_FILENO, "%i: %s\n", current_region->id, current_region->name);
+					current_region = current_region->next;
+				}
+			}
+			else dprintf(STDOUT_FILENO, "Error: invalid parameter (type 'help status' for more info)\n");
 			continue;
 		}
 		if (!strcmp(token, "tile")) {
