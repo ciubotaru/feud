@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <ctype.h>		/* for isdigit */
 #include <unistd.h>
+#include <sys/ioctl.h>		/* to get terminal size */
 #include "world.h"
 
 #define MAXLINE 1024
@@ -150,6 +151,56 @@ void print_help(const char *topic)
 		return;
 	}
 	dprintf(STDOUT_FILENO, "%s: no help for this topic\n", topic);
+}
+
+void print_print(uint16_t w, uint16_t h) {
+	struct winsize ws;
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+	ws.ws_row -= 1;
+	if (w >= world->grid->width) w = (world->grid->width > ws.ws_col ? world->grid->width - ws.ws_col : 0);
+	if (h >= world->grid->height) h = (world->grid->height > ws.ws_row ? world->grid->height - ws.ws_row : 0);
+	uint16_t w_max = (w + ws.ws_col > world->grid->width ? world->grid->width : w + ws.ws_col);
+	uint16_t h_max = (h + ws.ws_row > world->grid->height ? world->grid->height : h + ws.ws_row);
+	char tile_char = '.';
+	int i, j;
+	for (i = h_max - 1; i >= h; i--) {
+		for (j = w; j < w_max; j++) {
+			if (world->grid->tiles[i][j]->piece != NULL) {
+				switch (world->grid->tiles[i][j]->piece->type) {
+				case NOBLE:	/* noble */
+					switch (world->grid->tiles[i][j]->
+						piece->owner->rank) {
+					case KNIGHT:
+						tile_char = 'k';
+						break;
+					case BARON:
+						tile_char = 'b';
+						break;
+					case COUNT:
+						tile_char = 'c';
+						break;
+					case DUKE:
+						tile_char = 'd';
+						break;
+					case KING:
+						tile_char = 'K';
+						break;
+					}
+					break;
+				case SOLDIER:	/* soldier */
+					tile_char = 's';
+					break;
+				case 2:	/* ship */
+					tile_char = 'S';
+					break;
+				}
+			}
+			else if (world->grid->tiles[i][j]->walkable) tile_char = '.';
+			else tile_char = '~';
+			dprintf(STDOUT_FILENO, "%c", tile_char);
+		}
+		dprintf(STDOUT_FILENO, "\n");
+	}
 }
 
 void print_status()
@@ -571,6 +622,22 @@ void setup_loop()
 			} else
 				dprintf(STDOUT_FILENO,
 					"Error: Unknown parameter (type 'help player' for more info)\n");
+			continue;
+		}
+		if (!strcmp(command, "print")) {
+			if (world->grid == NULL) {
+				dprintf(STDOUT_FILENO,
+					"Error: board not set\n");
+				continue;
+			}
+			uint16_t coords[2];
+			int i;
+			for (i = 0; i < 2; i++) {
+				token = strtok(NULL, " \n");
+				if (!token) coords[i] = 0;
+				else coords[i] = (uint16_t) atoi(token);
+			}
+			print_print(coords[0], coords[1]);
 			continue;
 		}
 		if (!strcmp(command, "quit")) {
