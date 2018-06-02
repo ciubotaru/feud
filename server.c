@@ -122,12 +122,13 @@ void print_help(const char *topic)
 		dprintf(STDOUT_FILENO,
 			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
-		dprintf(STDOUT_FILENO, " status - print game status\n");
+		dprintf(STDOUT_FILENO,
+			" status ... - print game status (type 'help status' for more info)\n");
 		dprintf(STDOUT_FILENO,
 			" tile ... - set up a tile (type 'help tile' for more info\n");
 		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
 		dprintf(STDOUT_FILENO, " validate - check game data playability\n");
-//		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
+		dprintf(STDOUT_FILENO, "For details, type 'help [command]'.\n");
 		return;
 	}
 	if (strcmp(topic, "piece") == 0) {
