@@ -224,10 +224,10 @@ void print_status()
 		world->grid->width,
 		world->grid->height);
 	dprintf(STDOUT_FILENO,
-		" Nr. regions: %i\n",
+		" Regions: %i\n",
 		count_regions());
 	dprintf(STDOUT_FILENO,
-		" Nr. players: %i\n",
+		" Players: %i\n",
 		count_characters());
 	dprintf(STDOUT_FILENO,
 		" Active player: %i\n",
@@ -247,11 +247,17 @@ void print_status_player(character_t *character) {
 	dprintf(STDOUT_FILENO, "ID: %i\n", character->id);
 	dprintf(STDOUT_FILENO, "Name: %s\n", character->name);
 	dprintf(STDOUT_FILENO, "Rank: %s\n", ranklist[character->rank]);
-	dprintf(STDOUT_FILENO, "Nr. regions: %i (%i tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
-	dprintf(STDOUT_FILENO, "Nr. pieces: %i\n", count_pieces_by_owner(character));
+	dprintf(STDOUT_FILENO, "Born: %s of %i\n", months[character->birthdate.tm_mon], character->birthdate.tm_year);
+	uint16_t age_months = 12 * (world->current_time.tm_year - character->birthdate.tm_year) + world->current_time.tm_mon - character->birthdate.tm_mon;
+	dprintf(STDOUT_FILENO, "Age: %i year(s) %i month(s)\n", age_months / 12, age_months % 12);
+	dprintf(STDOUT_FILENO, "Die: %s of %i\n", months[character->deathdate.tm_mon], character->deathdate.tm_year);
+	uint16_t left_months = 12 * (character->deathdate.tm_year - world->current_time.tm_year) + character->deathdate.tm_mon - world->current_time.tm_mon;
+	dprintf(STDOUT_FILENO, "Left: %i year(s) %i month(s)\n", left_months / 12, left_months % 12);
+	dprintf(STDOUT_FILENO, "Regions: %i (%i tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
+	dprintf(STDOUT_FILENO, "Army: %i\n", count_pieces_by_owner(character));
 	dprintf(STDOUT_FILENO, "Money: %i\n", get_money(character));
 	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
-	dprintf(STDOUT_FILENO, "Nr. vassals: %i\n", count_vassals(character));
+	dprintf(STDOUT_FILENO, "Vassals: %i\n", count_vassals(character));
 	if (world->selected_character == character) dprintf(STDOUT_FILENO,
 		" Moves left: %i\n",
 		world->moves_left);
@@ -811,7 +817,7 @@ void setup_loop()
 					current_character = current_character->next;
 				}
 			}
-			if (!strcmp(token, "region")) {
+			else if (!strcmp(token, "region")) {
 				char *id_ch = strtok(NULL, " \n");
 				if (!id_ch) {
 					dprintf(STDOUT_FILENO,
