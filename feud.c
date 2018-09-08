@@ -278,6 +278,7 @@ void draw_map(WINDOW *local_win)
 		piece = get_noble_by_owner(character);
 		/* set cursor to noble */
 		set_cursor(piece->height, piece->width);
+		tile = world->grid->tiles[piece->height][piece->width];
 		result = claim_region(character, tile->region);
 		switch (result) {
 		case 1:	/* claimed from nature */
