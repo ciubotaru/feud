@@ -186,10 +186,12 @@ void draw_map(WINDOW *local_win)
 
 	int message_len = strlen(message);
 	if (message_len > 0) {
+		wcolor_set(local_win, 12, NULL);
 		for (i = 0; i < (message_len - 1) / 29 + 1; i++) {
 			mvwprintw(local_win, 20 + i, 50, "%.*s", 29,
 				  &message[29 * i]);
 		}
+		wcolor_set(local_win, 1, NULL);
 	}
 
 	mvwprintw(local_win, 23, 50, "Mode: %s\n", modes[current_mode]);
