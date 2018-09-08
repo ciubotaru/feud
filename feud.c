@@ -198,6 +198,7 @@ void draw_map(WINDOW *local_win)
 	int ch;
 	ch = get_input(local_win);
 	unsigned char result;
+	message[0] = '\0';
 	switch (ch) {
 	case 1065:		//up
 		if (current_mode == VIEW) {
@@ -337,22 +338,35 @@ void draw_map(WINDOW *local_win)
 	case 'u':		//place a soldier -- dialog
 			/**
 			 * check if in view mode
-			 * check if region is our (not free, first of all)
 			 * check if enough money
 			 * check if walkable
+			 * check if region is our (defined and claimed)
 			 * check if empty
 			**/
-		if (current_mode == VIEW && tile->region != NULL
-		    && tile->region->owner != NULL
-		    && tile->region->owner->id == world->selected_character->id
-		    && character->money >= COST_SOLDIER && tile->walkable
-		    && piece == NULL) {
-			add_piece(1, world->grid->cursor_height,
-				  world->grid->cursor_width, character);
-			set_money(character, get_money(character) - COST_SOLDIER);
-			update_money_ranking();
-			update_army_ranking();
+		if (current_mode != VIEW) break;
+		if (character->money < COST_SOLDIER) {
+			strcpy(message, "Not enough money.");
+			break;
 		}
+		if (!tile->walkable) {
+			strcpy(message, "Tile not walkable. Choose another tile.");
+			break;
+		}
+		if (piece != NULL) {
+			strcpy(message, "Tile not empty. Choose another tile.");
+			break;
+		}
+		if (tile->region == NULL
+			|| tile->region->owner == NULL
+			|| tile->region->owner->id != world->selected_character->id) {
+			strcpy(message, "Not your region. Choose another tile.");
+			break;
+		}
+		add_piece(1, world->grid->cursor_height,
+			  world->grid->cursor_width, character);
+		set_money(character, get_money(character) - COST_SOLDIER);
+		update_money_ranking();
+		update_army_ranking();
 		break;
 	case 'v':		// toggle between 'move piece' and 'explore map'
 		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
