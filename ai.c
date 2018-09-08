@@ -10,6 +10,7 @@
 #define GAMEOVER 2
 #define MAXLINE 1024
 #define PROMPT "> "
+#define ABOUT_STRING "Feud AI v0.0.1"
 
 int stage = -1;
 int side;
@@ -38,6 +39,11 @@ void reset()
 {
 	destroy_world();
 	create_world();
+}
+
+void print_about()
+{
+	dprintf(STDOUT_FILENO, "%s\n", ABOUT_STRING);
 }
 
 void print_help_piece()
@@ -187,6 +193,10 @@ void standby()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!strcmp(token, "about")) {
+			print_about();
+			continue;
+		}
 		if (!strcmp(token, "board")) {
 			uint16_t coords[2];
 			int i;
@@ -928,7 +938,7 @@ void think()
 int main(int argc, char **argv)
 {
 	reset();
-	dprintf(STDOUT_FILENO, "Feud AI v0.0.1\n");
+	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
 	stdin_buffer->size = 0;
 	stage = STANDBY;

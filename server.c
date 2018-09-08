@@ -8,6 +8,7 @@
 #include "world.h"
 
 #define MAXLINE 1024
+#define ABOUT_STRING "Feud Server v0.0.1"
 
 #define SETUP_LOOP 0
 #define GAME_LOOP 1
@@ -40,6 +41,12 @@ void reset()
 {
 	destroy_world();
 	create_world();
+}
+
+void print_about()
+{
+	dprintf(STDOUT_FILENO, "%s\n", ABOUT_STRING);
+	return;
 }
 
 void print_help_piece()
@@ -295,7 +302,11 @@ void setup_loop()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
-		if (!strcmp(token, "board")) {
+		if (!strcmp(token, "about")) {
+			print_about();
+			continue;
+		}
+		else if (!strcmp(token, "board")) {
 			uint16_t coords[2];
 			int i;
 			int success = 1;
@@ -987,7 +998,7 @@ void game_loop()
 int main(int argc, char **argv)
 {
 	reset();
-	dprintf(STDOUT_FILENO, "Feud Server v0.0.1\n");
+	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
 	stdin_buffer->size = 0;
 	stage = SETUP_LOOP;
