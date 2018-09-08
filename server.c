@@ -92,10 +92,10 @@ void print_help_region()
 void print_help_status()
 {
 	dprintf(STDOUT_FILENO, "Parameters for 'status' command:\n");
-	dprintf(STDOUT_FILENO, " status - print game status\n");
-	dprintf(STDOUT_FILENO, " status player - print player status\n");
+	dprintf(STDOUT_FILENO, " status - print general information (map size, nr. of players, nr. of regions)\n");
+	dprintf(STDOUT_FILENO, " status player <playerID> - print player status\n");
 	dprintf(STDOUT_FILENO, " status playerlist - print list of players\n");
-	dprintf(STDOUT_FILENO, " status region - print region info\n");
+	dprintf(STDOUT_FILENO, " status region <regionID> - print region info\n");
 	dprintf(STDOUT_FILENO, " status regionlist - print list of regions\n");
 	return;
 }
@@ -130,7 +130,7 @@ void print_help(const char *topic)
 			" region ... - set up a region (type 'help region' for more info)\n");
 		dprintf(STDOUT_FILENO, " save - write current game to file\n");
 		dprintf(STDOUT_FILENO,
-			" status ... - print game status (type 'help status' for more info)\n");
+			" status ... - print print game information (type 'help status' for more info)\n");
 		dprintf(STDOUT_FILENO,
 			" tile ... - set up a tile (type 'help tile' for more info\n");
 		dprintf(STDOUT_FILENO, " turn <playerID> - set player's turn\n");
@@ -236,10 +236,11 @@ void print_status()
 	dprintf(STDOUT_FILENO,
 		" Players: %i\n",
 		count_characters());
+	character_t *turn = world->selected_character;
 	dprintf(STDOUT_FILENO,
-		" Active player: %i\n",
-		(world->selected_character ? world->selected_character->id : 0));
-	dprintf(STDOUT_FILENO, 
+		"Player to move: %s\n",
+		(turn ? turn->name : "none"));
+	dprintf(STDOUT_FILENO,
 		" Moves left: %i\n",
 		world->moves_left);
 	return;
@@ -266,7 +267,7 @@ void print_status_player(character_t *character) {
 	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
 	dprintf(STDOUT_FILENO, "Vassals: %i\n", count_vassals(character));
 	if (world->selected_character == character) dprintf(STDOUT_FILENO,
-		" Moves left: %i\n",
+		"Moves left: %i\n",
 		world->moves_left);
 }
 
@@ -822,10 +823,10 @@ void setup_loop()
 					dprintf(STDOUT_FILENO, "No players\n");
 					continue;
 				}
-				character_t *current_character = world->characterlist;
-				while (current_character != NULL) {
-					dprintf(STDOUT_FILENO, "%i: %s\n", current_character->id, current_character->name);
-					current_character = current_character->next;
+				character_t *current = world->characterlist;
+				while (current != NULL) {
+					printf("%s %i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, ranklist[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					current = current->next;
 				}
 			}
 			else if (!strcmp(token, "region")) {
@@ -853,10 +854,11 @@ void setup_loop()
 					dprintf(STDOUT_FILENO, "No regions\n");
 					continue;
 				}
-				region_t *current_region = world->regionlist;
-				while (current_region != NULL) {
-					dprintf(STDOUT_FILENO, "%i: %s\n", current_region->id, current_region->name);
-					current_region = current_region->next;
+				region_t *current = world->regionlist;
+				while (current != NULL) {
+					/* Add nr of tiles and owner */
+					printf("%i. %s, %i tile(s), owned by %s\n", current->id, current->name, current->size, (current->owner ? current->owner->name : "none"));
+					current = current->next;
 				}
 			}
 			else dprintf(STDOUT_FILENO, "Error: invalid parameter (type 'help status' for more info)\n");
