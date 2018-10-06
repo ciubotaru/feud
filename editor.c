@@ -479,9 +479,9 @@ void characters_dialog(WINDOW *local_win)
 	int counter = 0;
 	int section = 0;
 	character_t *current = world->characterlist;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
-	while (current != NULL) {
+	int characterlist_selector;
+	while (current) {
+		characterlist_selector = get_character_order(world->selected_character);
 		section = characterlist_selector / 10;
 		if (counter >= section * 10 && counter < section * 10 + 10
 		    && counter < nr_characters) {
@@ -504,36 +504,22 @@ void characters_dialog(WINDOW *local_win)
 		current_screen = ADD_CHARACTER_DIALOG;
 		break;
 	case 'd':
-		counter = 0;
-		current = world->characterlist;
-		while (counter < characterlist_selector) {
-			current = current->next;
-			counter++;
-		}
-		if (current != NULL) {
-			remove_character(current);
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				world->selected_character =
-				    get_character_by_order(characterlist_selector);
-			}
-		}
+		current = world->selected_character;
+		if (world->selected_character->next) world->selected_character = world->selected_character->next;
+		else world->selected_character = world->selected_character->prev;
+		remove_character(current);
 		break;
 	case 'e':
 		current_screen = EDIT_CHARACTER_DIALOG;
 		break;
 	case 1065:
-		if (characterlist_selector > 0) {
-			characterlist_selector--;
-			world->selected_character =
-			    get_character_by_order(characterlist_selector);
+		if (world->selected_character->prev) {
+			world->selected_character = world->selected_character->prev;
 		}
 		break;
 	case 1066:
-		if (characterlist_selector < nr_characters - 1) {
-			characterlist_selector++;
-			world->selected_character =
-			    get_character_by_order(characterlist_selector);
+		if (world->selected_character->next) {
+			world->selected_character = world->selected_character->next;
 		}
 		break;
 	case 'q':
@@ -1499,9 +1485,8 @@ void homage_dialog(WINDOW *local_win)
 
 	int i;
 	character_t *active_character = world->selected_character;
-	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *lord = world->selected_character;
+	int characterlist_selector;
 
 	int set_lord_ok = 0;
 	int unset_lord_ok = 0;
@@ -1517,18 +1502,18 @@ void homage_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (selected_character->id == active_character->id)
+		if (lord->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
-		else if (selected_character->lord != NULL
-			 && selected_character->lord->id == active_character->id)
+		else if (lord->lord != NULL
+			 && lord->lord->id == active_character->id)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
-		else if (selected_character->rank <= KNIGHT)
+		else if (lord->rank <= KNIGHT)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to a knight]");
 		else if (active_character->lord != NULL
-			 && active_character->lord == selected_character) {
+			 && active_character->lord == lord) {
 			mvwprintw(local_win, 2, 2, "To unset lord, press 'd'");
 			unset_lord_ok = 1;
 		} else {
@@ -1543,6 +1528,7 @@ void homage_dialog(WINDOW *local_win)
 		int counter = 0;
 		int section = 0;
 		character_t *current = world->characterlist;
+		characterlist_selector = get_character_order(lord);
 		while (current != NULL) {
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -1569,38 +1555,14 @@ void homage_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (lord->prev) lord = lord->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (lord->next) lord = lord->next;
 			break;
 		case 10:
 			if (set_lord_ok) {
-				active_character->lord = selected_character;
+				active_character->lord = lord;
 				current_screen = EDIT_CHARACTER_DIALOG;
 				return;
 			}

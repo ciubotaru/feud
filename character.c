@@ -33,6 +33,7 @@ static void fill_character_details(character_t *character, const char *name)
 	character->rank_land = 0;
 	character->rank_army = 0;
 	character->rank_money = 0;
+	character->prev = NULL;
 	character->next = NULL;
 	character->birthdate.tm_year = world->current_time.tm_year;
 	character->birthdate.tm_mon = world->current_time.tm_mon;
@@ -61,6 +62,7 @@ character_t *add_character(const char *name)
 	if (!current->next)
 		return NULL;
 	fill_character_details(current->next, name);
+	current->next->prev = current;
 	return current->next;
 }
 
@@ -117,17 +119,18 @@ void remove_character(character_t *character)
 		else world->selected_character = NULL;
 	}
 
-	character_t *prev = NULL;
+//	character_t *prev = NULL;
 	current = world->characterlist;
 	while (current != NULL) {
 		if (current == character) {
-			if (prev) prev->next = current->next;
+			if (current->prev) current->prev->next = current->next;
 			else world->characterlist = current->next;
+			if (current->next) current->next->prev = current->prev;
 			character_t *tmp = current;
 			free(tmp);
 			return;
 		}
-		prev = current;
+//		prev = current;
 		current = current->next;
 	}
 }

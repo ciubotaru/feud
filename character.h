@@ -29,6 +29,7 @@ typedef struct character {
 	struct character *heir;
 //      uint16_t nr_vassals;
 //      struct character **vassals;
+	struct character *prev;
 	struct character *next;
 } character_t;
 

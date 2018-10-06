@@ -731,8 +731,7 @@ void give_money_dialog(WINDOW *local_win)
 			error = 0;
 			break;
 		case 1:
-			characterlist_selector =
-			    get_character_order(world->selected_character);
+			receiving_character = world->selected_character;
 			while (stage == 1) {
 				curs_set(FALSE);
 				noecho();
@@ -756,6 +755,8 @@ void give_money_dialog(WINDOW *local_win)
 				int counter = 0;
 				int section = 0;
 				character_t *current = world->characterlist;
+				characterlist_selector =
+				    get_character_order(receiving_character);
 				while (current != NULL) {
 					section = characterlist_selector / 10;
 					if (counter >= section * 10
@@ -789,20 +790,16 @@ void give_money_dialog(WINDOW *local_win)
 				int user_move = get_input(local_win);
 				switch (user_move) {
 				case 1065:
-					if (characterlist_selector > 0)
-						characterlist_selector--;
+					if (receiving_character->prev) receiving_character = receiving_character->prev;
 					break;
 				case 1066:
-					if (characterlist_selector <
-					    nr_characters - 1)
-						characterlist_selector++;
+					if (receiving_character->next) receiving_character = receiving_character->next;
 					break;
 				case 10:
-					receiving_character =
-					    get_character_by_order
-					    (characterlist_selector);
-					error = 0;
-					stage = 2;
+					if (receiving_character != active_character) {
+						error = 0;
+						stage = 2;
+					}
 					break;
 				case 27:
 					current_screen = MAIN_SCREEN;
@@ -906,10 +903,11 @@ void successor_dialog(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	int i;
+	character_t *current;
 	character_t *active_character = world->selected_character;
 	character_t *heir = active_character->heir;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *new_heir = world->selected_character;
+	int characterlist_selector;
 
 	while (1) {
 		curs_set(FALSE);
@@ -927,7 +925,8 @@ void successor_dialog(WINDOW *local_win)
 		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		character_t *current = world->characterlist;
+		current = world->characterlist;
+		characterlist_selector = get_character_order(new_heir);
 		while (current != NULL) {
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -956,19 +955,16 @@ void successor_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0)
-				characterlist_selector--;
+			if (new_heir->prev) new_heir = new_heir->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1)
-				characterlist_selector++;
+			if (new_heir->next) new_heir = new_heir->next;
 			break;
 		case 10:
-			heir = get_character_by_order(characterlist_selector);
-			if (heir->id != active_character->id)
-				set_successor(active_character, heir);
-			else
-				heir = active_character->heir;
+			if (new_heir != active_character) {
+				set_successor(active_character, new_heir);
+				heir = new_heir;
+			}
 			break;
 		case 'd':
 			heir = NULL;
@@ -1153,10 +1149,10 @@ void homage_dialog(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	int i;
+	character_t *current;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	int characterlist_selector;
 
 	int pay_homage_ok = 0;
 
@@ -1191,7 +1187,8 @@ void homage_dialog(WINDOW *local_win)
 		int nr_characters = count_characters();
 		int counter = 0;
 		int section = 0;
-		character_t *current = world->characterlist;
+		characterlist_selector = get_character_order(selected_character);
+		current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -1218,34 +1215,10 @@ void homage_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->prev) selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->next) selected_character = selected_character->next;
 			break;
 		case 10:
 			if (pay_homage_ok) {
@@ -1461,8 +1434,7 @@ void diplomacy_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	int characterlist_selector;
 
 	unsigned char offer_alliance_ok, quit_alliance_ok, offer_peace_ok,
 	    declare_war_ok, accept_offer_ok, reject_offer_ok, retract_offer_ok;
@@ -1574,6 +1546,7 @@ void diplomacy_dialog(WINDOW *local_win)
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
 		dipoffer_t *current_dipoffer = NULL;
+		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
 				current_dipstatus =
@@ -1619,34 +1592,10 @@ void diplomacy_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->prev) selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->next) selected_character = selected_character->next;
 			break;
 		case 'a':	/* offer alliance */
 			if (offer_alliance_ok) {
