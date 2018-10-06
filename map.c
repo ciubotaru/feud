@@ -268,13 +268,18 @@ void remove_region(region_t * region)
 	if (world->regionlist == NULL)
 		return;
 
-	for (region_t **current = &world->regionlist; *current; current = &(*current)->next) {
-		if (*current == region) {
-			region_t *next = (*current)->next;
-			free(*current);
-			*current = next;
-			break;
+	region_t *prev = NULL;
+	region_t *current = world->regionlist;
+	while (current != NULL) {
+		if (current == region) {
+			if (prev) prev->next = current->next;
+			else world->regionlist = current->next;
+			region_t *tmp = current;
+			free(tmp);
+			return;
 		}
+		prev = current;
+		current = current->next;
 	}
 }
 

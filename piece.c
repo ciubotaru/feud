@@ -114,14 +114,18 @@ void remove_piece(piece_t * piece)
 	if (world->grid == NULL || piece == NULL || world->piecelist == NULL)
 		return;
 
-	for (piece_t **current = &world->piecelist; *current; current = &(*current)->next) {
-		if (*current == piece) {
-			piece_t *next = (*current)->next;
-			world->grid->tiles[(*current)->height][(*current)->width]->piece = NULL;
-			free(*current);
-			*current = next;
-			break;
+	piece_t *prev = NULL;
+	piece_t *current = world->piecelist;
+	while (current != NULL) {
+		if (current == piece) {
+			if (prev) prev->next = current->next;
+			else world->piecelist = current->next;
+			piece_t *tmp = current;
+			free(tmp);
+			return;
 		}
+		prev = current;
+		current = current->next;
 	}
 }
 

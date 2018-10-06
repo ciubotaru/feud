@@ -117,13 +117,18 @@ void remove_character(character_t *character)
 		else world->selected_character = NULL;
 	}
 
-	for (character_t **current = &world->characterlist; *current; current = &(*current)->next) {
-		if (*current == character) {
-			character_t *next = (*current)->next;
-			free(*current);
-			*current = next;
-			break;
+	character_t *prev = NULL;
+	current = world->characterlist;
+	while (current != NULL) {
+		if (current == character) {
+			if (prev) prev->next = current->next;
+			else world->characterlist = current->next;
+			character_t *tmp = current;
+			free(tmp);
+			return;
 		}
+		prev = current;
+		current = current->next;
 	}
 }
 
