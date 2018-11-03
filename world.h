@@ -1,7 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 #include "file.h"
-#include "player.h"
+#include "character.h"
 #include "map.h"
 #include "dice.h"
 #include "piece.h"
@@ -13,9 +13,9 @@
 typedef struct {
 	grid_t *grid;
 
-	player_t *playerlist;
-	uint16_t next_player_id;
-	uint16_t selected_player;
+	character_t *characterlist;
+	uint16_t next_character_id;
+	character_t *selected_character;
 
 	gametime_t current_time;
 
@@ -39,17 +39,16 @@ void create_world(void);
 
 void destroy_world(void);
 
-char message[255]; /* ToDo replace all occurences with user_message */
+char message[255];		/* ToDo replace all occurences with user_message */
 
-char user_message[255];
+//char user_message[255];
 
-char display_message_str[255];
+//char display_message_str[255];
 
-void add_user_message(char *new_text);
+//void add_user_message(char *new_text);
 
-void msg_to_display(char *new_text);
+//void msg_to_display(char *new_text);
 
 int validate_game_data(char **error_message);
 
 #endif
-

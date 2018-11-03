@@ -1,0 +1,14 @@
+INSTALLATION
+============
+
+To compile feud from source code, type:
+
+$ ./configure --prefix=DIRECTORY
+$ make
+
+The generic way to install the compiled files is:
+
+$ make install
+
+However, one might prefer to use distro-specific installation mechanism (like
+"checkinstall") instead.

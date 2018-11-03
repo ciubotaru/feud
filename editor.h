@@ -7,9 +7,9 @@ WINDOW *map_editor();
 
 WINDOW *new_game_dialog();
 
-WINDOW *players_dialog();
+WINDOW *characters_dialog();
 
-WINDOW *add_player_dialog();
+WINDOW *add_character_dialog();
 
 WINDOW *regions_dialog();
 
@@ -17,14 +17,14 @@ WINDOW *add_region_dialog();
 
 WINDOW *tile_to_region();
 
-WINDOW *region_to_player();
+WINDOW *region_to_character();
 
 WINDOW *rename_region_dialog();
 
-WINDOW *edit_player_dialog();
+WINDOW *edit_character_dialog();
 
 WINDOW *validate_dialog();
 
 WINDOW *edit_time_dialog();
 
-#endif /* EDITOR_H */
+#endif				/* EDITOR_H */

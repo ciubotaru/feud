@@ -1,0 +1,110 @@
+GAME RULES
+==========
+
+Each player controls a feudal faction consisting of a noble (from knight to
+king), his army, money, land, diplomacy. Factions fight each other over land
+control. A player who loses his noble or all his land, loses the game. The game
+ends when there is only one sovereign noble left.
+
+Map
+---
+
+The game is played on a map (orthogonal grid). Map tiles can be walkable (land)
+or unwalkable (walls, water).
+
+A group of tiles make up a region. A region can either be free (terra nullius)
+or belong to a player. Region ownership changes when a player places the noble
+in that region:
+* A player can claim a free region.
+* A player can conquer a region owned by an enemy (if no other nobles are in
+  that region).
+
+Regions have names.
+
+Pieces
+------
+
+A walkable tile can house one piece. Each piece belongs to one player.
+Pieces move horizontally or vertically, not diagonally. There are two
+types of pieces: nobles and soldiers. A noble can be king, duke, count
+or baron. Noble's rank can change:
+* Paying homage to another player of same or lower rank -- the new vassal
+  is ranked down so as to be below his lord.
+* Promoting a vassal -- the lord will pay to increase his vassal's rank
+  (should be below the lord's rank and the vassal should have enough land).
+* Declaring oneself a king -- a free (lordless) player can declare
+  himself king if he has enough money and land.
+
+A noble has a finite lifespan (normally between 60 and 80 years). After
+a noble dies, a heir or lord will inherit the property.
+
+Turns and moves
+---------------
+
+The players move their pieces (and perform other actions) in turns. The
+number of tiles that a player is allowed to move his pieces is determined
+by a random number from one to siz (a roll of an ordinary six-sided dice).
+Within this number, the player can move any piece, in any order.
+
+If a player gets six, he can take money (see below) instead of moving.
+
+Money
+-----
+
+Players earn money by rolling a six and forfeiting the move. Money is used for:
+* recruiting new soldiers
+* promoting a vassal to a higher rank
+* self-proclamation
+* payments to other players
+
+Fief
+----
+
+Players can enter feudal (lord-vassal) relations with each other. If a player
+promotes one of their soldiers to a noble rank, a new player is created and this
+new player will be a vassal of the original player. An existing player can pay
+homage to, and become the vassal of, another player. The feudal relation can be
+ended by the lord freeing their vassal from homage.
+
+Rank
+----
+
+There are 5 noble ranks: knight, baron, count, duke and king. Player's rank can
+be increased by:
+* their lord promoting them to a higher rank, OR
+* a lordless noble declaring themselves king.
+
+Diplomacy
+---------
+
+Players can be: allies, enemies or neutral. Lord and vassal are always allies.
+Diplomatic relations are established as follows:
+* Neutral players can negotiate an alliance (one offers alliance, and the other
+  one accepts the offer).
+* Neutral or warring players automatically become allies if one of them pays
+  homage to the other one.
+* Enemies can stop their war by negotiating a peace treaty (one offers peace,
+  and the other accepts it). They become neutral.
+* Allies can unilaterally quit alliance unless they are lord and vassal.
+* Neutral player can unilaterally declare war.
+
+Diplomacy limits:
+* Players can not make an alliance if it stops the game.
+* Players can not quit alliance if they are lord-vassal.
+
+Succession
+----------
+
+A player can name a heir. If a player loses (the hero dies of age, is killed,
+loses all his land etc), another player (the successor) inherits their land,
+soldiers, money and, maybe, title and alegiance. The rules of succession are:
+* If a player named a heir, the heir will succeed.
+* If a player has no heir, but has a lord, the lord will succeed.
+* If a player has no heir and no lord, the property is lost.
+* The successor always inherits land, money and army.
+* The successor inherits the grantor's title only if the title is higher then
+  the successor's current title.
+* If the successor has no lord, the grantor's alegiance is not inherited.
+* If the inherited title is compatible with their current alegiance, the
+  successor keeps their alegiance. Otherwise the successor will inherit grantor's
+  alegiance.

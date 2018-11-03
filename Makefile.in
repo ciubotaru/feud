@@ -2,10 +2,10 @@ CC=@CC@
 datarootdir=@datarootdir@
 prefix=@prefix@
 CFLAGS =@CFLAGS@
-OBJS = map.o player.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
-EXECS = feud feud-editor
+OBJS = map.o character.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
+EXECS = feud feud-editor feud-ai feud-server
 
-.PHONY: all clean distclean
+.PHONY: all clean distclean install uninstall
 
 all: $(EXECS)
 
@@ -24,9 +24,32 @@ editor.o: editor.c
 feud-editor: $(OBJS) editor.o
 	$(CC) $(CFLAGS) -o feud-editor $(OBJS) editor.o -lncurses -lm
 
+ai.o: ai.c
+	$(CC) -c $(CFLAGS) -o ai.o ai.c
+
+feud-ai: $(OBJS) ai.o
+	$(CC) $(CFLAGS) -o feud-ai $(OBJS) ai.o -lncurses -lm
+
+server.o: server.c
+	$(CC) -c $(CFLAGS) -o server.o server.c
+
+feud-server: $(OBJS) server.o
+	$(CC) $(CFLAGS) -o feud-server $(OBJS) server.o -lncurses -lm
+
 clean:
 	rm *.o $(EXECS)
 
 distclean: clean
 	rm config.log config.status Makefile
 
+install:
+	if [ ! -d $(DESTDIR)$(prefix)/bin ]; then mkdir -p $(DESTDIR)$(prefix)/bin; fi
+	for EXEC in $(EXECS); do \
+	if [ -e $(DESTDIR)$(prefix)/bin/$$EXEC ]; then rm $(DESTDIR)$(prefix)/bin/$$EXEC; fi; \
+	install -m 755 $$EXEC $(DESTDIR)$(prefix)/bin/$$EXEC; \
+	done
+
+uninstall:
+	for EXEC in $(EXECS); do \
+	if [ -e $(DESTDIR)$(prefix)/bin/$$EXEC ]; then rm $(DESTDIR)$(prefix)/bin/$$EXEC; fi; \
+	done

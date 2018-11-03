@@ -1,49 +1,49 @@
 feud
 ====
 
-Version 0.0.1 (November, 2017)
+Version 0.0.2 (November, 2018)
 
-feud is a turn-based military and political strategy game. It is based on medieval-styled board games I used to make and play (mostly with myself) as a teenager.
+feud is a turn-based military and political strategy game. It is based on
+medieval-styled board games I used to make and play (mostly with myself) as a
+teenager.
 
-Description
+Game rules
 -----------
 
-Each player controls a feudal faction consisting of a noble (from knight to king), his army, money, land, diplomacy. Factions fight each other over land control. A player who loses his noble or all his land, loses the game. The game ends when there is only one sovereign noble left.
-
-The game is played on a map (orthogonal grid). Map tiles can be walkable (land) or unwalkable (walls, water). A group of tiles make up a region. A region can either be free or belong to a player. Regions have names.
-
-Currently, there are only nobles and soldiers (ships are planned). A noble has a finite lifespan (normally between 60 and 80 years). After a noble dies, a heir or lord will inherit the property.
-
-Installation
-------------
-
-To compile feud from source code, type:
-
-$ ./configure --prefix=DIRECTORY
-$ make
-
-The generic way to install the compiled files is:
-
-$ make install
-
-However, one might prefer to use distro-specific installation mechanism (like
-"checkinstall") instead.
+See file named RULES
 
 Usage
 -----
 
-To start the game, type:
+Currently, only game editor and hot-seat client are implemented. There is no
+NPC, no network multiplayer, and no maps. "No NPC" means that you can not play
+against computer, only against other humans (or against yourself). "No network
+support" means that all players will use the same computer. "No maps" means
+that you will have to use editor to create your own world (create grid, design
+terrain, define regions, give them nice names, create players and set their
+pieces).
 
-$ feud
+To create a world, type 'feud-editor', create a map and populate it to your
+liking.
+
+To start the game, type 'feud' and play together with your friend(s).
+
+Installation
+------------
+
+See file named INSTALL
 
 Licensing
 ---------
 
-feud is free software, and is released under the terms of the GNU General Public License version 3 or any later version. Please see the file called LICENSE.
+feud is free software, and is released under the terms of the GNU General
+Public License version 3 or any later version. Please see the file called
+LICENSE.
 
 History
 -------
 
 * First line of code was written on July 26, 2017.
-
+* November 2017 Version 0.0.1 released.
+* November 2018 Version 0.0.2 released.
 

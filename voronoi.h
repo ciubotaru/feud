@@ -27,4 +27,4 @@ void recalculate_region_centers();
 
 void voronoi();
 
-#endif /* VORONOI_H */
+#endif				/* VORONOI_H */

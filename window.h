@@ -4,7 +4,7 @@
 #define BG_BLACK "\33[40m"
 #define BG_WHITE "\33[47m"
 #define WHITE "\33[0;97;40m"
-#define B_WHITE "\33[1;97;40m" //bright white
+#define B_WHITE "\33[1;97;40m"	//bright white
 #define RESET "\33[0m"
 #define SAVE_CURSOR "\033[s"
 
@@ -20,13 +20,13 @@
 #define EDIT_REGION_DIALOG 6
 #define GIVE_REGION_DIALOG 7
 #define RENAME_REGION_DIALOG 8
-#define PLAYERS_DIALOG 9
-#define ADD_PLAYER_DIALOG 10
-#define EDIT_PLAYER_DIALOG 11
-#define RENAME_PLAYER_DIALOG 12
-#define PLAYER_MONEY_DIALOG 13
-#define PLAYER_DATES_DIALOG 14
-#define REGION_PLAYER_DIALOG 15
+#define CHARACTERS_DIALOG 9
+#define ADD_CHARACTER_DIALOG 10
+#define EDIT_CHARACTER_DIALOG 11
+#define RENAME_CHARACTER_DIALOG 12
+#define CHARACTER_MONEY_DIALOG 13
+#define CHARACTER_DATES_DIALOG 14
+#define REGION_CHARACTER_DIALOG 15
 #define GIVE_MONEY_DIALOG 16
 #define HEIR_DIALOG 17
 #define FEUDAL_DIALOG 18
@@ -36,9 +36,10 @@
 #define VALIDATE_DIALOG 22
 #define HELP_DIALOG 23
 #define INFORMATION 24
-#define GAME_OVER 25
+#define SELF_DECLARATION_DIALOG 25
+#define GAME_OVER 26
 
-char *screens[26];
+char *screens[27];
 
 int current_screen;
 
