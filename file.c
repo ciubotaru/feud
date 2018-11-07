@@ -5,7 +5,23 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
+
+#if defined(__linux__) || defined(__CYGWIN__)
+
 #include <endian.h>
+
+#elif defined(__APPLE__)
+
+#include <libkern/OSByteOrder.h>
+#define htobe16(x) OSSwapHostToBigInt16(x)
+#define be16toh(x) OSSwapBigToHostInt16(x)
+
+#else
+
+#error Platform not supported
+
+#endif
+
 #include <stdarg.h>
 #include "world.h"
 
