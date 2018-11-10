@@ -483,7 +483,6 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 	piece->height = dst_height;
 	piece->width = dst_width;
 	world->grid->tiles[dst_height][dst_width]->piece = piece;
-	set_cursor(dst_height, dst_width);
 	world->moves_left--;
 	return 0;
 }

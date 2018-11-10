@@ -207,9 +207,12 @@ void draw_map(WINDOW *local_win)
 			set_cursor(world->grid->cursor_height + 1,
 				   world->grid->cursor_width);
 		} else {
-			move_piece(piece, world->grid->cursor_height + 1,
-				   world->grid->cursor_width);
-			check_death();
+			if (move_piece(piece, world->grid->cursor_height + 1,
+				   world->grid->cursor_width) == 0) {
+				set_cursor(world->grid->cursor_height + 1,
+					   world->grid->cursor_width);
+				check_death();
+			}
 		}
 		break;
 	case 1066:		//down
@@ -217,9 +220,12 @@ void draw_map(WINDOW *local_win)
 			set_cursor(world->grid->cursor_height - 1,
 				   world->grid->cursor_width);
 		} else {
-			move_piece(piece, world->grid->cursor_height - 1,
-				   world->grid->cursor_width);
-			check_death();
+			if (move_piece(piece, world->grid->cursor_height + 1,
+				   world->grid->cursor_width) == 0) {
+				set_cursor(world->grid->cursor_height - 1,
+					   world->grid->cursor_width);
+				check_death();
+			}
 		}
 		break;
 	case 1067:		//right
@@ -227,9 +233,12 @@ void draw_map(WINDOW *local_win)
 			set_cursor(world->grid->cursor_height,
 				   world->grid->cursor_width + 1);
 		} else {
-			move_piece(piece, world->grid->cursor_height,
-				   world->grid->cursor_width + 1);
-			check_death();
+			if (move_piece(piece, world->grid->cursor_height,
+				   world->grid->cursor_width + 1) == 0) {
+				set_cursor(world->grid->cursor_height,
+					   world->grid->cursor_width + 1);
+				check_death();
+			}
 		}
 		break;
 	case 1068:		//left
@@ -237,9 +246,12 @@ void draw_map(WINDOW *local_win)
 			set_cursor(world->grid->cursor_height,
 				   world->grid->cursor_width - 1);
 		} else {
-			move_piece(piece, world->grid->cursor_height,
-				   world->grid->cursor_width - 1);
-			check_death();
+			if (move_piece(piece, world->grid->cursor_height,
+				   world->grid->cursor_width - 1) == 0) {
+				set_cursor(world->grid->cursor_height,
+					   world->grid->cursor_width - 1);
+				check_death();
+			}
 		}
 		break;
 	case ' ':		//SPACE end turn
