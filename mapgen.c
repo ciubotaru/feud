@@ -272,6 +272,7 @@ void assign_tiles_to_centers2()
 	region_t *z = NULL;
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
+			if (world->grid->tiles[i][j]->walkable == 0) continue;
 			closest_center = 0;
 			min_distance =
 			    (float)
@@ -360,7 +361,7 @@ void recalculate_region_centers2()
 		region = get_region_by_id(k + 1);
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region->id ==
+				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region->id ==
 				    k + 1) {
 					cumul_h += i;
 					cumul_w += j;
@@ -385,7 +386,7 @@ void recalculate_region_centers()
 		cumul_w = 0;
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region->id ==
+				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region->id ==
 				    current->id) {
 					cumul_h += i;
 					cumul_w += j;
@@ -399,15 +400,12 @@ void recalculate_region_centers()
 	}
 }
 
-void voronoi()
+void voronoi(int nr_regions)
 {
 	if (world->grid == NULL)
 		return;
 	int i;
-	uint16_t nr_regions =
-	    (world->grid->height) * (world->grid->width) / region_size;
 	region_centers = create_region_centers(nr_regions);
-	create_regions(nr_regions);
 	assign_tiles_to_centers2();
 	for (i = 0; i < voronoi_iterations; i++) {
 		recalculate_region_centers();
@@ -416,4 +414,120 @@ void voronoi()
 	for (i = 0; i < nr_regions; i++)
 		free(region_centers[i]);
 	free(region_centers);
+}
+
+unsigned char **create_height_grid() {
+	if (!world->grid || !world->grid->tiles) return NULL;
+	unsigned char **grid = malloc(sizeof(char *) * world->grid->height);
+	int i;
+	for (i = 0; i < world->grid->height; i++) {
+		grid[i] = malloc(world->grid->width);
+	}
+	return grid;
+}
+
+void delete_height_grid(unsigned char **grid) {
+	if (!grid) return;
+	int i;
+	for (i = 0; i < world->grid->height; i++) {
+		free(grid[i]);
+	}
+	free(grid);
+}
+
+void populate_height_grid(unsigned char **grid) {
+	if (!world->grid || !world->grid->tiles) return;
+	int i, j;
+	for (i = 0; i < world->grid->height; i++) {
+		for (j = 0; j < world->grid->width; j++) {
+			grid[i][j] = rand() % 256;
+		}
+	}
+}
+
+void blur_height_grid(unsigned char **grid) {
+	if (!world->grid || !world->grid->tiles) return;
+	int i, j, x, y, x_min, x_max, y_min, y_max, count;
+	unsigned char **grid_tmp = create_height_grid();
+	for (i = 0; i < world->grid->height; i++) {
+		for (j = 0; j < world->grid->width; j++) {
+			grid_tmp[i][j] = grid[i][j];
+		}
+	}
+	int radius = 7;
+	for(i = 0; i < world->grid->height; i++) {
+		x_min = 0 > i - radius ? 0 : i - radius;
+		x_max = world->grid->height < i + radius ? world->grid->height : i + radius;
+		for(j = 0; j < world->grid->width; j++) {
+			y_min = 0 > j - radius ? 0 : j - radius;
+			y_max = world->grid->width < j + radius ? world->grid->width : j + radius;
+			int sum = 0;
+			count = 0;
+			for(x = x_min; x < x_max; x++){
+				for(y = y_min; y < y_max; y++){
+//					if ((x - i)^2 + (y - j)^2 <= radius^2) {
+						sum += grid_tmp[x][y];
+						count++;
+//					}
+				}
+			}
+			grid[i][j] = sum / count;
+		}
+	}
+	delete_height_grid(grid_tmp);
+}
+
+int create_contiguous_area(unsigned char **grid, unsigned int percent_unwalkable) {
+	if (!world->grid || !world->grid->tiles) return 1;
+	int i, j, k, l, h_min, w_min, h_max, w_max, h, w, count, height;
+	h = 0;
+	w = 0;
+	height = grid[0][0];
+	/* mark all as unwalkable and find highest point */
+	for (i = 0; i < world->grid->height; i++) {
+		for (j = 0; j < world->grid->width; j++) {
+			world->grid->tiles[i][j]->walkable = 0;
+			if (grid[i][j] > height) {
+				height = grid[i][j];
+				h = i;
+				w = j;
+			}
+		}
+	}
+	/* mark highest point as walkable */
+	world->grid->tiles[h][w]->walkable = 1;
+
+	height = 0;
+	h_min = MAX(0, h - 1);
+	w_min = MAX(0, w - 1);
+	h_max = MIN(world->grid->height - 1, h + 1);
+	w_max = MIN(world->grid->width - 1, w + 1);
+	count = world->grid->height * world->grid->width * (100 - percent_unwalkable) / 100;
+	while (count > 0) {
+		height = 0;
+		for (i = h_min; i <= h_max; i++) {
+			for (j = w_min; j <= w_max; j++) {
+				if (world->grid->tiles[i][j]->walkable) continue;
+				if (
+					(i > 0 && world->grid->tiles[i - 1][j]->walkable)
+					|| (j > 0 && world->grid->tiles[i][j - 1]->walkable)
+					|| (i < world->grid->height - 1 && world->grid->tiles[i + 1][j]->walkable)
+					|| (j < world->grid->width - 1 && world->grid->tiles[i][j + 1]->walkable)
+				) {
+					if (grid[i][j] > height) {
+						height = grid[i][j];
+						h = i;
+						w = j;
+					}
+				}
+			}
+		}
+		world->grid->tiles[h][w]->walkable = 1;
+		if (h == h_min) h_min = MAX(0, h_min - 1);
+		else if (h == h_max) h_max = MIN(h_max + 1, world->grid->height - 1);
+		if (w == w_min) w_min = MAX(0, w_min - 1);
+		else if (w == w_max) w_max = MIN(w_max + 1, world->grid->width - 1);
+		count--;
+	}
+	return 0;
 }

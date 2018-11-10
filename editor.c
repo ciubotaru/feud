@@ -384,9 +384,9 @@ void new_game_dialog(WINDOW *local_win)
 	world->grid = create_grid(h, w);
 
 	wprintw(local_win,
-		"\n\n  Percentage of unwalkable terrain (0-50, default 0): ");
+		"\n\n  Percentage of unwalkable terrain (0-50, default 10): ");
 	char u_ch[3];
-	int unwalkable_perc = 0;
+	int unwalkable_perc = 10;
 	wgetnstr(local_win, u_ch, 2);
 	for (i = 0; i < strlen(u_ch); i++) {
 		if (!isdigit(u_ch[i]))
@@ -400,8 +400,25 @@ void new_game_dialog(WINDOW *local_win)
 		unwalkable_perc = 50;
 	mvwprintw(local_win, 6, 55, "%2d", unwalkable_perc);
 
+	int tiles_walkable = tiles_total * (100 - unwalkable_perc) / 100;
+	if (unwalkable_perc > 0) {
+		unsigned char **grid = create_height_grid();
+		populate_height_grid(grid);
+		blur_height_grid(grid);
+		int retval = create_contiguous_area(grid, unwalkable_perc);
+		delete_height_grid(grid);
+		/* recount walkable tiles */
+		tiles_walkable = 0;
+		int i, j;
+		for (i = 0; i < world->grid->height; i++) {
+			for (j = 0; j < world->grid->width; j++) {
+				if (world->grid->tiles[i][j]->walkable) tiles_walkable++;
+			}
+		}
+	}
+
 	wprintw(local_win,
-		"\n\n  Size of region (10-100, default 36): ");
+		"\n\n  Size of region (10-%i, default %i): ", MIN(tiles_walkable, 100), MIN(tiles_walkable, 36));
 	char r_ch[8];
 	int region_size = 36;
 	wgetnstr(local_win, r_ch, 3);
@@ -417,7 +434,7 @@ void new_game_dialog(WINDOW *local_win)
 		region_size = 100;
 	mvwprintw(local_win, 8, 38, "%3d", region_size);
 
-	int nr_regions = tiles_total / region_size;
+	int nr_regions = tiles_walkable / region_size;
 	if (nr_regions) {
 		create_regions(nr_regions);
 		voronoi(nr_regions);
