@@ -17,6 +17,8 @@ typedef struct tile {
 	unsigned char walkable;
 //      uint16_t owner; /* 0 is no owner */
 	struct region *region;
+	uint16_t height;
+	uint16_t width;
 	piece_t *piece;		/* should be a pointer to piece_t structure, NULL if empty */
 } tile_t;
 

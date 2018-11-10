@@ -268,6 +268,7 @@ void remove_region(region_t * region)
 	if (world->regionlist == NULL)
 		return;
 
+	clear_region(region);
 	region_t *prev = NULL;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
@@ -395,6 +396,8 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 		grid->tiles[i] = malloc(width * sizeof(void *));
 		for (j = 0; j < width; j++) {
 			grid->tiles[i][j] = tile_init();
+			grid->tiles[i][j]->height = i;
+			grid->tiles[i][j]->width = j;
 		}
 	}
 	world->grid = grid;
