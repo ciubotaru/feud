@@ -41,6 +41,8 @@
 
 char *screens[27];
 
+struct region *selected_region;
+
 struct tile *cursor;
 
 int current_screen;

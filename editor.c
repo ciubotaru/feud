@@ -6,10 +6,6 @@
 #include <math.h>		/* for log10 */
 #include "world.h"
 
-static region_t *selected_region = NULL;
-
-//tile_t *cursor = NULL;
-
 void editor_start_menu(WINDOW *local_win)
 {
 	wclear(local_win);

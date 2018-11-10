@@ -42,6 +42,8 @@ char *screens[] = {
 	[GAME_OVER] = "GAME OVER"
 };
 
+region_t *selected_region = NULL;
+
 tile_t *cursor = NULL;
 
 int check_termsize()

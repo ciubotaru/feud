@@ -18,8 +18,6 @@ int current_mode = VIEW;
 
 int gameover = 0;
 
-static region_t *selected_region = NULL;
-
 void draw_map(WINDOW *local_win)
 {
 	wclear(local_win);
