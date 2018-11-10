@@ -70,8 +70,8 @@ void update_land_ranking();
 typedef struct grid {
 	uint16_t height;
 	uint16_t width;
-	uint16_t cursor_height;
-	uint16_t cursor_width;
+//	uint16_t cursor_height;
+//	uint16_t cursor_width;
 	tile_t ***tiles;
 } grid_t;
 

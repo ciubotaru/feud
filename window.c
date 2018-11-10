@@ -42,6 +42,8 @@ char *screens[] = {
 	[GAME_OVER] = "GAME OVER"
 };
 
+tile_t *cursor = NULL;
+
 int check_termsize()
 {
 	int retval = 0;
@@ -66,14 +68,4 @@ int get_input(WINDOW * window)
 		}
 	}
 	return ch;
-}
-
-void set_cursor(uint16_t new_height, uint16_t new_width)
-{
-	if (world->grid == NULL)
-		return;
-	if (new_height < world->grid->height)
-		world->grid->cursor_height = new_height;
-	if (new_width < world->grid->width)
-		world->grid->cursor_width = new_width;
 }

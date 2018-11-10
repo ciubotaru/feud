@@ -41,12 +41,12 @@
 
 char *screens[27];
 
+struct tile *cursor;
+
 int current_screen;
 
 int check_termsize();
 
 int get_input();
-
-void set_cursor(uint16_t new_height, uint16_t new_width);
 
 #endif

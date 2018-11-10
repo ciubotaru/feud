@@ -8,6 +8,8 @@
 
 static region_t *selected_region = NULL;
 
+//tile_t *cursor = NULL;
+
 void editor_start_menu(WINDOW *local_win)
 {
 	wclear(local_win);
@@ -40,23 +42,24 @@ void editor_start_menu(WINDOW *local_win)
 
 void map_editor(WINDOW *local_win)
 {
+	if (!cursor) cursor = world->grid->tiles[0][0];
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
-	uint16_t h_multiplier = world->grid->cursor_height / 24;
-	uint16_t w_multiplier = world->grid->cursor_width / 48;
+	uint16_t h_multiplier = cursor->height / 24;
+	uint16_t w_multiplier = cursor->width / 48;
 	int i, j;
 	char tile_char = '.';
 	int color_nr = 0;
 	character_t *character = world->selected_character;
-	tile_t *tile =
-	    world->grid->tiles[world->grid->cursor_height][world->grid->
-							   cursor_width];
+//	tile_t *cursor = cursor;
+//	    world->grid->tiles[cursor->height][world->grid->
+//							   cursor_width];
 	region_t *region = NULL;
 	if (selected_region == NULL && world->regionlist != NULL)
 		selected_region = world->regionlist;
 	region = selected_region;
-	piece_t *piece = tile->piece;
+	piece_t *piece = cursor->piece;
 
 	for (i = 24 * (h_multiplier + 1) - 1; i >= 24 * h_multiplier; i--) {
 		if (i >= world->grid->height) {
@@ -119,8 +122,7 @@ void map_editor(WINDOW *local_win)
 				color_nr = 1;	/* blue */
 				tile_char = '~';
 			}
-			if (world->grid->cursor_height == i
-			    && world->grid->cursor_width == j) {
+			if (cursor == world->grid->tiles[i][j]) {
 				if (color_nr == 1)
 					color_nr = 26;
 				else
@@ -161,17 +163,17 @@ void map_editor(WINDOW *local_win)
 	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
-	mvwprintw(local_win, 12, 50, "Tile: %d, %d", world->grid->cursor_height,
-		  world->grid->cursor_width);
+	mvwprintw(local_win, 12, 50, "Tile: %d, %d", cursor->height,
+		  cursor->width);
 	mvwprintw(local_win, 13, 50, "Terrain: %s %s",
-		  (tile->walkable ? "walkable" : "unwalkable"), "land");
+		  (cursor->walkable ? "walkable" : "unwalkable"), "land");
 	mvwprintw(local_win, 14, 50, "Region: %s (%d)",
-		  (tile->region == NULL ? "none" : tile->region->name),
-		  (tile->region == NULL ? 0 : tile->region->id));
+		  (cursor->region == NULL ? "none" : cursor->region->name),
+		  (cursor->region == NULL ? 0 : cursor->region->id));
 	mvwprintw(local_win, 15, 50, "Owned by: %s",
-		  (tile->region == NULL
-		   || tile->region->owner ==
-		   NULL ? "none" : tile->region->owner->name));
+		  (cursor->region == NULL
+		   || cursor->region->owner ==
+		   NULL ? "none" : cursor->region->owner->name));
 
 	/* piece info */
 	mvwprintw(local_win, 17, 50, "Unit: %s",
@@ -191,48 +193,38 @@ void map_editor(WINDOW *local_win)
 		return;
 		break;
 	case 1065:		/* up */
-		set_cursor(world->grid->cursor_height + 1,
-			   world->grid->cursor_width);
+		if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
 		break;
 	case 1066:		/* down */
-		set_cursor(world->grid->cursor_height - 1,
-			   world->grid->cursor_width);
+		if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
 		break;
 	case 1067:		/* right */
-		set_cursor(world->grid->cursor_height,
-			   world->grid->cursor_width + 1);
+		if (cursor->width < world->grid->width - 1) cursor = world->grid->tiles[cursor->height][cursor->width + 1];
 		break;
 	case 1068:		/* left */
-		set_cursor(world->grid->cursor_height,
-			   world->grid->cursor_width - 1);
+		if (cursor->width > 0) cursor = world->grid->tiles[cursor->height][cursor->width - 1];
 		break;
 	case 'c':
 		/* if tile is not part of region, include it, else remove */
-		if (tile->region == NULL)
-			change_tile_region(region,
-					   world->grid->tiles[world->grid->
-							      cursor_height]
-					   [world->grid->cursor_width]);
+		if (cursor->region == NULL)
+			change_tile_region(region, cursor);
 		else
-			change_tile_region(NULL,
-					   world->grid->tiles[world->grid->
-							      cursor_height]
-					   [world->grid->cursor_width]);
+			change_tile_region(NULL, cursor);
 		break;
 	case 'h':
 		current_screen = CHARACTERS_DIALOG;
 		break;
 	case 'n':
 		/* if tile not wlakable, just ignore */
-		if (tile->walkable == 0)
+		if (cursor->walkable == 0)
 			break;
 		/* if tile is occupied, remove piece */
 		if (piece != NULL)
 			remove_piece(piece);
 		/* if tile free, add soldier */
 		else
-			add_piece(NOBLE, world->grid->cursor_height,
-				  world->grid->cursor_width, character);
+			add_piece(NOBLE, cursor->height,
+				  cursor->width, character);
 		break;
 	case 'q':
 		current_screen = 99;
@@ -248,28 +240,27 @@ void map_editor(WINDOW *local_win)
 		break;
 	case 'u':
 		/* if tile not wlakable, just ignore */
-		if (tile->walkable == 0)
+		if (cursor->walkable == 0)
 			break;
 		/* if tile is occupied, remove piece */
 		if (piece != NULL)
 			remove_piece(piece);
 		/* if tile free, add soldier */
 		else
-			add_piece(SOLDIER, world->grid->cursor_height,
-				  world->grid->cursor_width, character);
+			add_piece(SOLDIER, cursor->height,
+				  cursor->width, character);
 		break;
 	case 'v':
 		current_screen = VALIDATE_DIALOG;
 		break;
 	case 'w':
-		toggle_walkable(world->grid->cursor_height,
-				world->grid->cursor_width);
+		toggle_walkable(cursor->height, cursor->width);
 		break;
 	case '\t':
 		if (piece != NULL) {
 			piece = next_piece(piece);
-			world->grid->cursor_height = piece->height;
-			world->grid->cursor_width = piece->width;
+			cursor->height = piece->height;
+			cursor->width = piece->width;
 		}
 		break;
 	case '>':
@@ -293,8 +284,8 @@ void map_editor(WINDOW *local_win)
 		world->selected_character = character;
 		piece = get_noble_by_owner(character);
 		if (piece != NULL) {
-			world->grid->cursor_height = piece->height;
-			world->grid->cursor_width = piece->width;
+			cursor->height = piece->height;
+			cursor->width = piece->width;
 		}
 		break;
 	case '0':
@@ -1847,6 +1838,7 @@ int main()
 	}
 
 	create_world();
+//	cursor = world->grid->tiles[0][0];
 	srand((unsigned)time(NULL));
 
 	initscr();
@@ -1882,8 +1874,11 @@ int main()
 			new_game_dialog(local_win);
 			break;
 		case MAP_EDITOR:
-			if (world->grid == NULL)
+			if (world->grid == NULL) {
 				load_game();
+				piece_t *active_piece = get_noble_by_owner(world->selected_character);
+				cursor = world->grid->tiles[active_piece->height][active_piece->width];
+			}
 			map_editor(local_win);
 			break;
 		case CHARACTERS_DIALOG:

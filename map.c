@@ -389,8 +389,6 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 	grid_t *grid = malloc(sizeof(grid_t));
 	grid->height = height;
 	grid->width = width;
-	grid->cursor_height = 0;
-	grid->cursor_width = 0;
 	grid->tiles = malloc(height * sizeof(void *));
 	for (i = 0; i < height; i++) {
 		grid->tiles[i] = malloc(width * sizeof(void *));

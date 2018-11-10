@@ -30,14 +30,11 @@ void draw_map(WINDOW *local_win)
 	uint16_t h_multiplier = world->grid->cursor_height / 24;
 	uint16_t w_multiplier = world->grid->cursor_width / 48;
 **/
-	int16_t h_offset = world->grid->cursor_height - 12;
-	int16_t w_offset = world->grid->cursor_width - 24;
+	int16_t h_offset = cursor->height - 12;
+	int16_t w_offset = cursor->width - 24;
 
 	character_t *character = world->selected_character;
-	tile_t *tile =
-	    world->grid->tiles[world->grid->cursor_height][world->grid->
-							   cursor_width];
-	piece_t *piece = tile->piece;
+	piece_t *piece = cursor->piece;
 
 	char tile_char = '.';
 	int color_nr = 0;
@@ -106,8 +103,8 @@ void draw_map(WINDOW *local_win)
 				color_nr = 1;	//blue
 				tile_char = '~';
 			}
-			if (world->grid->cursor_height == i
-			    && world->grid->cursor_width == j) {
+			if (cursor->height == i
+			    && cursor->width == j) {
 				if (color_nr == 1)
 					color_nr = 26;
 				else
@@ -147,17 +144,17 @@ void draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
-	mvwprintw(local_win, 12, 50, "Tile: %d, %d", world->grid->cursor_height,
-		  world->grid->cursor_width);
+	mvwprintw(local_win, 12, 50, "Tile: %d, %d", cursor->height,
+		  cursor->width);
 	mvwprintw(local_win, 13, 50, "Terrain: %s %s",
-		  (tile->walkable ? "walkable" : "unwalkable"), "land");
+		  (cursor->walkable ? "walkable" : "unwalkable"), "land");
 	mvwprintw(local_win, 14, 50, "Region: %s (%d)",
-		  (tile->region == NULL ? "none" : tile->region->name),
-		  (tile->region == NULL ? 0 : tile->region->id));
+		  (cursor->region == NULL ? "none" : cursor->region->name),
+		  (cursor->region == NULL ? 0 : cursor->region->id));
 	mvwprintw(local_win, 15, 50, "Owned by: %s",
-		  (tile->region == NULL
-		   || tile->region->owner ==
-		   NULL ? "none" : tile->region->owner->name));
+		  (cursor->region == NULL
+		   || cursor->region->owner ==
+		   NULL ? "none" : cursor->region->owner->name));
 
 	/* piece info */
 	mvwprintw(local_win, 17, 50, "Unit: %s",
@@ -204,52 +201,44 @@ void draw_map(WINDOW *local_win)
 	switch (ch) {
 	case 1065:		//up
 		if (current_mode == VIEW) {
-			set_cursor(world->grid->cursor_height + 1,
-				   world->grid->cursor_width);
+			if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
 		} else {
-			if (move_piece(piece, world->grid->cursor_height + 1,
-				   world->grid->cursor_width) == 0) {
-				set_cursor(world->grid->cursor_height + 1,
-					   world->grid->cursor_width);
+			if (move_piece(piece, cursor->height + 1,
+				   cursor->width) == 0) {
+				cursor = world->grid->tiles[cursor->height + 1][cursor->width];
 				check_death();
 			}
 		}
 		break;
 	case 1066:		//down
 		if (current_mode == VIEW) {
-			set_cursor(world->grid->cursor_height - 1,
-				   world->grid->cursor_width);
+			if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
 		} else {
-			if (move_piece(piece, world->grid->cursor_height + 1,
-				   world->grid->cursor_width) == 0) {
-				set_cursor(world->grid->cursor_height - 1,
-					   world->grid->cursor_width);
+			if (move_piece(piece, cursor->height + 1,
+				   cursor->width) == 0) {
+				cursor = world->grid->tiles[cursor->height - 1][cursor->width];
 				check_death();
 			}
 		}
 		break;
 	case 1067:		//right
 		if (current_mode == VIEW) {
-			set_cursor(world->grid->cursor_height,
-				   world->grid->cursor_width + 1);
+			if (cursor->width < world->grid->width - 1) cursor = world->grid->tiles[cursor->height][cursor->width + 1];
 		} else {
-			if (move_piece(piece, world->grid->cursor_height,
-				   world->grid->cursor_width + 1) == 0) {
-				set_cursor(world->grid->cursor_height,
-					   world->grid->cursor_width + 1);
+			if (move_piece(piece, cursor->height,
+				   cursor->width + 1) == 0) {
+				cursor = world->grid->tiles[cursor->height][cursor->width + 1];
 				check_death();
 			}
 		}
 		break;
 	case 1068:		//left
 		if (current_mode == VIEW) {
-			set_cursor(world->grid->cursor_height,
-				   world->grid->cursor_width - 1);
+			if (cursor->width > 0) cursor = world->grid->tiles[cursor->height][cursor->width - 1];
 		} else {
-			if (move_piece(piece, world->grid->cursor_height,
-				   world->grid->cursor_width - 1) == 0) {
-				set_cursor(world->grid->cursor_height,
-					   world->grid->cursor_width - 1);
+			if (move_piece(piece, cursor->height,
+				   cursor->width - 1) == 0) {
+				cursor = world->grid->tiles[cursor->height][cursor->width - 1];
 				check_death();
 			}
 		}
@@ -276,35 +265,32 @@ void draw_map(WINDOW *local_win)
 		}
 		world->selected_character = character;
 		piece = get_noble_by_owner(character);
-		world->grid->cursor_height = piece->height;
-		world->grid->cursor_width = piece->width;
+		cursor = world->grid->tiles[piece->height][piece->width];
 		current_mode = VIEW;
 		break;
 	case '\t':		// loop through own pieces
 		if (piece != NULL) {
 			piece_t *active_piece = next_piece(piece);
-			world->grid->cursor_height = active_piece->height;
-			world->grid->cursor_width = active_piece->width;
+			cursor = world->grid->tiles[active_piece->height][active_piece->width];
 		}
 		break;
 	case 'c':		// claim a region
 		/* first, switch to noble */
 		piece = get_noble_by_owner(character);
 		/* set cursor to noble */
-		set_cursor(piece->height, piece->width);
-		tile = world->grid->tiles[piece->height][piece->width];
-		result = claim_region(character, tile->region);
+		cursor = world->grid->tiles[piece->height][piece->width];
+		result = claim_region(character, cursor->region);
 		switch (result) {
 		case 1:	/* claimed from nature */
 			add_to_cronicle("%s %s claimed %s.\n",
 					ranklist[character->rank], character->name,
-					tile->region->name);
+					cursor->region->name);
 			update_land_ranking();
 			break;
 		case 2:	/* conquered from enemy */
 			add_to_cronicle("%s %s conquered %s.\n",
 					ranklist[character->rank], character->name,
-					tile->region->name);
+					cursor->region->name);
 			check_death();
 			update_land_ranking();
 			break;
@@ -363,7 +349,7 @@ void draw_map(WINDOW *local_win)
 			strcpy(message, "Not enough money.");
 			break;
 		}
-		if (!tile->walkable) {
+		if (!cursor->walkable) {
 			strcpy(message, "Tile not walkable. Choose another tile.");
 			break;
 		}
@@ -371,14 +357,14 @@ void draw_map(WINDOW *local_win)
 			strcpy(message, "Tile not empty. Choose another tile.");
 			break;
 		}
-		if (tile->region == NULL
-			|| tile->region->owner == NULL
-			|| tile->region->owner->id != world->selected_character->id) {
+		if (cursor->region == NULL
+			|| cursor->region->owner == NULL
+			|| cursor->region->owner->id != world->selected_character->id) {
 			strcpy(message, "Not your region. Choose another tile.");
 			break;
 		}
-		add_piece(1, world->grid->cursor_height,
-			  world->grid->cursor_width, character);
+		add_piece(1, cursor->height,
+			  cursor->width, character);
 		set_money(character, get_money(character) - COST_SOLDIER);
 		update_money_ranking();
 		update_army_ranking();
@@ -388,8 +374,7 @@ void draw_map(WINDOW *local_win)
 		if (current_mode == 0) {
 			piece =
 			    get_noble_by_owner(world->selected_character);
-			world->grid->cursor_height = piece->height;
-			world->grid->cursor_width = piece->width;
+			cursor = world->grid->tiles[piece->height][piece->width];
 		}
 		break;
 	case '?':
@@ -474,10 +459,9 @@ void regions_dialog(WINDOW *local_win)
 		}
 		if (counter >= section * 10 && counter < section * 10 + 10
 		    && counter < nr_regions) {
-			if (counter == regionlist_selector) {
+			if (counter == regionlist_selector)
 				wattron(local_win, COLOR_PAIR(26));
-//                              world->selected_region = current_region->id;
-			} else
+			else
 				wattron(local_win, COLOR_PAIR(1));
 			mvwprintw(local_win, 8 + counter % 10, 2,
 				  "%3d. %s (%i tiles)", current_region->id,
@@ -997,12 +981,9 @@ void feudal_dialog(WINDOW *local_win)
 
 	int i;
 	character_t *active_character = world->selected_character;
-//      piece_t *active_character_noble = get_noble_by_owner(active_character);
 	character_t *lord = active_character->lord;
-	tile_t *current_tile =
-	    world->grid->tiles[world->grid->cursor_height][world->grid->
-							   cursor_width];
-	piece_t *current_piece = current_tile->piece;
+
+	piece_t *current_piece = cursor->piece;
 	character_t *selected_character = NULL;
 	int characterlist_selector = 0;
 	int create_vassal_ok = 0;
@@ -1256,10 +1237,7 @@ void promote_soldier_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *new_vassal = NULL;
-	tile_t *current_tile =
-	    world->grid->tiles[world->grid->cursor_height][world->grid->
-							   cursor_width];
-	piece_t *current_piece = current_tile->piece;	/* assumed to be our soldier */
+	piece_t *current_piece = cursor->piece;	/* assumed to be our soldier */
 
 	/* set selected_region to our region */
 	region_t *current_region = world->regionlist;
@@ -1846,6 +1824,9 @@ int main()
 						free(error_message);
 					return 0;
 				}
+				piece_t *active_piece = get_noble_by_owner(world->selected_character);
+				cursor = world->grid->tiles[active_piece->height][active_piece->width];
+
 			}
 			draw_map(local_win);
 			break;
