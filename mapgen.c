@@ -221,24 +221,12 @@ float **create_region_centers(uint16_t nr_regions)
 {
 	if (world->grid == NULL || nr_regions == 0)
 		return NULL;
-	int i, j, tmp;
-	int numbers[world->grid->height * world->grid->width];
-	for (i = 0; i < world->grid->height * world->grid->width; i++)
-		numbers[i] = i;
-	for (i = 0; i < world->grid->height * world->grid->width / 4; i++) {
-		j = i +
-		    rand() / (RAND_MAX /
-			      (world->grid->height * world->grid->width - i) +
-			      1);
-		tmp = numbers[j];
-		numbers[j] = numbers[i];
-		numbers[i] = tmp;
-	}
+	int i;
 	region_centers = malloc(sizeof(float *) * nr_regions);
 	for (i = 0; i < nr_regions; i++) {
 		region_centers[i] = malloc(sizeof(float) * 2);
-		region_centers[i][0] = numbers[i] / world->grid->width;
-		region_centers[i][1] = numbers[i] % world->grid->width;
+		region_centers[i][0] = fmod(rand(), world->grid->height);
+		region_centers[i][1] = fmod(rand(), world->grid->width);
 	}
 	return region_centers;
 }
