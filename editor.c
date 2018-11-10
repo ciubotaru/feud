@@ -452,8 +452,26 @@ void new_game_dialog(WINDOW *local_win)
 	wclrtoeol(local_win);
 	mvwprintw(local_win, 10, 40, "%i", p);
 
+	int decimal = (int) floor(log10(p) + 2);
+	char *name = malloc(6 + decimal);
+	character_t *character = NULL;
+	region_t *region = world->regionlist;
+	uint16_t height, width;
+	piece_t *piece = NULL;
+	int region_size_min = 100;
+	for (i = 0; i < p; i++) {
+		sprintf(name, "Player%0*d", decimal,  i + 1);
+		character = add_character(name);
+		set_character_rank(character, KING);
+		change_region_owner(character, region);
+		region = region->next;
+	}
+	free(name);
+	world->selected_character = world->characterlist;
+
 	int s = 3;
 	wprintw(local_win, "\n\n  Number of soldiers (default %i): ", s);
+
 	wmove(local_win, 12, 40);
 	wclrtoeol(local_win);
 	mvwprintw(local_win, 12, 40, "%i", s);
