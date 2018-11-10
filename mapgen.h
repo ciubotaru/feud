@@ -9,8 +9,8 @@ repeat X times
 end
 * distort borders ?
 **/
-#ifndef VORONOI_H
-#define VORONOI_H
+#ifndef MAPGEN_H
+#define MAPGEN_H
 #include <stdint.h>
 
 int voronoi_iterations;
@@ -27,4 +27,4 @@ void recalculate_region_centers();
 
 void voronoi();
 
-#endif				/* VORONOI_H */
+#endif				/* MAPGEN_H */

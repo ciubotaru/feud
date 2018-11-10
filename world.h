@@ -4,9 +4,9 @@
 #include "character.h"
 #include "map.h"
 #include "dice.h"
-#include "piece.h"
 #include "diplomacy.h"
-#include "voronoi.h"
+#include "mapgen.h"
+#include "piece.h"
 #include "window.h"
 #include "config.h"
 
