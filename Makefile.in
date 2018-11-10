@@ -1,23 +1,26 @@
-CC=@CC@
-datarootdir=@datarootdir@
-prefix=@prefix@
-CFLAGS =@CFLAGS@
+CC = @CC@
+datarootdir = @datarootdir@
+prefix = @prefix@
+CFLAGS = @CFLAGS@
 OBJS = map.o character.o dice.o diplomacy.o piece.o time.o file.o window.o voronoi.o world.o
-AI_OBJS = map.o character.o dice.o diplomacy.o piece.o time.o file.o world.o
+CLI_OBJS = map.o character.o dice.o diplomacy.o piece.o time.o file.o world.o
 EXECS = feud feud-editor feud-ai feud-server
 
 .PHONY: all clean distclean install uninstall
 
 all: $(EXECS)
 
-$(OBJS): %.o: %.c
+$(CLI_OBJS): %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 feud.o: feud.c
 	$(CC) -c $(CFLAGS) -o feud.o feud.c
 
-feud: $(OBJS) feud.o
-	$(CC) $(CFLAGS) -o feud $(OBJS) feud.o -lncurses -lm
+window.o: window.c
+	$(CC) -c $(CFLAGS) -o window.o window.c
+
+feud: $(CLI_OBJS) feud.o window.o
+	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o window.o -lncurses -lm
 
 editor.o: editor.c
 	$(CC) -c $(CFLAGS) -o editor.o editor.c
@@ -28,17 +31,19 @@ feud-editor: $(OBJS) editor.o
 ai.o: ai.c
 	$(CC) -c $(CFLAGS) -o ai.o ai.c
 
-feud-ai: $(OBJS) ai.o
-	$(CC) $(CFLAGS) -o feud-ai $(AI_OBJS) ai.o -lm
+feud-ai: $(CLI_OBJS) ai.o
+	$(CC) $(CFLAGS) -o feud-ai $(CLI_OBJS) ai.o -lm
 
 server.o: server.c
 	$(CC) -c $(CFLAGS) -o server.o server.c
 
-feud-server: $(OBJS) server.o
-	$(CC) $(CFLAGS) -o feud-server $(OBJS) server.o -lncurses -lm
+feud-server: $(CLI_OBJS) server.o
+	$(CC) $(CFLAGS) -o feud-server $(CLI_OBJS) server.o -lm
 
 clean:
-	rm *.o $(EXECS)
+	for i in $(OBJS) $(EXECS); do \
+	if [ -e $$i ]; then rm -v $$i; fi; \
+	done
 
 distclean: clean
 	rm config.log config.status Makefile
