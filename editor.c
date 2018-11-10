@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>		/* for isdigit */
-
+#include <math.h>		/* for log10 */
 #include "world.h"
 
 static region_t *selected_region = NULL;
@@ -332,6 +332,10 @@ void new_game_dialog(WINDOW *local_win)
 		current_screen = MAIN_SCREEN;
 		return;
 	}
+
+	destroy_world();
+	create_world();
+
 	wmove(local_win, 2, 0);
 	wclrtoeol(local_win);
 	wmove(local_win, 3, 0);
@@ -376,8 +380,28 @@ void new_game_dialog(WINDOW *local_win)
 		w = 100;
 	mvwprintw(local_win, 4, 34, "%3d", w);
 
+	int tiles_total = h * w;
+	world->grid = create_grid(h, w);
+
 	wprintw(local_win,
-		"\n\n  Size of region (10-100, default 36, type 0 to skip): ");
+		"\n\n  Percentage of unwalkable terrain (0-50, default 0): ");
+	char u_ch[3];
+	int unwalkable_perc = 0;
+	wgetnstr(local_win, u_ch, 2);
+	for (i = 0; i < strlen(u_ch); i++) {
+		if (!isdigit(u_ch[i]))
+			break;
+	}
+	if (strlen(u_ch) > 0)
+		unwalkable_perc = atoi(u_ch);
+	if (unwalkable_perc < 0)
+		unwalkable_perc = 0;
+	else if (unwalkable_perc > 50)
+		unwalkable_perc = 50;
+	mvwprintw(local_win, 6, 55, "%2d", unwalkable_perc);
+
+	wprintw(local_win,
+		"\n\n  Size of region (10-100, default 36): ");
 	char r_ch[8];
 	int region_size = 36;
 	wgetnstr(local_win, r_ch, 3);
@@ -387,11 +411,48 @@ void new_game_dialog(WINDOW *local_win)
 	}
 	if (strlen(r_ch) > 0)
 		region_size = atoi(r_ch);
-	else if (region_size < 10)
+	if (region_size < 10)
 		region_size = 10;
 	else if (region_size > 100)
 		region_size = 100;
-	mvwprintw(local_win, 6, 55, "%3d", region_size);
+	mvwprintw(local_win, 8, 38, "%3d", region_size);
+
+	int nr_regions = tiles_total / region_size;
+	if (nr_regions) {
+		create_regions(nr_regions);
+		voronoi(nr_regions);
+		sort_region_list();
+	}
+	region_t *current_region = world->regionlist;
+	region_t *next_region = NULL;
+	while (current_region) {
+		next_region = current_region->next;
+		if (current_region->size == 0) {
+			remove_region(current_region);
+			nr_regions--;
+		}
+		current_region = next_region;
+	}
+
+	int p = (nr_regions - 1) / 5 + 1;
+	wprintw(local_win, "\n\n  Number of players (1-%i, default %i): ", nr_regions, p);
+	char p_ch[8];
+	wgetnstr(local_win, p_ch, 7);
+	for (i = 0; i < strlen(p_ch); i++) {
+		if (!isdigit(p_ch[i]))
+			break;
+	}
+	if (strlen(p_ch) > 0)
+		p = atoi(p_ch);
+	wmove(local_win, 10, 40);
+	wclrtoeol(local_win);
+	mvwprintw(local_win, 10, 40, "%i", p);
+
+	int s = 3;
+	wprintw(local_win, "\n\n  Number of soldiers (default %i): ", s);
+	wmove(local_win, 12, 40);
+	wclrtoeol(local_win);
+	mvwprintw(local_win, 12, 40, "%i", s);
 
 	wprintw(local_win, "\n\n  Starting year (default 0): ");
 	char y_ch[8];
@@ -403,9 +464,9 @@ void new_game_dialog(WINDOW *local_win)
 	}
 	if (strlen(y_ch) > 0)
 		y = atoi(y_ch);
-	wmove(local_win, 8, 29);
+	wmove(local_win, 14, 29);
 	wclrtoeol(local_win);
-	mvwprintw(local_win, 8, 29, "%i", y);
+	mvwprintw(local_win, 14, 29, "%i", y);
 
 	wprintw(local_win, "\n\n  Starting month (1-12, default 1): ");
 	char m_ch[3];
@@ -421,31 +482,14 @@ void new_game_dialog(WINDOW *local_win)
 		m = 12;
 	if (m > 0)
 		m--;
-	wmove(local_win, 10, 36);
+	wmove(local_win, 16, 36);
 	wclrtoeol(local_win);
-	mvwprintw(local_win, 10, 36, "%s", months[m]);
-
-	/* remove regions */
-	while (world->regionlist != NULL)
-		remove_region(world->regionlist);
-	/* remove pieces */
-	clear_piece_list();
-	/* remove characters */
-	clear_character_list();
-	/* remove tiles */
-	remove_grid();
-
-	/* use collected data to create world */
-	world->grid = create_grid(h, w);
-
-	if (region_size > 0) {
-		voronoi();
-		sort_region_list();
-	}
+	mvwprintw(local_win, 16, 36, "%s", months[m]);
 
 	world->current_time.tm_year = y;
 	world->current_time.tm_mon = m;
 
+	world->moves_left = get_dice();
 	save_game();
 
 	wprintw(local_win,
