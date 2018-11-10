@@ -1104,7 +1104,7 @@ void change_character_money_dialog(WINDOW *local_win)
 		wmove(local_win, 3, 0);
 		wclrtoeol(local_win);
 		mvwprintw(local_win, 2, 2,
-			  "Current amount is '%d'. Type new amount (0-%s), or press Enter to return.\n  New amount: ",
+			  "Current amount is '%d'. Type new amount (0-%d), or press Enter to return.\n  New amount: ",
 			  get_money(character), MONEY_MAX);
 		wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 		if (strlen(money_ch) == 0) {
