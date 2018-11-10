@@ -10,6 +10,9 @@
 #include "window.h"
 #include "config.h"
 
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define MIN(X, Y) (((X) > (Y)) ? (Y) : (X))
+
 typedef struct {
 	grid_t *grid;
 

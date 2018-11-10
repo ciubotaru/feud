@@ -165,10 +165,10 @@ void print_print(uint16_t w, uint16_t h) {
 	struct winsize ws;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 	ws.ws_row -= 1;
-	if (w >= world->grid->width) w = (world->grid->width > ws.ws_col ? world->grid->width - ws.ws_col : 0);
-	if (h >= world->grid->height) h = (world->grid->height > ws.ws_row ? world->grid->height - ws.ws_row : 0);
-	uint16_t w_max = (w + ws.ws_col > world->grid->width ? world->grid->width : w + ws.ws_col);
-	uint16_t h_max = (h + ws.ws_row > world->grid->height ? world->grid->height : h + ws.ws_row);
+	if (w >= world->grid->width) w = MAX(world->grid->width - ws.ws_col, 0);
+	if (h >= world->grid->height) h = MAX(world->grid->height - ws.ws_row, 0);
+	uint16_t w_max = MIN(w + ws.ws_col, world->grid->width);
+	uint16_t h_max = MIN(h + ws.ws_row, world->grid->height);
 	char tile_char = '.';
 	int i, j;
 	for (i = h_max - 1; i >= h; i--) {
