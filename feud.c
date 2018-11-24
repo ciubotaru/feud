@@ -263,20 +263,20 @@ void draw_map(WINDOW *local_win)
 		}
 		world->selected_character = character;
 		piece = get_noble_by_owner(character);
-		cursor = world->grid->tiles[piece->height][piece->width];
+		cursor = piece->tile;
 		current_mode = VIEW;
 		break;
 	case '\t':		// loop through own pieces
 		if (piece != NULL) {
 			piece_t *active_piece = next_piece(piece);
-			cursor = world->grid->tiles[active_piece->height][active_piece->width];
+			cursor = active_piece->tile;
 		}
 		break;
 	case 'c':		// claim a region
 		/* first, switch to noble */
 		piece = get_noble_by_owner(character);
 		/* set cursor to noble */
-		cursor = world->grid->tiles[piece->height][piece->width];
+		cursor = piece->tile;
 		result = claim_region(character, cursor->region);
 		switch (result) {
 		case 1:	/* claimed from nature */
@@ -372,7 +372,7 @@ void draw_map(WINDOW *local_win)
 		if (current_mode == 0) {
 			piece =
 			    get_noble_by_owner(world->selected_character);
-			cursor = world->grid->tiles[piece->height][piece->width];
+			cursor = piece->tile;
 		}
 		break;
 	case '?':
@@ -1823,7 +1823,7 @@ int main()
 					return 0;
 				}
 				piece_t *active_piece = get_noble_by_owner(world->selected_character);
-				cursor = world->grid->tiles[active_piece->height][active_piece->width];
+				cursor = active_piece->tile;
 
 			}
 			draw_map(local_win);

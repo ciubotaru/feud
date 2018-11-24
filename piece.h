@@ -11,9 +11,7 @@
 typedef struct piece {
 	uint16_t id;
 	unsigned char type;
-//      unsigned char rank;
-	uint16_t width;
-	uint16_t height;
+	struct tile *tile;
 	character_t *owner;
 	struct piece *next;
 } piece_t;

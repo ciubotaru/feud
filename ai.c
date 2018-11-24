@@ -1047,10 +1047,10 @@ void think()
 			current_piece = current_piece->next;
 		}
 		uint16_t directions_mask = 0;
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width)) directions_mask |= 1;
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1)) directions_mask |= (1 << 1);
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width)) directions_mask |= (1 << 2);
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1)) directions_mask |= (1 << 3);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width)) directions_mask |= 1;
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1)) directions_mask |= (1 << 1);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width)) directions_mask |= (1 << 2);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1)) directions_mask |= (1 << 3);
 		uint16_t nr_directions = __builtin_popcount (directions_mask);
 		/* if piece is blocked, skip and choose another one (WHAT IF ALL PIECES are blocked???) */
 		if (nr_directions == 0) continue;
@@ -1064,28 +1064,20 @@ void think()
 		}
 		switch (bit) {
 			case 1:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->height++;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width);
+				move_piece(current_piece, current_piece->tile->height + 1, current_piece->tile->width);
 				break;
 			case 2:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->width++;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1);
+				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width + 1);
 				break;
 			case 3:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->height--;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width);
+				move_piece(current_piece, current_piece->tile->height - 1, current_piece->tile->width);
 				break;
 			case 4:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->width--;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1);
+				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width - 1);
 				break;
 		}
 		world->moves_left--;

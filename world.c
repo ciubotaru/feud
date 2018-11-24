@@ -182,8 +182,7 @@ int validate_game_data(char **error_message)
 	error = 0;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (world->grid->tiles[piece->height][piece->width]->walkable ==
-		    0) {
+		if (piece->tile->walkable == 0) {
 			error = 1;
 			break;
 		}
@@ -231,9 +230,7 @@ int validate_game_data(char **error_message)
 	tile_t *tile = NULL;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (piece->id !=
-		    world->grid->tiles[piece->height][piece->width]->piece->
-		    id) {
+		if (piece->id != piece->tile->piece->id) {
 			error = 1;
 			break;
 		}
@@ -248,8 +245,8 @@ int validate_game_data(char **error_message)
 		for (j = 0; j < world->grid->width; j++) {
 			tile = world->grid->tiles[i][j];
 			if (tile->piece != NULL) {
-				if (tile->piece->height != i
-				    || tile->piece->width != j) {
+				if (tile->height != i
+				    || tile->width != j) {
 					error = 1;
 					break;
 				}

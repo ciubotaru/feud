@@ -32,8 +32,7 @@ static void fill_piece_details(piece_t * piece, const unsigned char type,
 {
 	piece->id = world->next_piece_id;
 	piece->type = type;
-	piece->width = width;
-	piece->height = height;
+	piece->tile = world->grid->tiles[height][width];
 	piece->owner = owner;
 	world->grid->tiles[height][width]->piece = piece;
 //      grid->tiles[height][width]->region->owner->id = owner->id;
@@ -121,7 +120,7 @@ void remove_piece(piece_t * piece)
 			if (prev) prev->next = current->next;
 			else world->piecelist = current->next;
 			piece_t *tmp = current;
-			world->grid->tiles[tmp->height][tmp->width]->piece = NULL;
+			tmp->tile->piece = NULL;
 			free(tmp);
 			return;
 		}

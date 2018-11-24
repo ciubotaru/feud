@@ -186,9 +186,7 @@ unsigned char claim_region(character_t * character, region_t * region)
 
 	/* if current owner is in the region, stop here */
 	piece_t *owners_noble = get_noble_by_owner(current_owner);
-	region_t *present_location =
-	    world->grid->tiles[owners_noble->height][owners_noble->width]->
-	    region;
+	region_t *present_location = owners_noble->tile->region;
 	if (region == present_location)
 		return 0;
 
@@ -458,8 +456,8 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 			const uint16_t dst_width)
 {
-	uint16_t src_height = piece->height;
-	uint16_t src_width = piece->width;
+	uint16_t src_height = piece->tile->height;
+	uint16_t src_width = piece->tile->width;
 	unsigned int movable =
 	    is_legal_move(src_height, src_width, dst_height, dst_width);
 
@@ -480,9 +478,8 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 		update_army_ranking();
 	}
 	/* update grid */
-	world->grid->tiles[piece->height][piece->width]->piece = NULL;
-	piece->height = dst_height;
-	piece->width = dst_width;
+	world->grid->tiles[src_height][src_width]->piece = NULL;
+	piece->tile = world->grid->tiles[dst_height][dst_width];
 	world->grid->tiles[dst_height][dst_width]->piece = piece;
 	world->moves_left--;
 	return 0;

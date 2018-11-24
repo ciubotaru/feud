@@ -255,8 +255,7 @@ void map_editor(WINDOW *local_win)
 	case '\t':
 		if (piece != NULL) {
 			piece = next_piece(piece);
-			cursor->height = piece->height;
-			cursor->width = piece->width;
+			cursor = piece->tile;
 		}
 		break;
 	case '>':
@@ -280,8 +279,7 @@ void map_editor(WINDOW *local_win)
 		world->selected_character = character;
 		piece = get_noble_by_owner(character);
 		if (piece != NULL) {
-			cursor->height = piece->height;
-			cursor->width = piece->width;
+			cursor = piece->tile;
 		}
 		break;
 	case '0':
@@ -1891,7 +1889,7 @@ int main()
 			if (world->grid == NULL) {
 				load_game();
 				piece_t *active_piece = get_noble_by_owner(world->selected_character);
-				cursor = world->grid->tiles[active_piece->height][active_piece->width];
+				cursor = active_piece->tile;
 			}
 			map_editor(local_win);
 			break;
