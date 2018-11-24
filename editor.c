@@ -457,18 +457,22 @@ void new_game_dialog(WINDOW *local_win)
 	uint16_t height, width;
 	piece_t *piece = NULL;
 	int region_size_min = 100;
+	tile_t *tile = NULL;
 	for (i = 0; i < p; i++) {
 		sprintf(name, "Player%0*d", decimal,  i + 1);
 		character = add_character(name);
 		set_character_rank(character, KING);
 		change_region_owner(character, region);
+		tile = region_center(region);
+		piece = add_piece(NOBLE, tile->height, tile->width, character);
+		if (region->size < region_size_min) region_size_min = region->size;
 		region = region->next;
 	}
 	free(name);
 	world->selected_character = world->characterlist;
 
-	int s = 3;
-	wprintw(local_win, "\n\n  Number of soldiers (default %i): ", s);
+	int s = (region_size_min > 4 ? 3 : region_size_min - 1);
+	wprintw(local_win, "\n\n  Number of soldiers (0-%i, default %i): ", region_size_min - 1, s);
 
 	wmove(local_win, 12, 40);
 	wclrtoeol(local_win);

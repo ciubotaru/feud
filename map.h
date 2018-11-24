@@ -87,4 +87,6 @@ unsigned int move_piece(piece_t *piece, const uint16_t dst_heigh,
 
 void toggle_walkable(const uint16_t height, const uint16_t width);
 
+tile_t *region_center(region_t *region);
+
 #endif				/* MAP_H */

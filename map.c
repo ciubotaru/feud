@@ -494,3 +494,24 @@ void toggle_walkable(const uint16_t height, const uint16_t width)
 	world->grid->tiles[height][width]->walkable =
 	    (world->grid->tiles[height][width]->walkable + 1) % 2;
 }
+
+tile_t *region_center(region_t *region) {
+	if (!region || region->size == 0) return NULL;
+	int16_t sum_h = 0;
+	int16_t sum_w = 0;
+	uint16_t i;
+	for (i = 0; i < region->size; i++) {
+		sum_h += region->tiles[i]->height;
+		sum_w += region->tiles[i]->width;
+	}
+	int16_t center_h = sum_h / region->size;
+	int16_t center_w = sum_w / region->size;
+	tile_t *tile = region->tiles[0];
+
+	for (i = 1; i < region->size; i++) {
+		if (abs(region->tiles[i]->height - center_h) + abs(region->tiles[i]->width - center_w) < abs(tile->height - center_h) + abs(tile->width - center_w)) {
+			tile = region->tiles[i];
+		}
+	}
+	return tile;
+}
