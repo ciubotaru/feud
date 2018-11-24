@@ -1080,7 +1080,6 @@ void think()
 				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width - 1);
 				break;
 		}
-		world->moves_left--;
 	}
 	dprintf(STDOUT_FILENO, "done\n");
 	world->moves_left = 0;
