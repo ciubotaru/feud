@@ -515,3 +515,26 @@ tile_t *region_center(region_t *region) {
 	}
 	return tile;
 }
+
+tile_t *get_empty_tile_in_region(region_t *region) {
+	if (!region || region->size == 0) return NULL;
+	/* compute region center */
+	tile_t *center = region_center(region);
+	if (!center->piece) return center;
+	uint16_t distance_min = world->grid->height + world->grid->width;
+	uint16_t distance = 0;
+	tile_t *tile_min = NULL;
+	tile_t *tile = NULL;
+	uint16_t i;
+	for (i = 0; i < region->size; i++) {
+		tile = region->tiles[i];
+		if (!tile->piece) {
+			distance = abs(tile->height - center->height) + abs(tile->width - center->width);
+			if (distance < distance_min) {
+				distance_min = distance;
+				tile_min = tile;
+			}
+		}
+	}
+	return tile_min;
+}

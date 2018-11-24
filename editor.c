@@ -305,7 +305,7 @@ void new_game_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
-	int i;
+	int i, j;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
@@ -394,7 +394,6 @@ void new_game_dialog(WINDOW *local_win)
 		delete_height_grid(grid);
 		/* recount walkable tiles */
 		tiles_walkable = 0;
-		int i, j;
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
 				if (world->grid->tiles[i][j]->walkable) tiles_walkable++;
@@ -446,6 +445,8 @@ void new_game_dialog(WINDOW *local_win)
 	}
 	if (strlen(p_ch) > 0)
 		p = atoi(p_ch);
+	p = MAX(1, p);
+	p = MIN(p, nr_regions);
 	wmove(local_win, 10, 40);
 	wclrtoeol(local_win);
 	mvwprintw(local_win, 10, 40, "%i", p);
@@ -471,12 +472,30 @@ void new_game_dialog(WINDOW *local_win)
 	free(name);
 	world->selected_character = world->characterlist;
 
-	int s = (region_size_min > 4 ? 3 : region_size_min - 1);
+	int s = MIN(3, region_size_min - 1);
 	wprintw(local_win, "\n\n  Number of soldiers (0-%i, default %i): ", region_size_min - 1, s);
-
+	char s_ch[8];
+	wgetnstr(local_win, s_ch, 7);
+	for (i = 0; i < strlen(s_ch); i++) {
+		if (!isdigit(s_ch[i]))
+			break;
+	}
+	if (strlen(s_ch) > 0)
+		s = atoi(s_ch);
+	s = MIN(s, region_size_min - 1);
 	wmove(local_win, 12, 40);
 	wclrtoeol(local_win);
 	mvwprintw(local_win, 12, 40, "%i", s);
+
+	character = world->characterlist;
+	while (character) {
+		region = get_noble_by_owner(character)->tile->region;
+		for (i = 0; i < s; i++) {
+			tile = get_empty_tile_in_region(region);
+			if (tile) add_piece(SOLDIER, tile->height, tile->width, character);
+		}
+		character = character->next;
+	}
 
 	wprintw(local_win, "\n\n  Starting year (default 0): ");
 	char y_ch[8];

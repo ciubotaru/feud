@@ -89,4 +89,6 @@ void toggle_walkable(const uint16_t height, const uint16_t width);
 
 tile_t *region_center(region_t *region);
 
+tile_t *get_empty_tile_in_region(region_t *region);
+
 #endif				/* MAP_H */
