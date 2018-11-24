@@ -121,6 +121,7 @@ void remove_piece(piece_t * piece)
 			if (prev) prev->next = current->next;
 			else world->piecelist = current->next;
 			piece_t *tmp = current;
+			world->grid->tiles[tmp->height][tmp->width]->piece = NULL;
 			free(tmp);
 			return;
 		}
