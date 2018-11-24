@@ -212,7 +212,7 @@ void draw_map(WINDOW *local_win)
 		if (current_mode == VIEW) {
 			if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
 		} else {
-			if (move_piece(piece, cursor->height + 1,
+			if (move_piece(piece, cursor->height - 1,
 				   cursor->width) == 0) {
 				cursor = world->grid->tiles[cursor->height - 1][cursor->width];
 				check_death();
