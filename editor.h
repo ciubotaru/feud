@@ -5,8 +5,6 @@ WINDOW *editor_start_menu();
 
 WINDOW *map_editor();
 
-WINDOW *new_game_dialog();
-
 WINDOW *characters_dialog();
 
 WINDOW *add_character_dialog();

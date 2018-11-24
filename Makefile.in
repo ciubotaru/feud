@@ -2,7 +2,7 @@ CC = @CC@
 datarootdir = @datarootdir@
 prefix = @prefix@
 CFLAGS = @CFLAGS@
-OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o mapgen.o piece.o server.o time.o window.o world.o
+OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o mapgen.o new.o piece.o server.o time.o window.o world.o
 CLI_OBJS = map.o character.o dice.o diplomacy.o file.o piece.o time.o world.o
 EXECS = feud feud-editor feud-ai feud-server
 
@@ -16,8 +16,8 @@ $(OBJS): %.o: %.c
 feud: $(CLI_OBJS) feud.o window.o
 	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o window.o -lncurses -lm
 
-feud-editor: $(CLI_OBJS) editor.o mapgen.o window.o
-	$(CC) $(CFLAGS) -o feud-editor $(CLI_OBJS) editor.o mapgen.o window.o -lncurses -lm
+feud-editor: $(CLI_OBJS) editor.o new.o mapgen.o window.o
+	$(CC) $(CFLAGS) -o feud-editor $(CLI_OBJS) editor.o new.o mapgen.o window.o -lncurses -lm
 
 feud-ai: $(CLI_OBJS) ai.o
 	$(CC) $(CFLAGS) -o feud-ai $(CLI_OBJS) ai.o -lm

@@ -6,6 +6,7 @@
 #include "dice.h"
 #include "diplomacy.h"
 #include "mapgen.h"
+#include "new.h"
 #include "piece.h"
 #include "window.h"
 #include "config.h"
