@@ -1536,13 +1536,9 @@ void diplomacy_dialog(WINDOW *local_win)
 		dipoffer_t *current_dipoffer = NULL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
-			if (active_character != current) {
-				current_dipstatus =
-				    get_dipstatus(active_character, current);
-				current_status = current_dipstatus->status;
-				current_dipoffer =
-				    current_dipstatus->pending_offer;
-			}
+			current_dipstatus = get_dipstatus(active_character, current);
+			current_status = current_dipstatus->status;
+			current_dipoffer = current_dipstatus->pending_offer;
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
