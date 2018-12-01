@@ -4,11 +4,7 @@
 #include "time.h"
 
 /* noble ranks */
-#define KNIGHT 0
-#define BARON 1
-#define COUNT 2
-#define DUKE 3
-#define KING 4
+enum ranklist {KNIGHT, BARON, COUNT, DUKE, KING};
 
 #define MONEY_MAX 999
 #define MONEY_MAX_DIGITS 3
@@ -19,7 +15,7 @@ typedef struct character {
 	uint16_t id;
 	char name[17];		/* 16 + endchar */
 	uint16_t money;
-	unsigned char rank;
+	enum ranklist rank;
 	uint16_t rank_land;
 	uint16_t rank_army;
 	uint16_t rank_money;

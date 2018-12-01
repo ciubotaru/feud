@@ -198,7 +198,7 @@ void print_print(uint16_t w, uint16_t h) {
 				case SOLDIER:	/* soldier */
 					tile_char = 's';
 					break;
-				case 2:	/* ship */
+				case SHIP:	/* ship */
 					tile_char = 'S';
 					break;
 				}

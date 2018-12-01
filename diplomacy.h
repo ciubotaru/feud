@@ -5,9 +5,8 @@
 #include "piece.h"
 #include "map.h"
 
-#define NEUTRAL 0
-#define ALLIANCE 1
-#define WAR 2
+enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
+
 #define REJECT 0
 #define ACCEPT 1
 

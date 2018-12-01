@@ -83,7 +83,7 @@ void draw_map(WINDOW *local_win)
 				case SOLDIER:	/* soldier */
 					tile_char = 's';
 					break;
-				case 2:	/* ship */
+				case SHIP:	/* ship */
 					tile_char = 'S';
 					break;
 				}
@@ -319,7 +319,7 @@ void draw_map(WINDOW *local_win)
 	case 'q':		// quit
 		curs_set(TRUE);
 		echo();
-		current_screen = 99;
+		current_screen = SHUTDOWN;
 		break;
 	case 'r':		// give region
 		current_screen = REGIONS_DIALOG;
@@ -1841,7 +1841,7 @@ int main()
 			break;
 		case GAME_OVER:
 			info_dialog(local_win);
-			current_screen = 99;
+			current_screen = SHUTDOWN;
 			break;
 		case HEIR_DIALOG:
 			successor_dialog(local_win);
@@ -1864,7 +1864,7 @@ int main()
 		case SELF_DECLARATION_DIALOG:
 			self_declaration_dialog(local_win);
 			break;
-		case 99:
+		case SHUTDOWN:
 			use_default_colors();
 			destroy_world();
 			endwin();

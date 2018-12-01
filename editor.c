@@ -30,7 +30,7 @@ void editor_start_menu(WINDOW *local_win)
 			current_screen = NEW_GAME;
 			return;
 		case 'q':
-			current_screen = 99;
+			current_screen = SHUTDOWN;
 			return;
 		}
 	}
@@ -100,7 +100,7 @@ void map_editor(WINDOW *local_win)
 					tile_char = 's';
 					break;
 /* ToDo change 2 to SHIP when we have ships */
-				case 2:	/* ship */
+				case SHIP:	/* ship */
 					tile_char = 'S';
 					break;
 				}
@@ -223,7 +223,7 @@ void map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'q':
-		current_screen = 99;
+		current_screen = SHUTDOWN;
 		break;
 	case 'r':
 		current_screen = REGIONS_DIALOG;
@@ -1718,7 +1718,7 @@ int main()
 		case HELP_DIALOG:
 			help_dialog(local_win);
 			break;
-		case 99:
+		case SHUTDOWN:
 			destroy_world();
 			use_default_colors();
 			endwin();

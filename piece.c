@@ -8,7 +8,7 @@
 char *const piece_name[] = {
 	"noble",
 	"soldier",
-//      "ship",
+	"ship"
 };
 
 //uint16_t piece_id = 0;
@@ -26,7 +26,7 @@ piece_t *create_piecelist()
 	return world->piecelist;
 }
 
-static void fill_piece_details(piece_t * piece, const unsigned char type,
+static void fill_piece_details(piece_t * piece, const enum piece_type type,
 			       const uint16_t height, const uint16_t width,
 			       character_t * owner)
 {
@@ -39,7 +39,7 @@ static void fill_piece_details(piece_t * piece, const unsigned char type,
 	world->next_piece_id++;
 }
 
-piece_t *add_piece(const unsigned char type, const uint16_t height,
+piece_t *add_piece(const enum piece_type type, const uint16_t height,
 		   const uint16_t width, character_t * owner)
 {
 	if (owner == NULL)
