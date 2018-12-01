@@ -267,7 +267,7 @@ dipoffer_t *open_offer(character_t *from, character_t *to, const unsigned int of
 	dipoffer_t *dipoffer = NULL;
 	if ((status == WAR && offer == NEUTRAL)
 	    || (status == NEUTRAL && offer == ALLIANCE)) {
-		dipoffer = malloc(sizeof(dipoffer));
+		dipoffer = malloc(sizeof(dipoffer_t));
 		dipoffer->from = from;
 		dipoffer->to = to;
 		dipoffer->offer = offer;
@@ -281,8 +281,10 @@ void close_offer(dipoffer_t *offer, const unsigned int result)
 	if (offer == NULL || offer->from == NULL || offer->to == NULL)
 		return;
 	dipstatus_t *dipstatus = get_dipstatus(offer->from, offer->to);
-	if (dipstatus == NULL)
+	if (dipstatus == NULL) {
+		free(offer);
 		return;
+	}
 	if (result == ACCEPT) {
 		switch (dipstatus->status) {
 		case WAR:
