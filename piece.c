@@ -5,7 +5,7 @@
 #include "map.h"
 #include "world.h"
 
-char *const unit_type_list[] = {
+char *const piece_name[] = {
 	"noble",
 	"soldier",
 //      "ship",

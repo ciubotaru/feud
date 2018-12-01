@@ -4,7 +4,7 @@
 #include "diplomacy.h"
 #include "world.h"
 
-char *const dipstatuslist[] = {
+char *const dipststus_name[] = {
 	"neutral",
 	"alliance",
 	"war"

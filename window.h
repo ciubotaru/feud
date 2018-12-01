@@ -39,7 +39,7 @@
 #define SELF_DECLARATION_DIALOG 25
 #define GAME_OVER 26
 
-char *screens[27];
+extern char *screens[];
 
 struct region *selected_region;
 

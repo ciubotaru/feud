@@ -125,7 +125,7 @@ void draw_map(WINDOW *local_win)
 
 	/* character info */
 	mvwprintw(local_win, 4, 50, "Hero: %s (%s)", character->name,
-		  ranklist[character->rank]);
+		  rank_name[character->rank]);
 	character_age_mon =
 	    (world->current_time.tm_year - character->birthdate.tm_year) * 12 +
 	    (world->current_time.tm_mon - character->birthdate.tm_mon);
@@ -156,7 +156,7 @@ void draw_map(WINDOW *local_win)
 
 	/* piece info */
 	mvwprintw(local_win, 17, 50, "Unit: %s",
-		  (piece == NULL ? " " : unit_type_list[piece->type]));
+		  (piece == NULL ? " " : piece_name[piece->type]));
 	mvwprintw(local_win, 18, 50, "Owned by: %s",
 		  (piece == NULL ? " " : piece->owner->name));
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
@@ -173,7 +173,7 @@ void draw_map(WINDOW *local_win)
 			wcolor_set(local_win, 10, NULL);
 			break;
 		}
-		wprintw(local_win, "%s", dipstatuslist[diplomacy->status]);
+		wprintw(local_win, "%s", dipststus_name[diplomacy->status]);
 		if (diplomacy->pending_offer != NULL)
 			wprintw(local_win, " *");
 		wcolor_set(local_win, 1, NULL);
@@ -281,13 +281,13 @@ void draw_map(WINDOW *local_win)
 		switch (result) {
 		case 1:	/* claimed from nature */
 			add_to_cronicle("%s %s claimed %s.\n",
-					ranklist[character->rank], character->name,
+					rank_name[character->rank], character->name,
 					cursor->region->name);
 			update_land_ranking();
 			break;
 		case 2:	/* conquered from enemy */
 			add_to_cronicle("%s %s conquered %s.\n",
-					ranklist[character->rank], character->name,
+					rank_name[character->rank], character->name,
 					cursor->region->name);
 			check_death();
 			update_land_ranking();
@@ -651,10 +651,10 @@ void give_region_dialog(WINDOW *local_win)
 			if (give_region_ok) {
 				change_region_owner(selected_character, region);
 				add_to_cronicle("%s %s granted %s to %s %s.\n",
-						ranklist[active_character->rank],
+						rank_name[active_character->rank],
 						active_character->name,
 						region->name,
-						ranklist[selected_character->rank],
+						rank_name[selected_character->rank],
 						selected_character->name);
 				update_land_ranking();
 				current_screen = REGIONS_DIALOG;
@@ -1069,7 +1069,7 @@ void feudal_dialog(WINDOW *local_win)
 					mvwprintw(local_win, 9 + counter % 10,
 						  2, "%3d. %s (%s)",
 						  current->id, current->name,
-						  ranklist[current->rank]);
+						  rank_name[current->rank]);
 					counter++;
 				}
 				wattron(local_win, COLOR_PAIR(1));
@@ -1097,7 +1097,7 @@ void feudal_dialog(WINDOW *local_win)
 				selected_character->lord = NULL;
 				add_to_cronicle
 				    ("%s %s became a sovereign of his lands.\n",
-				     ranklist[selected_character->rank],
+				     rank_name[selected_character->rank],
 				     selected_character->name);
 				characterlist_selector = 0;
 				selected_character = NULL;
@@ -1113,9 +1113,9 @@ void feudal_dialog(WINDOW *local_win)
 						+ 1);
 				add_to_cronicle
 				    ("%s %s bestowed the %s title upon their vassal %s.\n",
-				     ranklist[active_character->rank],
+				     rank_name[active_character->rank],
 				     active_character->name,
-				     ranklist[selected_character->rank],
+				     rank_name[selected_character->rank],
 				     selected_character->name);
 			}
 			break;
@@ -1196,7 +1196,7 @@ void homage_dialog(WINDOW *local_win)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
-						ranklist[current->rank]);
+						rank_name[current->rank]);
 				wattron(local_win, COLOR_PAIR(1));
 			}
 			current = current->next;
@@ -1400,9 +1400,9 @@ void promote_soldier_dialog(WINDOW *local_win)
 				change_region_owner(new_vassal, current_region);
 				add_to_cronicle
 				    ("%s %s granted %s to their new vassal, %s %s.\n",
-				     ranklist[active_character->rank],
+				     rank_name[active_character->rank],
 				     active_character->name, current_region->name,
-				     ranklist[new_vassal->rank],
+				     rank_name[new_vassal->rank],
 				     new_vassal->name);
 				current_screen = FEUDAL_DIALOG;
 				return;
@@ -1554,11 +1554,11 @@ void diplomacy_dialog(WINDOW *local_win)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
-						dipstatuslist[current_status]);
+						dipststus_name[current_status]);
 					if (current_dipoffer != NULL)
 						wprintw(local_win,
 							", %s offer %s",
-							dipstatuslist
+							dipststus_name
 							[current_dipoffer->
 							 offer],
 							(current_dipoffer->
@@ -1617,9 +1617,9 @@ void diplomacy_dialog(WINDOW *local_win)
 					      WAR);
 				add_to_cronicle
 				    ("%s %s declared war on %s %s.\n",
-				     ranklist[active_character->rank],
+				     rank_name[active_character->rank],
 				     active_character->name,
-				     ranklist[selected_character->rank],
+				     rank_name[selected_character->rank],
 				     selected_character->name);
 			}
 			break;
@@ -1629,9 +1629,9 @@ void diplomacy_dialog(WINDOW *local_win)
 					      NEUTRAL);
 				add_to_cronicle
 				    ("%s %s broke their alliance with %s %s.\n",
-				     ranklist[active_character->rank],
+				     rank_name[active_character->rank],
 				     active_character->name,
-				     ranklist[selected_character->rank],
+				     rank_name[selected_character->rank],
 				     selected_character->name);
 			}
 			break;
@@ -1641,16 +1641,16 @@ void diplomacy_dialog(WINDOW *local_win)
 				if (dipstatus->status == ALLIANCE)
 					add_to_cronicle
 					    ("%s %s and %s %s concluded an alliance.\n",
-					     ranklist[active_character->rank],
+					     rank_name[active_character->rank],
 					     active_character->name,
-					     ranklist[selected_character->rank],
+					     rank_name[selected_character->rank],
 					     selected_character->name);
 				else
 					add_to_cronicle
 					    ("%s %s and %s %s signed a peace treaty.\n",
-					     ranklist[active_character->rank],
+					     rank_name[active_character->rank],
 					     active_character->name,
-					     ranklist[selected_character->rank],
+					     rank_name[selected_character->rank],
 					     selected_character->name);
 //                                      dipstatus = NULL; /* not needed ? */
 			}
@@ -1744,7 +1744,7 @@ void self_declaration_dialog(WINDOW *local_win) {
 	if (eligible && user_move == 'y') {
 		add_to_cronicle
 				    ("%s %s declared themselves a king.\n",
-				     ranklist[active_character->rank],
+				     rank_name[active_character->rank],
 				     active_character->name);
 		set_character_rank(active_character, KING);
 		set_money(active_character, money - KING + rank);

@@ -16,7 +16,7 @@ typedef struct piece {
 	struct piece *next;
 } piece_t;
 
-char *const unit_type_list[3];
+extern char *const piece_name[];
 
 piece_t *add_piece(const unsigned char type, const uint16_t height,
 		   const uint16_t width, character_t *owner);

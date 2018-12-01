@@ -51,7 +51,7 @@ void print_help_piece()
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO,
 		" piece add <playerID> <type> <height> <width> - place a new piece type can be %i for %s or %i for %s\n",
-		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
+		NOBLE, piece_name[NOBLE], SOLDIER, piece_name[SOLDIER]);
 	dprintf(STDOUT_FILENO,
 		" piece delete <height> <width> - remove a piece at given coordinates\n");
 	dprintf(STDOUT_FILENO,
@@ -217,7 +217,7 @@ void print_status_player(character_t *character) {
 	}
 	dprintf(STDOUT_FILENO, "ID: %i\n", character->id);
 	dprintf(STDOUT_FILENO, "Name: %s\n", character->name);
-	dprintf(STDOUT_FILENO, "Rank: %s\n", ranklist[character->rank]);
+	dprintf(STDOUT_FILENO, "Rank: %s\n", rank_name[character->rank]);
 	dprintf(STDOUT_FILENO, "Born: %s of %i\n", months[character->birthdate.tm_mon], character->birthdate.tm_year);
 	uint16_t age_months = 12 * (world->current_time.tm_year - character->birthdate.tm_year) + world->current_time.tm_mon - character->birthdate.tm_mon;
 	dprintf(STDOUT_FILENO, "Age: %i year(s) %i month(s)\n", age_months / 12, age_months % 12);
@@ -838,7 +838,7 @@ void standby()
 				}
 				character_t *current = world->characterlist;
 				while (current != NULL) {
-					printf("%s%s%i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), (current == ai_character ? "a" : " "), current->id, current->name, ranklist[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					printf("%s%s%i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), (current == ai_character ? "a" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
 					current = current->next;
 				}
 			}

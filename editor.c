@@ -142,7 +142,7 @@ void map_editor(WINDOW *local_win)
 	/* character info */
 	if (character != NULL)
 		mvwprintw(local_win, 4, 50, "Sel. pl.: %s (%s)", character->name,
-			  ranklist[character->rank]);
+			  rank_name[character->rank]);
 	if (region != NULL)
 		mvwprintw(local_win, 6, 50, "Sel. reg.: %s (%d)", region->name,
 			  region->size);
@@ -173,7 +173,7 @@ void map_editor(WINDOW *local_win)
 
 	/* piece info */
 	mvwprintw(local_win, 17, 50, "Unit: %s",
-		  (piece == NULL ? " " : unit_type_list[piece->type]));
+		  (piece == NULL ? " " : piece_name[piece->type]));
 	mvwprintw(local_win, 18, 50, "Owned by: %s",
 		  (piece == NULL ? " " : piece->owner->name));
 /**
@@ -433,7 +433,7 @@ void add_character_dialog(WINDOW *local_win)
 				error = 1;
 			if (!error) {
 				mvwprintw(local_win, 8, 2, "%s",
-					  ranklist[rank]);
+					  rank_name[rank]);
 				stage = 2;
 			}
 			break;
@@ -771,7 +771,7 @@ void edit_character_dialog(WINDOW *local_win)
 		return;
 	}
 	mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
-	mvwprintw(local_win, 3, 2, "Rank: %s", ranklist[active_character->rank]);
+	mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
 	mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
 	mvwprintw(local_win, 5, 2, "Birthdate: %s of year %i",
 		  months[active_character->birthdate.tm_mon],
@@ -1386,7 +1386,7 @@ void homage_dialog(WINDOW *local_win)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
-						ranklist[current->rank]);
+						rank_name[current->rank]);
 				wattron(local_win, COLOR_PAIR(1));
 			}
 			current = current->next;
@@ -1517,7 +1517,7 @@ void diplomacy_dialog(WINDOW *local_win)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
-						dipstatuslist[current_status]);
+						dipststus_name[current_status]);
 				}
 				wprintw(local_win, ")");
 				wattron(local_win, COLOR_PAIR(1));

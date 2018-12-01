@@ -13,7 +13,7 @@
 
 char *const dipofferlist[2];	/* peace offer and alliance offer */
 
-char *const dipstatuslist[3];
+extern char *const dipststus_name[];
 
 typedef struct dipoffer {
 	character_t *from;

@@ -13,7 +13,7 @@
 #define MONEY_MAX 999
 #define MONEY_MAX_DIGITS 3
 
-char *const ranklist[5];
+extern char *const rank_name[];
 
 typedef struct character {
 	uint16_t id;
