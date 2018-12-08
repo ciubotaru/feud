@@ -1,7 +1,7 @@
 feud
 ====
 
-Version 0.0.2 (November, 2018)
+Version 0.0.3 (December, 2018)
 
 feud is a turn-based military and political strategy game. It is based on
 medieval-styled board games I used to make and play (mostly with myself) as a
@@ -44,4 +44,3 @@ History
 -------
 
 See file named CHANGES
-

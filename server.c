@@ -8,7 +8,7 @@
 #include "world.h"
 
 #define MAXLINE 1024
-#define ABOUT_STRING "Feud Server v0.0.1"
+#define ABOUT_STRING "Feud Server v0.0.3"
 
 #define SETUP_LOOP 0
 #define GAME_LOOP 1

@@ -10,7 +10,7 @@
 #define GAMEOVER 2
 #define MAXLINE 1024
 #define PROMPT "> "
-#define ABOUT_STRING "Feud AI v0.0.1"
+#define ABOUT_STRING "Feud AI v0.0.3"
 
 int stage = -1;
 int side;
