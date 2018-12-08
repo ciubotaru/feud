@@ -385,10 +385,11 @@ int draw_map(WINDOW *local_win)
 		current_mode = VIEW;
 		break;
 	case '\t':		// loop through own pieces
-		if (piece != NULL) {
-			piece_t *active_piece = next_piece(piece);
-			cursor = active_piece->tile;
+		if (piece != NULL && piece->owner == world->selected_character) {
+			cursor = next_piece(piece)->tile;
 		}
+		else
+			cursor = get_noble_by_owner(world->selected_character)->tile;
 		break;
 	case 'c':		// claim a region
 		/* first, switch to noble */
