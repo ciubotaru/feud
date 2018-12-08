@@ -18,8 +18,9 @@ int current_mode = VIEW;
 
 int gameover = 0;
 
-void draw_map(WINDOW *local_win)
+int draw_map(WINDOW *local_win)
 {
+	int retval = MAIN_SCREEN;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
@@ -297,32 +298,32 @@ void draw_map(WINDOW *local_win)
 		}
 		break;
 	case 'd':		// diplomacy list
-		current_screen = DIPLOMACY_DIALOG;
+		retval = DIPLOMACY_DIALOG;
 		break;
 	case 'f':		// feudal stuff
-		current_screen = FEUDAL_DIALOG;
+		retval = FEUDAL_DIALOG;
 		break;
 	case 'i':		// game information
-		current_screen = INFORMATION;
+		retval = INFORMATION;
 		break;
 	case 'h':		// name a successor
-		current_screen = HEIR_DIALOG;
+		retval = HEIR_DIALOG;
 		break;
 	case 'k':		// declare yourself king
-		current_screen = SELF_DECLARATION_DIALOG;
+		retval = SELF_DECLARATION_DIALOG;
 		break;
 	case 'm':		// give money
 		/* check if we have money */
 		if (character->money > 0)
-			current_screen = GIVE_MONEY_DIALOG;
+			retval = GIVE_MONEY_DIALOG;
 		break;
 	case 'q':		// quit
 		curs_set(TRUE);
 		echo();
-		current_screen = SHUTDOWN;
+		retval = SHUTDOWN;
 		break;
 	case 'r':		// give region
-		current_screen = REGIONS_DIALOG;
+		retval = REGIONS_DIALOG;
 		break;
 	case 's':		// save game
 		save_game();
@@ -376,16 +377,17 @@ void draw_map(WINDOW *local_win)
 		}
 		break;
 	case '?':
-		current_screen = HELP_DIALOG;
+		retval = HELP_DIALOG;
 		break;
 	default:	// ignore all other keys
 		break;
 	}
-	return;
+	return retval;
 }
 
-void regions_dialog(WINDOW *local_win)
+int regions_dialog(WINDOW *local_win)
 {
+	int retval = REGIONS_DIALOG;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
@@ -406,7 +408,7 @@ void regions_dialog(WINDOW *local_win)
 			"  To give a region to another player, press 'g'.\n");
 	else
 		wprintw(local_win,
-			" [You can't give away your last region.]\n");
+			"  [You can't give away your last region.]\n");
 	wprintw(local_win, "  To rename a region, press 'e'.\n");
 	wprintw(local_win, "  To scroll, press up/down keys.\n");
 	wprintw(local_win, "  To return to map, press 'q'.\n\n");
@@ -511,21 +513,21 @@ void regions_dialog(WINDOW *local_win)
 		}
 		break;
 	case 'e':
-		current_screen = EDIT_REGION_DIALOG;
+		retval = EDIT_REGION_DIALOG;
 		break;
 	case 'g':		/* give to another character */
-		current_screen = GIVE_REGION_DIALOG;
+		retval = GIVE_REGION_DIALOG;
 		break;
 	case 'q':		/* return to map */
-		current_screen = MAIN_SCREEN;
+		retval = MAIN_SCREEN;
 		break;
 	default:
 		break;
 	}
-	return;
+	return retval;
 }
 
-void rename_region_dialog(WINDOW *local_win)
+int rename_region_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -553,8 +555,8 @@ void rename_region_dialog(WINDOW *local_win)
 					  region->name);
 			wgetnstr(local_win, name, 16);
 			if (strlen(name) == 0) {
-				current_screen = REGIONS_DIALOG;
-				return;
+				return REGIONS_DIALOG;
+				break;
 			}
 			if (get_region_by_name(name) == NULL) {
 				stage = 1;
@@ -565,15 +567,13 @@ void rename_region_dialog(WINDOW *local_win)
 		case 1:
 			change_region_name(name, region);
 			sort_region_list();
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		}
 	}
-	return;
 }
 
-void give_region_dialog(WINDOW *local_win)
+int give_region_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -657,20 +657,18 @@ void give_region_dialog(WINDOW *local_win)
 						rank_name[selected_character->rank],
 						selected_character->name);
 				update_land_ranking();
-				current_screen = REGIONS_DIALOG;
-				return;
+				return REGIONS_DIALOG;
+				break;
 			}
 			break;
 		case 'q':
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		}
 	}
-	return;
 }
 
-void give_money_dialog(WINDOW *local_win)
+int give_money_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -706,8 +704,7 @@ void give_money_dialog(WINDOW *local_win)
 					active_character->money);
 			wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 			if (strlen(money_ch) == 0) {
-				current_screen = MAIN_SCREEN;
-				return;
+				return MAIN_SCREEN;
 				break;
 			}
 			for (i = 0; i < strlen(money_ch); i++) {
@@ -796,8 +793,7 @@ void give_money_dialog(WINDOW *local_win)
 					}
 					break;
 				case 27:
-					current_screen = MAIN_SCREEN;
-					return;
+					return MAIN_SCREEN;
 					break;
 				}
 			}
@@ -814,14 +810,13 @@ void give_money_dialog(WINDOW *local_win)
 					  get_money(receiving_character) + money);
 			}
 			update_money_ranking();
-			current_screen = MAIN_SCREEN;
-			return;
+			return MAIN_SCREEN;
 			break;
 		}
 	}
 }
 
-void info_dialog(WINDOW *local_win)
+int info_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -882,16 +877,13 @@ void info_dialog(WINDOW *local_win)
 				section++;
 			break;
 		case 'q':
-			current_screen = MAIN_SCREEN;
-			return;
+			return MAIN_SCREEN;
 			break;
 		}
 	}
-	current_screen = MAIN_SCREEN;
-	return;
 }
 
-void successor_dialog(WINDOW *local_win)
+int successor_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -965,14 +957,13 @@ void successor_dialog(WINDOW *local_win)
 			set_successor(active_character, heir);
 			break;
 		case 'q':
-			current_screen = MAIN_SCREEN;
-			return;
+			return MAIN_SCREEN;
 			break;
 		}
 	}
 }
 
-void feudal_dialog(WINDOW *local_win)
+int feudal_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1089,8 +1080,7 @@ void feudal_dialog(WINDOW *local_win)
 			break;
 		case 'h':
 			if (lord == NULL)
-				current_screen = HOMAGE_DIALOG;
-			return;
+				return HOMAGE_DIALOG;
 			break;
 		case 'f':
 			if (selected_character != NULL) {
@@ -1120,21 +1110,17 @@ void feudal_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'q':
-			current_screen = MAIN_SCREEN;
-			return;
+			return MAIN_SCREEN;
 			break;
 		case 'v':
-			if (create_vassal_ok) {
-				current_screen = PROMOTE_SOLDIER_DIALOG;
-				return;
-			}
+			if (create_vassal_ok)
+				return PROMOTE_SOLDIER_DIALOG;
 			break;
 		}
 	}
-
 }
 
-void homage_dialog(WINDOW *local_win)
+int homage_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1214,19 +1200,17 @@ void homage_dialog(WINDOW *local_win)
 		case 10:
 			if (pay_homage_ok) {
 				homage(active_character, selected_character);
-				current_screen = FEUDAL_DIALOG;
-				return;
+				return FEUDAL_DIALOG;
 			}
 			break;
 		case 'q':
-			current_screen = MAIN_SCREEN;
-			return;
+			return FEUDAL_DIALOG;
 			break;
 		}
 	}
 }
 
-void promote_soldier_dialog(WINDOW *local_win)
+int promote_soldier_dialog(WINDOW *local_win)
 {
 	/* replace currently selected piece with a new character */
 	wclear(local_win);
@@ -1264,10 +1248,8 @@ void promote_soldier_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 2, 2,
 					  "Type a name for new vassal, or press Enter to return:\n\n  ");
 			wgetnstr(local_win, name, 16);
-			if (strlen(name) == 0) {
-				current_screen = FEUDAL_DIALOG;
-				return;
-			}
+			if (strlen(name) == 0)
+				return FEUDAL_DIALOG;
 			if (get_character_by_name(name) == NULL) {
 				stage = 1;
 				error = 0;
@@ -1387,8 +1369,7 @@ void promote_soldier_dialog(WINDOW *local_win)
 				}
 				break;
 			case 'q':	/* return to map */
-				current_screen = FEUDAL_DIALOG;
-				return;
+				return FEUDAL_DIALOG;
 				break;
 			case 10:
 				new_vassal = add_character(name);
@@ -1404,8 +1385,7 @@ void promote_soldier_dialog(WINDOW *local_win)
 				     active_character->name, current_region->name,
 				     rank_name[new_vassal->rank],
 				     new_vassal->name);
-				current_screen = FEUDAL_DIALOG;
-				return;
+				return FEUDAL_DIALOG;
 				break;
 			default:
 				break;
@@ -1414,7 +1394,7 @@ void promote_soldier_dialog(WINDOW *local_win)
 	}
 }
 
-void diplomacy_dialog(WINDOW *local_win)
+int diplomacy_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1604,8 +1584,7 @@ void diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'q':	/* return */
-			current_screen = MAIN_SCREEN;
-			return;
+			return MAIN_SCREEN;
 			break;
 		case 'r':	/* retract offer */
 			if (retract_offer_ok)
@@ -1659,7 +1638,7 @@ void diplomacy_dialog(WINDOW *local_win)
 	}
 }
 
-void help_dialog(WINDOW *local_win)
+int help_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1696,10 +1675,10 @@ void help_dialog(WINDOW *local_win)
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
 	get_input(local_win);
-	current_screen = MAIN_SCREEN;
+	return MAIN_SCREEN;
 }
 
-void self_declaration_dialog(WINDOW *local_win) {
+int self_declaration_dialog(WINDOW *local_win) {
 	/**
 	 * A player can declare themselves a king if they:
 	 * - have enough land (5 regions) for a kingdom
@@ -1749,7 +1728,7 @@ void self_declaration_dialog(WINDOW *local_win) {
 		set_character_rank(active_character, KING);
 		set_money(active_character, money - KING + rank);
 	}
-	current_screen = MAIN_SCREEN;
+	return MAIN_SCREEN;
 }
 
 /**
@@ -1764,6 +1743,8 @@ int main()
 		printf("Your terminal must be at least 24x80. Exiting...\n");
 		return 0;
 	}
+
+	int current_screen = MAIN_SCREEN;
 
 	gameover = 0;
 	create_world();
@@ -1822,47 +1803,47 @@ int main()
 				cursor = active_piece->tile;
 
 			}
-			draw_map(local_win);
+			current_screen = draw_map(local_win);
 			break;
 		case REGIONS_DIALOG:
-			regions_dialog(local_win);
+			current_screen = regions_dialog(local_win);
 			break;
 		case EDIT_REGION_DIALOG:
-			rename_region_dialog(local_win);
+			current_screen = rename_region_dialog(local_win);
 			break;
 		case GIVE_REGION_DIALOG:
-			give_region_dialog(local_win);
+			current_screen = give_region_dialog(local_win);
 			break;
 		case GIVE_MONEY_DIALOG:
-			give_money_dialog(local_win);
+			current_screen = give_money_dialog(local_win);
 			break;
 		case INFORMATION:
-			info_dialog(local_win);
+			current_screen = info_dialog(local_win);
 			break;
 		case GAME_OVER:
-			info_dialog(local_win);
+			current_screen = info_dialog(local_win);
 			current_screen = SHUTDOWN;
 			break;
 		case HEIR_DIALOG:
-			successor_dialog(local_win);
+			current_screen = successor_dialog(local_win);
 			break;
 		case FEUDAL_DIALOG:
-			feudal_dialog(local_win);
+			current_screen = feudal_dialog(local_win);
 			break;
 		case HOMAGE_DIALOG:
-			homage_dialog(local_win);
+			current_screen = homage_dialog(local_win);
 			break;
 		case PROMOTE_SOLDIER_DIALOG:
-			promote_soldier_dialog(local_win);
+			current_screen = promote_soldier_dialog(local_win);
 			break;
 		case DIPLOMACY_DIALOG:
-			diplomacy_dialog(local_win);
+			current_screen = diplomacy_dialog(local_win);
 			break;
 		case HELP_DIALOG:
-			help_dialog(local_win);
+			current_screen = help_dialog(local_win);
 			break;
 		case SELF_DECLARATION_DIALOG:
-			self_declaration_dialog(local_win);
+			current_screen = self_declaration_dialog(local_win);
 			break;
 		case SHUTDOWN:
 			use_default_colors();
