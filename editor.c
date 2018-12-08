@@ -39,15 +39,15 @@ int main()
 	curs_set(FALSE);
 	WINDOW *local_win = newwin(25, 80, 0, 0);
 
-	current_screen = MAIN_SCREEN;
+	current_screen = START_MENU;
 	while (1) {
 		switch (current_screen) {
-		case MAIN_SCREEN:
+		case START_MENU:
 			current_screen = editor_start_menu(local_win);
 			break;
 		case NEW_GAME:
 			if (new_game_dialog(local_win) == 0) current_screen = MAP_EDITOR;
-			else current_screen = MAIN_SCREEN;
+			else current_screen = START_MENU;
 			break;
 		case MAP_EDITOR:
 			if (world->grid == NULL) {
@@ -111,9 +111,8 @@ int main()
 			endwin();
 			return 0;
 			break;
-		default: // return to main screen
-			current_screen = MAIN_SCREEN;
-			break;
+		default:
+			current_screen = START_MENU;
 		}
 	}
 }

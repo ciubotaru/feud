@@ -13,8 +13,8 @@ all: $(EXECS)
 $(OBJS): %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
-feud: $(CLI_OBJS) feud.o window.o
-	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o window.o -lncurses -lm
+feud: $(CLI_OBJS) feud.o new.o mapgen.o window.o
+	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o new.o mapgen.o window.o -lncurses -lm
 
 feud-editor: $(CLI_OBJS) editor.o new.o mapgen.o window.o
 	$(CC) $(CFLAGS) -o feud-editor $(CLI_OBJS) editor.o new.o mapgen.o window.o -lncurses -lm

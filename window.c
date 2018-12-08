@@ -20,6 +20,7 @@ char *modes[] = {
 int current_mode = VIEW;
 
 char *screens[] = {
+	[START_MENU] = "MENU",
 	[MAIN_SCREEN] = "GAME: MAIN SCREEN",
 	[GAME_TIME_DIALOG] = "SET GAME TIME",
 	[NEW_GAME] = "CREATE NEW GAME",
@@ -79,11 +80,72 @@ int get_input(WINDOW * window)
 	return ch;
 }
 
+int start_menu(WINDOW *local_win)
+{
+	wclear(local_win);
+	wattrset(local_win, A_BOLD);
+
+	int savefile_exists;
+	savefile_exists = 0;
+	size_t len1, len2, len3;
+	char *prefix = getenv("HOME");
+	char *filename;
+	if (prefix) {
+		len1 = strlen(prefix);
+		len2 = strlen(SAVE_DIRNAME);
+		len3 = strlen(SAVE_FILENAME);
+		filename = malloc(len1 + len2 + len3 + 1);
+		if (!filename) {
+			return SHUTDOWN;
+		}
+		memcpy(filename, prefix, len1);
+		memcpy(filename + len1, SAVE_DIRNAME, len2);
+		memcpy(filename + (len1 + len2), SAVE_FILENAME, len3 + 1);
+		if (access(filename, F_OK) != -1) savefile_exists = 1;
+		free(filename);
+	}
+
+	int i;
+	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
+		wprintw(local_win, " ");
+	wprintw(local_win, "%s\n\n", screens[current_screen]);
+	wprintw(local_win, "  [N]ew game\n");
+	if (savefile_exists) wprintw(local_win, "  [L]oad game\n");
+	wprintw(local_win, "  [Q]uit\n");
+
+	int ch;
+	while (1) {
+		ch = wgetch(local_win);
+		switch (ch) {
+			case 'l':
+			case 'L':
+				if (savefile_exists) {
+					return MAIN_SCREEN;
+				}
+				break;
+			case 'n':
+			case 'N':
+				return NEW_GAME;
+				break;
+			case 'q':
+			case 'Q':
+				return SHUTDOWN;
+				break;
+			default:
+				break;
+		}
+	}
+}
+
 int draw_map(WINDOW *local_win)
 {
 	int retval = MAIN_SCREEN;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
+
+	character_t *character = world->selected_character;
+	if (!cursor) cursor = get_noble_by_owner(character)->tile;
+	piece_t *piece = cursor->piece;
 
 	int i, j;
 /**
@@ -92,9 +154,6 @@ int draw_map(WINDOW *local_win)
 **/
 	int16_t h_offset = cursor->height - 12;
 	int16_t w_offset = cursor->width - 24;
-
-	character_t *character = world->selected_character;
-	piece_t *piece = cursor->piece;
 
 	char tile_char = '.';
 	int color_nr = 0;
@@ -379,9 +438,7 @@ int draw_map(WINDOW *local_win)
 			retval = GIVE_MONEY_DIALOG;
 		break;
 	case 'q':		// quit
-		curs_set(TRUE);
-		echo();
-		retval = SHUTDOWN;
+		retval = START_MENU;
 		break;
 	case 'r':		// give region
 		retval = REGIONS_DIALOG;
@@ -2665,6 +2722,10 @@ int change_character_dates_dialog(WINDOW *local_win)
 	char birthyear_ch[4] = { 0 };
 	unsigned char birthmon = 0;
 	char birthmon_ch[3] = { 0 };
+	uint16_t deathyear = 0;
+	char deathyear_ch[4] = { 0 };
+	unsigned char deathmon = 0;
+	char deathmon_ch[3] = { 0 };
 
 	while (1) {
 		switch (stage) {
@@ -2751,8 +2812,6 @@ int change_character_dates_dialog(WINDOW *local_win)
 					  "Current deathdate is '%s of %d'.\n  Type new year (0-999) and month (1-12), or press Enter to skip.\n  Year: ",
 					  months[character->deathdate.tm_mon],
 					  character->deathdate.tm_year);
-			uint16_t deathyear = 0;
-			char deathyear_ch[3] = { 0 };
 			wgetnstr(local_win, deathyear_ch, 3);
 			if (strlen(deathyear_ch) == 0) {
 				mvwprintw(local_win, 8, 8, "%d",
@@ -2785,8 +2844,6 @@ int change_character_dates_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 8, 40, "Month: ");
 			} else
 				mvwprintw(local_win, 8, 40, "Month: ");
-			unsigned char deathmon = 0;
-			char deathmon_ch[2] = { 0 };
 			wgetnstr(local_win, deathmon_ch, 2);
 			if (strlen(deathmon_ch) == 0) {
 				mvwprintw(local_win, 8, 47, "%s",
@@ -2840,7 +2897,7 @@ int validate_dialog(WINDOW *local_win)
 	if (error_message == NULL) {
 		msg = "All checks passed. Game data are valid.";
 		error_message = malloc(strlen(msg) + 1);
-		memcpy(error_message, msg, strlen(msg) + 1);
+		if (error_message) memcpy(error_message, msg, strlen(msg) + 1);
 	}
 	wmove(local_win, 10, 0);
 	for (i = 0; i < (80 - strlen(error_message)) / 2; i++)
@@ -2872,6 +2929,9 @@ int edit_time_dialog(WINDOW *local_win)
 
 	int stage = 0;
 	int error = 0;
+	unsigned char mon = 0;
+	char mon_ch[3] = { 0 };
+
 	while (1) {
 		switch (stage) {
 		case 0:
@@ -2921,8 +2981,6 @@ int edit_time_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 4, 40, "Month: ");
 			} else
 				mvwprintw(local_win, 4, 40, "Month: ");
-			unsigned char mon = 0;
-			char mon_ch[2] = { 0 };
 			wgetnstr(local_win, mon_ch, 2);
 			if (strlen(mon_ch) == 0) {
 				mvwprintw(local_win, 4, 47, "%s",

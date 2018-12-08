@@ -16,6 +16,7 @@ int current_mode;
 int gameover;
 
 enum screenlist {
+	START_MENU,
 	MAIN_SCREEN,
 	GAME_TIME_DIALOG,
 	NEW_GAME,
@@ -57,6 +58,8 @@ int current_screen;
 int check_termsize();
 
 int get_input();
+
+int start_menu(WINDOW *local_win);
 
 int draw_map(WINDOW *local_win);
 

@@ -47,9 +47,16 @@ int main()
 	curs_set(FALSE);	// 0
 	WINDOW *local_win = newwin(25, 80, 0, 0);
 
-	current_screen = MAIN_SCREEN;
+	current_screen = START_MENU;
 	while (1) {
 		switch (current_screen) {
+		case START_MENU:
+			current_screen = start_menu(local_win);
+			break;
+		case NEW_GAME:
+			if (new_game_dialog(local_win) == 0) current_screen = MAIN_SCREEN;
+			else current_screen = START_MENU;
+			break;
 		case MAIN_SCREEN:
 			if (world->grid == NULL) {
 				int retval = load_game();
@@ -73,9 +80,6 @@ int main()
 						free(error_message);
 					return 0;
 				}
-				piece_t *active_piece = get_noble_by_owner(world->selected_character);
-				cursor = active_piece->tile;
-
 			}
 			current_screen = draw_map(local_win);
 			break;
@@ -120,6 +124,8 @@ int main()
 			current_screen = self_declaration_dialog(local_win);
 			break;
 		case SHUTDOWN:
+			curs_set(TRUE);
+			echo();
 			use_default_colors();
 			destroy_world();
 			endwin();
