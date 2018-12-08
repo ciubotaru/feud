@@ -31,6 +31,8 @@ typedef struct character {
 
 character_t *add_character(const char *name);
 
+character_t *add_character_before(character_t *parent, const char *name);
+
 void remove_character(character_t *character);
 
 void clear_character_list();

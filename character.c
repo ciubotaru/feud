@@ -66,6 +66,36 @@ character_t *add_character(const char *name)
 	return current->next;
 }
 
+character_t *add_character_before(character_t *parent, const char *name)
+{
+	if (world->characterlist == NULL) {
+		world->characterlist = create_characterlist();
+		fill_character_details(world->characterlist, name);
+		return world->characterlist;
+	}
+
+	character_t *current = world->characterlist;
+
+	/*fast-forward to parent or to the end of list*/
+	while (current != parent && current != NULL) {
+		current = current->next;
+	}
+
+	/* now we can add a new variable */
+	character_t *new = malloc(sizeof(character_t));
+	if (!new) return NULL;
+	fill_character_details(new, name);
+
+	if (current->prev) {
+		current->prev->next = new;
+		new->prev = current->prev;
+	}
+	else world->characterlist = new;
+	new->next = current;
+	current->prev = new;
+	return new;
+}
+
 void remove_character(character_t *character)
 {
 	if (character == NULL)

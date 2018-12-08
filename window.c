@@ -1490,7 +1490,7 @@ int promote_soldier_dialog(WINDOW *local_win)
 				return FEUDAL_DIALOG;
 				break;
 			case 10:
-				new_vassal = add_character(name);
+				new_vassal = add_character_before(active_character, name);
 				current_piece->type = NOBLE;
 				set_character_rank(new_vassal, KNIGHT);
 				current_piece->owner = new_vassal;

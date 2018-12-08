@@ -211,6 +211,7 @@ void homage(character_t *character, character_t *lord)
 	set_diplomacy(character, lord, ALLIANCE);
 }
 
+/* not used */
 void promote_soldier(character_t *character, piece_t *piece, region_t *region,
 		     char *name)
 {
@@ -228,7 +229,7 @@ void promote_soldier(character_t *character, piece_t *piece, region_t *region,
 	/* character must have at least two regions (one for new character) */
 	if (count_regions_by_owner(character) < 2)
 		return;
-	character_t *vassal = add_character(name);
+	character_t *vassal = add_character_before(character, name);
 //      piece->rank = 1;
 	set_character_rank(vassal, 1);
 	piece->owner = vassal;
