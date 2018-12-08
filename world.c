@@ -46,8 +46,7 @@ void destroy_world()
 	if (world == NULL)
 		return;
 	/* remove regions */
-	while (world->regionlist != NULL)
-		remove_region(world->regionlist);
+	clear_region_list();
 	/* remove pieces */
 	clear_piece_list();
 	/* remove characters */
