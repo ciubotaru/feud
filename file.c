@@ -422,25 +422,10 @@ unsigned int load_game()
 		if (result != 0)
 			return result;
 	}
-/**
-	deserialize_game_metadata(&buffer, &pos);
-	deserialize_characterlist(&buffer, &pos);
-	deserialize_regionlist(&buffer, &pos);
-	deserialize_grid(&buffer, &pos);
-	deserialize_pieces(&buffer, &pos);
-	deserialize_feudal(&buffer, &pos);
-	deserialize_heir(&buffer, &pos);
-	deserialize_diplomacy(&buffer, &pos);
-	deserialize_dipoffer(&buffer, &pos);
-**/
 	free(buffer);
 	world->selected_character = get_character_by_id(selected_character_id);
 	if (!world->selected_character) return 1;
-	piece_t *active_piece = get_noble_by_owner(world->selected_character);
-//	if (active_piece != NULL) {
-//		world->grid->cursor_height = active_piece->height;
-//		world->grid->cursor_width = active_piece->width;
-//	}
+
 	update_money_ranking();
 	update_army_ranking();
 	update_land_ranking();

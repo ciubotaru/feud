@@ -467,7 +467,7 @@ void blur_height_grid(unsigned char **grid) {
 
 int create_contiguous_area(unsigned char **grid, unsigned int percent_unwalkable) {
 	if (!world->grid || !world->grid->tiles) return 1;
-	int i, j, k, l, h_min, w_min, h_max, w_max, h, w, count, height;
+	int i, j, h_min, w_min, h_max, w_max, h, w, count, height;
 	h = 0;
 	w = 0;
 	height = grid[0][0];

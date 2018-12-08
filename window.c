@@ -2894,7 +2894,7 @@ int validate_dialog(WINDOW *local_win)
 	char *error_message = NULL;
 	int validation_result = validate_game_data(&error_message);
 
-	if (error_message == NULL) {
+	if (validation_result == 0) {
 		msg = "All checks passed. Game data are valid.";
 		error_message = malloc(strlen(msg) + 1);
 		if (error_message) memcpy(error_message, msg, strlen(msg) + 1);

@@ -97,7 +97,7 @@ int new_game_dialog(WINDOW *local_win)
 		unsigned char **grid = create_height_grid();
 		populate_height_grid(grid);
 		blur_height_grid(grid);
-		int retval = create_contiguous_area(grid, unwalkable_perc);
+		create_contiguous_area(grid, unwalkable_perc);
 		delete_height_grid(grid);
 		/* recount walkable tiles */
 		tiles_walkable = 0;
@@ -162,7 +162,6 @@ int new_game_dialog(WINDOW *local_win)
 	char *name = malloc(6 + decimal);
 	character_t *character = NULL;
 	region_t *region = world->regionlist;
-	uint16_t height, width;
 	piece_t *piece = NULL;
 	int region_size_min = 100;
 	tile_t *tile = NULL;
