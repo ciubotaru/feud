@@ -9,8 +9,8 @@ repeat X times
 end
 * distort borders ?
 **/
-#ifndef VORONOI_H
-#define VORONOI_H
+#ifndef MAPGEN_H
+#define MAPGEN_H
 #include <stdint.h>
 
 int voronoi_iterations;
@@ -25,6 +25,16 @@ void assign_tiles_to_centers();
 
 void recalculate_region_centers();
 
-void voronoi();
+void voronoi(int nr_regions);
 
-#endif				/* VORONOI_H */
+unsigned char **create_height_grid();
+
+void delete_height_grid(unsigned char **grid);
+
+void populate_height_grid(unsigned char **grid);
+
+void blur_height_grid(unsigned char **grid);
+
+int create_contiguous_area(unsigned char **grid, unsigned int percent_unwalkable);
+
+#endif				/* MAPGEN_H */

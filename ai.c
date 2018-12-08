@@ -10,7 +10,7 @@
 #define GAMEOVER 2
 #define MAXLINE 1024
 #define PROMPT "> "
-#define ABOUT_STRING "Feud AI v0.0.1"
+#define ABOUT_STRING "Feud AI v0.0.3"
 
 int stage = -1;
 int side;
@@ -51,7 +51,7 @@ void print_help_piece()
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO,
 		" piece add <playerID> <type> <height> <width> - place a new piece type can be %i for %s or %i for %s\n",
-		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
+		NOBLE, piece_name[NOBLE], SOLDIER, piece_name[SOLDIER]);
 	dprintf(STDOUT_FILENO,
 		" piece delete <height> <width> - remove a piece at given coordinates\n");
 	dprintf(STDOUT_FILENO,
@@ -217,7 +217,7 @@ void print_status_player(character_t *character) {
 	}
 	dprintf(STDOUT_FILENO, "ID: %i\n", character->id);
 	dprintf(STDOUT_FILENO, "Name: %s\n", character->name);
-	dprintf(STDOUT_FILENO, "Rank: %s\n", ranklist[character->rank]);
+	dprintf(STDOUT_FILENO, "Rank: %s\n", rank_name[character->rank]);
 	dprintf(STDOUT_FILENO, "Born: %s of %i\n", months[character->birthdate.tm_mon], character->birthdate.tm_year);
 	uint16_t age_months = 12 * (world->current_time.tm_year - character->birthdate.tm_year) + world->current_time.tm_mon - character->birthdate.tm_mon;
 	dprintf(STDOUT_FILENO, "Age: %i year(s) %i month(s)\n", age_months / 12, age_months % 12);
@@ -838,7 +838,7 @@ void standby()
 				}
 				character_t *current = world->characterlist;
 				while (current != NULL) {
-					printf("%s%s%i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), (current == ai_character ? "a" : " "), current->id, current->name, ranklist[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					printf("%s%s%i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), (current == ai_character ? "a" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
 					current = current->next;
 				}
 			}
@@ -1047,10 +1047,10 @@ void think()
 			current_piece = current_piece->next;
 		}
 		uint16_t directions_mask = 0;
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width)) directions_mask |= 1;
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1)) directions_mask |= (1 << 1);
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width)) directions_mask |= (1 << 2);
-		if (is_legal_move(current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1)) directions_mask |= (1 << 3);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width)) directions_mask |= 1;
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1)) directions_mask |= (1 << 1);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width)) directions_mask |= (1 << 2);
+		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1)) directions_mask |= (1 << 3);
 		uint16_t nr_directions = __builtin_popcount (directions_mask);
 		/* if piece is blocked, skip and choose another one (WHAT IF ALL PIECES are blocked???) */
 		if (nr_directions == 0) continue;
@@ -1064,31 +1064,22 @@ void think()
 		}
 		switch (bit) {
 			case 1:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height + 1, current_piece->width);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->height++;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width);
+				move_piece(current_piece, current_piece->tile->height + 1, current_piece->tile->width);
 				break;
 			case 2:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width + 1);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->width++;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1);
+				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width + 1);
 				break;
 			case 3:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height - 1, current_piece->width);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->height--;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width);
+				move_piece(current_piece, current_piece->tile->height - 1, current_piece->tile->width);
 				break;
 			case 4:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->height, current_piece->width, current_piece->height, current_piece->width - 1);
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = NULL;
-				current_piece->width--;
-				world->grid->tiles[current_piece->height][current_piece->width]->piece = current_piece;
+				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1);
+				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width - 1);
 				break;
 		}
-		world->moves_left--;
 	}
 	dprintf(STDOUT_FILENO, "done\n");
 	world->moves_left = 0;

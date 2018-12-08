@@ -3,24 +3,21 @@
 
 #include "character.h"
 
-#define NOBLE 0
-#define SOLDIER 1
-//#define SHIP 2
+enum piece_type {NOBLE, SOLDIER, SHIP};
+
 #define COST_SOLDIER 1
 
 typedef struct piece {
 	uint16_t id;
-	unsigned char type;
-//      unsigned char rank;
-	uint16_t width;
-	uint16_t height;
+	enum piece_type type;
+	struct tile *tile;
 	character_t *owner;
 	struct piece *next;
 } piece_t;
 
-char *const unit_type_list[3];
+extern char *const piece_name[];
 
-piece_t *add_piece(const unsigned char type, const uint16_t height,
+piece_t *add_piece(const enum piece_type type, const uint16_t height,
 		   const uint16_t width, character_t *owner);
 
 piece_t *get_noble_by_owner(character_t *owner);

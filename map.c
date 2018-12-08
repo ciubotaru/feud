@@ -186,9 +186,7 @@ unsigned char claim_region(character_t * character, region_t * region)
 
 	/* if current owner is in the region, stop here */
 	piece_t *owners_noble = get_noble_by_owner(current_owner);
-	region_t *present_location =
-	    world->grid->tiles[owners_noble->height][owners_noble->width]->
-	    region;
+	region_t *present_location = owners_noble->tile->region;
 	if (region == present_location)
 		return 0;
 
@@ -268,6 +266,7 @@ void remove_region(region_t * region)
 	if (world->regionlist == NULL)
 		return;
 
+	clear_region(region);
 	region_t *prev = NULL;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
@@ -388,13 +387,13 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 	grid_t *grid = malloc(sizeof(grid_t));
 	grid->height = height;
 	grid->width = width;
-	grid->cursor_height = 0;
-	grid->cursor_width = 0;
 	grid->tiles = malloc(height * sizeof(void *));
 	for (i = 0; i < height; i++) {
 		grid->tiles[i] = malloc(width * sizeof(void *));
 		for (j = 0; j < width; j++) {
 			grid->tiles[i][j] = tile_init();
+			grid->tiles[i][j]->height = i;
+			grid->tiles[i][j]->width = j;
 		}
 	}
 	world->grid = grid;
@@ -457,8 +456,8 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 			const uint16_t dst_width)
 {
-	uint16_t src_height = piece->height;
-	uint16_t src_width = piece->width;
+	uint16_t src_height = piece->tile->height;
+	uint16_t src_width = piece->tile->width;
 	unsigned int movable =
 	    is_legal_move(src_height, src_width, dst_height, dst_width);
 
@@ -479,11 +478,9 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 		update_army_ranking();
 	}
 	/* update grid */
-	world->grid->tiles[piece->height][piece->width]->piece = NULL;
-	piece->height = dst_height;
-	piece->width = dst_width;
+	world->grid->tiles[src_height][src_width]->piece = NULL;
+	piece->tile = world->grid->tiles[dst_height][dst_width];
 	world->grid->tiles[dst_height][dst_width]->piece = piece;
-	set_cursor(dst_height, dst_width);
 	world->moves_left--;
 	return 0;
 }
@@ -496,4 +493,48 @@ void toggle_walkable(const uint16_t height, const uint16_t width)
 		return;
 	world->grid->tiles[height][width]->walkable =
 	    (world->grid->tiles[height][width]->walkable + 1) % 2;
+}
+
+tile_t *region_center(region_t *region) {
+	if (!region || region->size == 0) return NULL;
+	int16_t sum_h = 0;
+	int16_t sum_w = 0;
+	uint16_t i;
+	for (i = 0; i < region->size; i++) {
+		sum_h += region->tiles[i]->height;
+		sum_w += region->tiles[i]->width;
+	}
+	int16_t center_h = sum_h / region->size;
+	int16_t center_w = sum_w / region->size;
+	tile_t *tile = region->tiles[0];
+
+	for (i = 1; i < region->size; i++) {
+		if (abs(region->tiles[i]->height - center_h) + abs(region->tiles[i]->width - center_w) < abs(tile->height - center_h) + abs(tile->width - center_w)) {
+			tile = region->tiles[i];
+		}
+	}
+	return tile;
+}
+
+tile_t *get_empty_tile_in_region(region_t *region) {
+	if (!region || region->size == 0) return NULL;
+	/* compute region center */
+	tile_t *center = region_center(region);
+	if (!center->piece) return center;
+	uint16_t distance_min = world->grid->height + world->grid->width;
+	uint16_t distance = 0;
+	tile_t *tile_min = NULL;
+	tile_t *tile = NULL;
+	uint16_t i;
+	for (i = 0; i < region->size; i++) {
+		tile = region->tiles[i];
+		if (!tile->piece) {
+			distance = abs(tile->height - center->height) + abs(tile->width - center->width);
+			if (distance < distance_min) {
+				distance_min = distance;
+				tile_min = tile;
+			}
+		}
+	}
+	return tile_min;
 }

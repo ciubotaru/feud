@@ -5,7 +5,7 @@
 #define SAVE_FILENAME "/feud.sav"
 #define LOG_FILENAME "/feud.log"
 
-int add_to_cronicle(char *format, ...);
+int add_to_chronicle(char *format, ...);
 
 unsigned int load_game();
 

@@ -4,11 +4,15 @@
 #include "character.h"
 #include "map.h"
 #include "dice.h"
-#include "piece.h"
 #include "diplomacy.h"
-#include "voronoi.h"
+#include "mapgen.h"
+#include "new.h"
+#include "piece.h"
 #include "window.h"
 #include "config.h"
+
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+#define MIN(X, Y) (((X) > (Y)) ? (Y) : (X))
 
 typedef struct {
 	grid_t *grid;

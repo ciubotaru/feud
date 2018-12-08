@@ -5,10 +5,10 @@
 #include "map.h"
 #include "world.h"
 
-char *const unit_type_list[] = {
+char *const piece_name[] = {
 	"noble",
 	"soldier",
-//      "ship",
+	"ship"
 };
 
 //uint16_t piece_id = 0;
@@ -26,21 +26,20 @@ piece_t *create_piecelist()
 	return world->piecelist;
 }
 
-static void fill_piece_details(piece_t * piece, const unsigned char type,
+static void fill_piece_details(piece_t * piece, const enum piece_type type,
 			       const uint16_t height, const uint16_t width,
 			       character_t * owner)
 {
 	piece->id = world->next_piece_id;
 	piece->type = type;
-	piece->width = width;
-	piece->height = height;
+	piece->tile = world->grid->tiles[height][width];
 	piece->owner = owner;
 	world->grid->tiles[height][width]->piece = piece;
 //      grid->tiles[height][width]->region->owner->id = owner->id;
 	world->next_piece_id++;
 }
 
-piece_t *add_piece(const unsigned char type, const uint16_t height,
+piece_t *add_piece(const enum piece_type type, const uint16_t height,
 		   const uint16_t width, character_t * owner)
 {
 	if (owner == NULL)
@@ -121,6 +120,7 @@ void remove_piece(piece_t * piece)
 			if (prev) prev->next = current->next;
 			else world->piecelist = current->next;
 			piece_t *tmp = current;
+			tmp->tile->piece = NULL;
 			free(tmp);
 			return;
 		}

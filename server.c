@@ -8,7 +8,7 @@
 #include "world.h"
 
 #define MAXLINE 1024
-#define ABOUT_STRING "Feud Server v0.0.1"
+#define ABOUT_STRING "Feud Server v0.0.3"
 
 #define SETUP_LOOP 0
 #define GAME_LOOP 1
@@ -54,7 +54,7 @@ void print_help_piece()
 	dprintf(STDOUT_FILENO, "Parameters for 'piece' command:\n");
 	dprintf(STDOUT_FILENO,
 		" piece add <playerID> <type> <height> <width> - place a new piece type can be %i for %s or %i for %s\n",
-		NOBLE, unit_type_list[NOBLE], SOLDIER, unit_type_list[SOLDIER]);
+		NOBLE, piece_name[NOBLE], SOLDIER, piece_name[SOLDIER]);
 	dprintf(STDOUT_FILENO,
 		" piece delete <height> <width> - remove a piece at given coordinates\n");
 	dprintf(STDOUT_FILENO,
@@ -165,10 +165,10 @@ void print_print(uint16_t w, uint16_t h) {
 	struct winsize ws;
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 	ws.ws_row -= 1;
-	if (w >= world->grid->width) w = (world->grid->width > ws.ws_col ? world->grid->width - ws.ws_col : 0);
-	if (h >= world->grid->height) h = (world->grid->height > ws.ws_row ? world->grid->height - ws.ws_row : 0);
-	uint16_t w_max = (w + ws.ws_col > world->grid->width ? world->grid->width : w + ws.ws_col);
-	uint16_t h_max = (h + ws.ws_row > world->grid->height ? world->grid->height : h + ws.ws_row);
+	if (w >= world->grid->width) w = MAX(world->grid->width - ws.ws_col, 0);
+	if (h >= world->grid->height) h = MAX(world->grid->height - ws.ws_row, 0);
+	uint16_t w_max = MIN(w + ws.ws_col, world->grid->width);
+	uint16_t h_max = MIN(h + ws.ws_row, world->grid->height);
 	char tile_char = '.';
 	int i, j;
 	for (i = h_max - 1; i >= h; i--) {
@@ -198,7 +198,7 @@ void print_print(uint16_t w, uint16_t h) {
 				case SOLDIER:	/* soldier */
 					tile_char = 's';
 					break;
-				case 2:	/* ship */
+				case SHIP:	/* ship */
 					tile_char = 'S';
 					break;
 				}
@@ -254,7 +254,7 @@ void print_status_player(character_t *character) {
 	}
 	dprintf(STDOUT_FILENO, "ID: %i\n", character->id);
 	dprintf(STDOUT_FILENO, "Name: %s\n", character->name);
-	dprintf(STDOUT_FILENO, "Rank: %s\n", ranklist[character->rank]);
+	dprintf(STDOUT_FILENO, "Rank: %s\n", rank_name[character->rank]);
 	dprintf(STDOUT_FILENO, "Born: %s of %i\n", months[character->birthdate.tm_mon], character->birthdate.tm_year);
 	uint16_t age_months = 12 * (world->current_time.tm_year - character->birthdate.tm_year) + world->current_time.tm_mon - character->birthdate.tm_mon;
 	dprintf(STDOUT_FILENO, "Age: %i year(s) %i month(s)\n", age_months / 12, age_months % 12);
@@ -825,7 +825,7 @@ void setup_loop()
 				}
 				character_t *current = world->characterlist;
 				while (current != NULL) {
-					printf("%s %i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, ranklist[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					printf("%s %i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
 					current = current->next;
 				}
 			}

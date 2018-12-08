@@ -46,8 +46,7 @@ void destroy_world()
 	if (world == NULL)
 		return;
 	/* remove regions */
-	while (world->regionlist != NULL)
-		remove_region(world->regionlist);
+	clear_region_list();
 	/* remove pieces */
 	clear_piece_list();
 	/* remove characters */
@@ -179,15 +178,9 @@ int validate_game_data(char **error_message)
 	}
 
 	/* All units should stand on walkable tiles */
-	error = 0;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (world->grid->tiles[piece->height][piece->width]->walkable ==
-		    0) {
-			error = 1;
-			break;
-		}
-		if (error == 1) {
+		if (piece->tile->walkable == 0) {
 			msg = "Piece on unwalkable tile detected.";
 			goto error;
 		}
@@ -195,31 +188,21 @@ int validate_game_data(char **error_message)
 	}
 
 	/* death date should be later than current date */
-	error = 0;
 	character = world->characterlist;
 	while (character != NULL) {
 		if (character->deathdate.tm_year * 12 + character->deathdate.tm_mon <=
 		    total_months) {
-			error = 1;
-			break;
+			msg = "A dead hero detectd. Recheck!";
+			goto error;
 		}
 		character = character->next;
 	}
-	if (error != 0) {
-		msg = "A dead hero detected. Recheck!";
-		goto error;
-	}
 
 	/* birth date should be earlier than current date */
-	error = 0;
 	character = world->characterlist;
 	while (character != NULL) {
 		if (character->birthdate.tm_year * 12 + character->birthdate.tm_mon >
 		    total_months) {
-			error = 1;
-			break;
-		}
-		if (error == 1) {
 			msg = "An unborn hero detected.";
 			goto error;
 		}
@@ -227,54 +210,38 @@ int validate_game_data(char **error_message)
 	}
 
 	/* check if pointers from grid to pieces correspond to piece coords */
-	error = 0;
 	tile_t *tile = NULL;
 	piece = world->piecelist;
 	while (piece != NULL) {
-		if (piece->id !=
-		    world->grid->tiles[piece->height][piece->width]->piece->
-		    id) {
-			error = 1;
-			break;
+		if (piece->id != piece->tile->piece->id) {
+			msg = "Grid-piece consistency broken.";
+			goto error;
 		}
 		piece = piece->next;
-	}
-	if (error == 1) {
-		msg = "Grid-piece inconsistency broken.";
-		goto error;
 	}
 
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
 			tile = world->grid->tiles[i][j];
 			if (tile->piece != NULL) {
-				if (tile->piece->height != i
-				    || tile->piece->width != j) {
-					error = 1;
-					break;
+				if (tile->height != i
+				    || tile->width != j) {
+					msg = "Grid-piece consistency brpken.";
+					goto error;
 				}
 			}
 		}
 	}
-	if (error == 1) {
-		msg = "Grid-piece inconsistency broken.";
-		goto error;
-	}
 
 	/* check if all lords are higher ranks than their vassals */
-	error = 0;
 	character = world->characterlist;
 	while (character != NULL) {
 		if (character->lord != NULL) {
 			if (character->lord->rank <= character->rank) {
-				error = 1;
-				break;
+				msg =
+				    "Inconsistency between lord and vassal rank detected.";
+				goto error;
 			}
-		}
-		if (error == 1) {
-			msg =
-			    "Inconsistency between lord and vassal rank detected.";
-			goto error;
 		}
 		character = character->next;
 	}

@@ -17,6 +17,8 @@ typedef struct tile {
 	unsigned char walkable;
 //      uint16_t owner; /* 0 is no owner */
 	struct region *region;
+	uint16_t height;
+	uint16_t width;
 	piece_t *piece;		/* should be a pointer to piece_t structure, NULL if empty */
 } tile_t;
 
@@ -68,8 +70,6 @@ void update_land_ranking();
 typedef struct grid {
 	uint16_t height;
 	uint16_t width;
-	uint16_t cursor_height;
-	uint16_t cursor_width;
 	tile_t ***tiles;
 } grid_t;
 
@@ -86,5 +86,9 @@ unsigned int move_piece(piece_t *piece, const uint16_t dst_heigh,
 			const uint16_t dst_width);
 
 void toggle_walkable(const uint16_t height, const uint16_t width);
+
+tile_t *region_center(region_t *region);
+
+tile_t *get_empty_tile_in_region(region_t *region);
 
 #endif				/* MAP_H */

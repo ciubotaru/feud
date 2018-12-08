@@ -11,35 +11,47 @@
 #include <stdint.h>
 #include <ncurses.h>
 
-#define MAIN_SCREEN 0
-#define GAME_TIME_DIALOG 1
-#define NEW_GAME 2
-#define MAP_EDITOR 3
-#define REGIONS_DIALOG 4
-#define ADD_REGION_DIALOG 5
-#define EDIT_REGION_DIALOG 6
-#define GIVE_REGION_DIALOG 7
-#define RENAME_REGION_DIALOG 8
-#define CHARACTERS_DIALOG 9
-#define ADD_CHARACTER_DIALOG 10
-#define EDIT_CHARACTER_DIALOG 11
-#define RENAME_CHARACTER_DIALOG 12
-#define CHARACTER_MONEY_DIALOG 13
-#define CHARACTER_DATES_DIALOG 14
-#define REGION_CHARACTER_DIALOG 15
-#define GIVE_MONEY_DIALOG 16
-#define HEIR_DIALOG 17
-#define FEUDAL_DIALOG 18
-#define HOMAGE_DIALOG 19
-#define PROMOTE_SOLDIER_DIALOG 20
-#define DIPLOMACY_DIALOG 21
-#define VALIDATE_DIALOG 22
-#define HELP_DIALOG 23
-#define INFORMATION 24
-#define SELF_DECLARATION_DIALOG 25
-#define GAME_OVER 26
+int current_mode;
 
-char *screens[27];
+int gameover;
+
+enum screenlist {
+	START_MENU,
+	MAIN_SCREEN,
+	GAME_TIME_DIALOG,
+	NEW_GAME,
+	MAP_EDITOR,
+	REGIONS_DIALOG,
+	ADD_REGION_DIALOG,
+	EDIT_REGION_DIALOG,
+	GIVE_REGION_DIALOG,
+	RENAME_REGION_DIALOG,
+	CHARACTERS_DIALOG,
+	ADD_CHARACTER_DIALOG,
+	EDIT_CHARACTER_DIALOG,
+	RENAME_CHARACTER_DIALOG,
+	CHARACTER_MONEY_DIALOG,
+	CHARACTER_DATES_DIALOG,
+	REGION_CHARACTER_DIALOG,
+	GIVE_MONEY_DIALOG,
+	HEIR_DIALOG,
+	FEUDAL_DIALOG,
+	HOMAGE_DIALOG,
+	PROMOTE_SOLDIER_DIALOG,
+	DIPLOMACY_DIALOG,
+	VALIDATE_DIALOG,
+	HELP_DIALOG,
+	INFORMATION,
+	SELF_DECLARATION_DIALOG,
+	GAME_OVER,
+	SHUTDOWN
+};
+
+extern char *screens[];
+
+struct region *selected_region;
+
+struct tile *cursor;
 
 int current_screen;
 
@@ -47,6 +59,66 @@ int check_termsize();
 
 int get_input();
 
-void set_cursor(uint16_t new_height, uint16_t new_width);
+int start_menu(WINDOW *local_win);
+
+int draw_map(WINDOW *local_win);
+
+int regions_dialog(WINDOW *local_win);
+
+int rename_region_dialog(WINDOW *local_win);
+
+int give_region_dialog(WINDOW *local_win);
+
+int give_money_dialog(WINDOW *local_win);
+
+int info_dialog(WINDOW *local_win);
+
+int successor_dialog(WINDOW *local_win);
+
+int feudal_dialog(WINDOW *local_win);
+
+int homage_dialog(WINDOW *local_win);
+
+int promote_soldier_dialog(WINDOW *local_win);
+
+int diplomacy_dialog(WINDOW *local_win);
+
+int help_dialog(WINDOW *local_win);
+
+int self_declaration_dialog(WINDOW *local_win);
+
+int editor_start_menu(WINDOW *local_win);
+
+int map_editor(WINDOW *local_win);
+
+int characters_dialog(WINDOW *local_win);
+
+int add_character_dialog(WINDOW *local_win);
+
+int editor_regions_dialog(WINDOW *local_win);
+
+int add_region_dialog(WINDOW *local_win);
+
+int region_to_character(WINDOW *local_win);
+
+int edit_character_dialog(WINDOW *local_win);
+
+int rename_character_dialog(WINDOW *local_win);
+
+int change_character_money_dialog(WINDOW *local_win);
+
+int change_character_dates_dialog(WINDOW *local_win);
+
+int validate_dialog(WINDOW *local_win);
+
+int edit_time_dialog(WINDOW *local_win);
+
+int editor_successor_dialog(WINDOW *local_win);
+
+int editor_homage_dialog(WINDOW *local_win);
+
+int editor_diplomacy_dialog(WINDOW *local_win);
+
+int editor_help_dialog(WINDOW *local_win);
 
 #endif

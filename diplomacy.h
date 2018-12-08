@@ -5,15 +5,14 @@
 #include "piece.h"
 #include "map.h"
 
-#define NEUTRAL 0
-#define ALLIANCE 1
-#define WAR 2
+enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
+
 #define REJECT 0
 #define ACCEPT 1
 
 char *const dipofferlist[2];	/* peace offer and alliance offer */
 
-char *const dipstatuslist[3];
+extern char *const dipstatus_name[];
 
 typedef struct dipoffer {
 	character_t *from;
@@ -37,6 +36,8 @@ dipstatus_t *get_dipstatus(character_t * name1, character_t * name2);
 unsigned char get_diplomacy(character_t * name1, character_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
+
+void remove_redundant_diplomacy();
 
 void homage(character_t * character, character_t * lord);
 

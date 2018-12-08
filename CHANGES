@@ -1,0 +1,19 @@
+Version 0.0.3 (December 2018)
+-----------------------------
+
+Changes:
+* Improved world generation mechanism (added unwalkable tiles, region ownership, units)
+* Added start menu (open saved game or create new game) in single player
+* Optimized move order (newly created vassals are last in queue)
+
+Bugfixes:
+* Wrong direction of movement
+* Decrement of moves left in AI
+* Incomplete cleanup when deleting game world data
+
+Early history
+-------------
+
+* First line of code was written on July 26, 2017.
+* November 2017 Version 0.0.1 released.
+* November 2018 Version 0.0.2 released.

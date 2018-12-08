@@ -5,7 +5,23 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
+
+#if defined(__linux__) || defined(__CYGWIN__)
+
 #include <endian.h>
+
+#elif defined(__APPLE__)
+
+#include <libkern/OSByteOrder.h>
+#define htobe16(x) OSSwapHostToBigInt16(x)
+#define be16toh(x) OSSwapBigToHostInt16(x)
+
+#else
+
+#error Platform not supported
+
+#endif
+
 #include <stdarg.h>
 #include "world.h"
 
@@ -37,7 +53,7 @@ char *strconcat(const char *input1, const char *input2)
 	return output;
 }
 
-int add_to_cronicle(char *format, ...)
+int add_to_chronicle(char *format, ...)
 {
 	va_list argptr;
 	va_start(argptr, format);
@@ -406,25 +422,10 @@ unsigned int load_game()
 		if (result != 0)
 			return result;
 	}
-/**
-	deserialize_game_metadata(&buffer, &pos);
-	deserialize_characterlist(&buffer, &pos);
-	deserialize_regionlist(&buffer, &pos);
-	deserialize_grid(&buffer, &pos);
-	deserialize_pieces(&buffer, &pos);
-	deserialize_feudal(&buffer, &pos);
-	deserialize_heir(&buffer, &pos);
-	deserialize_diplomacy(&buffer, &pos);
-	deserialize_dipoffer(&buffer, &pos);
-**/
 	free(buffer);
 	world->selected_character = get_character_by_id(selected_character_id);
 	if (!world->selected_character) return 1;
-	piece_t *active_piece = get_noble_by_owner(world->selected_character);
-	if (active_piece != NULL) {
-		world->grid->cursor_height = active_piece->height;
-		world->grid->cursor_width = active_piece->width;
-	}
+
 	update_money_ranking();
 	update_army_ranking();
 	update_land_ranking();
@@ -885,6 +886,7 @@ unsigned int save_game()
 	}
 
 	int nr_dipstat = 0;
+	remove_redundant_diplomacy();
 	dipstatus_t *current_diplomacy = world->diplomacylist;
 	while (current_diplomacy != NULL) {
 		nr_dipstat++;
