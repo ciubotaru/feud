@@ -158,6 +158,20 @@ void remove_diplomacy(dipstatus_t *dipstatus)
 	}
 }
 
+void remove_redundant_diplomacy() {
+	dipstatus_t *current = world->diplomacylist;
+	dipstatus_t *next = current;
+	while (current) {
+		next = current->next;
+		if (current->character1 == current->character2 ||
+			(current->status == NEUTRAL && current->pending_offer == NULL) ||
+			current->character1->lord == current->character2 ||
+			current->character1 == current->character2->lord
+		) remove_diplomacy(current);
+		current = next;
+	}
+}
+
 void homage(character_t *character, character_t *lord)
 {
 	if (character == NULL || lord == NULL)

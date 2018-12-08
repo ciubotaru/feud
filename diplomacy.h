@@ -37,6 +37,8 @@ unsigned char get_diplomacy(character_t * name1, character_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
 
+void remove_redundant_diplomacy();
+
 void homage(character_t * character, character_t * lord);
 
 void promote_soldier(character_t * character, piece_t * piece, region_t * region,

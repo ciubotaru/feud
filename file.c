@@ -886,6 +886,7 @@ unsigned int save_game()
 	}
 
 	int nr_dipstat = 0;
+	remove_redundant_diplomacy();
 	dipstatus_t *current_diplomacy = world->diplomacylist;
 	while (current_diplomacy != NULL) {
 		nr_dipstat++;
