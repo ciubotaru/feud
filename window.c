@@ -487,10 +487,10 @@ int draw_map(WINDOW *local_win)
 		break;
 	case 'v':		// toggle between 'move piece' and 'explore map'
 		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
-		if (current_mode == 0) {
-			piece =
-			    get_noble_by_owner(world->selected_character);
-			cursor = piece->tile;
+		if (cursor->piece == NULL
+			|| cursor->piece->owner != world->selected_character) {
+			cursor =
+			    get_noble_by_owner(world->selected_character)->tile;
 		}
 		break;
 	case '?':
