@@ -76,6 +76,7 @@ int get_input(WINDOW * window)
 			    || input == 68)
 				return input + 1000;
 		}
+		else return tolower(ch2);
 	}
 	return tolower(ch);
 }
