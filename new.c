@@ -6,7 +6,7 @@
 #include <math.h>		/* for log10 */
 #include "world.h"
 
-void new_game_dialog(WINDOW *local_win)
+int new_game_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -22,8 +22,7 @@ void new_game_dialog(WINDOW *local_win)
 		"\n\n  You are about to create a new game. This will destroy the old game and\n  overwrite the save file. Press 'y' to confirm.");
 	int confirm = wgetch(local_win);
 	if (confirm != 'y' && confirm != 'Y') {
-		current_screen = MAIN_SCREEN;
-		return;
+		return 1;
 	}
 
 	destroy_world();
@@ -248,5 +247,5 @@ void new_game_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 	wgetch(local_win);
-	return;
+	return 0;
 }

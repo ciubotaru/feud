@@ -47,8 +47,8 @@ int main()
 			current_screen = editor_start_menu(local_win);
 			break;
 		case NEW_GAME:
-			new_game_dialog(local_win);
-			current_screen = MAP_EDITOR;
+			if (new_game_dialog(local_win) == 0) current_screen = MAP_EDITOR;
+			else current_screen = MAIN_SCREEN;
 			break;
 		case MAP_EDITOR:
 			if (world->grid == NULL) {
