@@ -6,7 +6,7 @@
 #include <math.h>		/* for log10 */
 #include "world.h"
 
-void editor_start_menu(WINDOW *local_win)
+int editor_start_menu(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -24,19 +24,16 @@ void editor_start_menu(WINDOW *local_win)
 		ch = wgetch(local_win);
 		switch (ch) {
 		case 'o':
-			current_screen = MAP_EDITOR;
-			return;
+			return MAP_EDITOR;
 		case 'c':
-			current_screen = NEW_GAME;
-			return;
+			return NEW_GAME;
 		case 'q':
-			current_screen = SHUTDOWN;
-			return;
+			return SHUTDOWN;
 		}
 	}
 }
 
-void map_editor(WINDOW *local_win)
+int map_editor(WINDOW *local_win)
 {
 	if (!cursor) cursor = world->grid->tiles[0][0];
 	wclear(local_win);
@@ -185,8 +182,7 @@ void map_editor(WINDOW *local_win)
 
 	switch (ch) {
 	case 27:		/* escape */
-		current_screen = MAIN_SCREEN;
-		return;
+		return MAIN_SCREEN;
 		break;
 	case 1065:		/* up */
 		if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
@@ -208,7 +204,7 @@ void map_editor(WINDOW *local_win)
 			change_tile_region(NULL, cursor);
 		break;
 	case 'h':
-		current_screen = CHARACTERS_DIALOG;
+		return CHARACTERS_DIALOG;
 		break;
 	case 'n':
 		/* if tile not wlakable, just ignore */
@@ -223,16 +219,16 @@ void map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'q':
-		current_screen = SHUTDOWN;
+		return SHUTDOWN;
 		break;
 	case 'r':
-		current_screen = REGIONS_DIALOG;
+		return REGIONS_DIALOG;
 		break;
 	case 's':
 		save_game();
 		break;
 	case 't':
-		current_screen = GAME_TIME_DIALOG;
+		return GAME_TIME_DIALOG;
 		break;
 	case 'u':
 		/* if tile not wlakable, just ignore */
@@ -247,7 +243,7 @@ void map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'v':
-		current_screen = VALIDATE_DIALOG;
+		return VALIDATE_DIALOG;
 		break;
 	case 'w':
 		toggle_walkable(cursor->height, cursor->width);
@@ -278,9 +274,7 @@ void map_editor(WINDOW *local_win)
 			character = world->characterlist;
 		world->selected_character = character;
 		piece = get_noble_by_owner(character);
-		if (piece != NULL) {
-			cursor = piece->tile;
-		}
+		if (piece != NULL) cursor = piece->tile;
 		break;
 	case '0':
 	case '1':
@@ -292,14 +286,17 @@ void map_editor(WINDOW *local_win)
 		world->moves_left = ch - '0';
 		break;
 	case '?':
-		current_screen = HELP_DIALOG;
+		return HELP_DIALOG;
+		break;
+	default:
 		break;
 	}
-	return;
+	return MAP_EDITOR;
 }
 
-void characters_dialog(WINDOW *local_win)
+int characters_dialog(WINDOW *local_win)
 {
+	int retval = CHARACTERS_DIALOG;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
@@ -342,7 +339,7 @@ void characters_dialog(WINDOW *local_win)
 	int user_move = get_input(local_win);
 	switch (user_move) {
 	case 'a':
-		current_screen = ADD_CHARACTER_DIALOG;
+		retval = ADD_CHARACTER_DIALOG;
 		break;
 	case 'd':
 		current = world->selected_character;
@@ -351,7 +348,7 @@ void characters_dialog(WINDOW *local_win)
 		remove_character(current);
 		break;
 	case 'e':
-		current_screen = EDIT_CHARACTER_DIALOG;
+		retval = EDIT_CHARACTER_DIALOG;
 		break;
 	case 1065:
 		if (world->selected_character->prev) {
@@ -365,15 +362,15 @@ void characters_dialog(WINDOW *local_win)
 		break;
 	case 'q':
 		characterlist_selector = 0;
-		current_screen = MAP_EDITOR;
+		retval = MAP_EDITOR;
 		break;
 	default:
 		break;
 	}
-	return;
+	return retval;
 }
 
-void add_character_dialog(WINDOW *local_win)
+int add_character_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -404,8 +401,7 @@ void add_character_dialog(WINDOW *local_win)
 					  "Type a unique name for the new hero:         \n\n  ");
 			wgetnstr(local_win, name, 16);
 			if (strlen(name) == 0) {
-				current_screen = CHARACTERS_DIALOG;
-				return;
+				return CHARACTERS_DIALOG;
 			}
 			if (get_character_by_name(name) == NULL) {
 				stage = 1;
@@ -466,18 +462,17 @@ void add_character_dialog(WINDOW *local_win)
 			set_money(character, money);
 			set_character_rank(character, rank);
 			world->selected_character = character;
-			current_screen = CHARACTERS_DIALOG;
 			curs_set(FALSE);
 			noecho();
-			return;
+			return CHARACTERS_DIALOG;
 			break;
 		}
 	}
-	return;
 }
 
-void regions_dialog(WINDOW *local_win)
+int editor_regions_dialog(WINDOW *local_win)
 {
+	int retval = REGIONS_DIALOG;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 	curs_set(FALSE);
@@ -533,8 +528,7 @@ void regions_dialog(WINDOW *local_win)
 		}
 		break;
 	case 'a':
-		current_screen = ADD_REGION_DIALOG;
-		return;
+		retval = ADD_REGION_DIALOG;
 		break;
 	case 'd':
 		counter = 0;
@@ -554,23 +548,20 @@ void regions_dialog(WINDOW *local_win)
 		}
 		break;
 	case 'e':
-		current_screen = RENAME_REGION_DIALOG;
-		return;
+		retval = RENAME_REGION_DIALOG;
 		break;
 	case 'o':
-		current_screen = REGION_CHARACTER_DIALOG;
-		return;
+		retval = REGION_CHARACTER_DIALOG;
 		break;
 	case 'q':
 		regionlist_selector = 0;
-		current_screen = MAP_EDITOR;
-		return;
+		retval = MAP_EDITOR;
 		break;
 	}
-	return;
+	return retval;
 }
 
-void add_region_dialog(WINDOW *local_win)
+int add_region_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -596,8 +587,7 @@ void add_region_dialog(WINDOW *local_win)
 			char name[17] = { 0 };
 			wgetnstr(local_win, name, 16);
 			if (strlen(name) == 0) {
-				current_screen = CHARACTERS_DIALOG;
-				return;
+				return CHARACTERS_DIALOG;
 			}
 			if (get_region_by_name(name) == NULL) {
 				stage = 1;
@@ -608,15 +598,13 @@ void add_region_dialog(WINDOW *local_win)
 		case 1:
 			add_region(name);
 			sort_region_list();
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		}
 	}
-	return;
 }
 
-void region_to_character(WINDOW *local_win)
+int region_to_character(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -706,24 +694,20 @@ void region_to_character(WINDOW *local_win)
 			break;
 		case 10:
 			change_region_owner(selected_character, region);
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		case 'd':
 			change_region_owner(NULL, region);
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		case 'q':
-			current_screen = REGIONS_DIALOG;
-			return;
+			return REGIONS_DIALOG;
 			break;
 		}
 	}
-	return;
 }
 
-void rename_region_dialog(WINDOW *local_win)
+int rename_region_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -735,24 +719,41 @@ void rename_region_dialog(WINDOW *local_win)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s", screens[current_screen]);
 
+	int stage = 0;
+	int error = 0;
 	region_t *region = selected_region;
-	mvwprintw(local_win, 2, 2,
-		  "To rename this region, type new name (press Enter to cancel):\n\n  ");
 	char name[17] = { 0 };
-	wgetnstr(local_win, name, 16);
-	curs_set(FALSE);
-	noecho();
-	if (strlen(name) == 0) {
-		current_screen = REGIONS_DIALOG;
-		return;
+	while (1) {
+		switch (stage) {
+		case 0:
+			if (error == 1)
+				mvwprintw(local_win, 2, 2,
+					  "New name is not unique. Type another one:\n\n  ");
+			else
+				mvwprintw(local_win, 2, 2,
+					  "Type a new name for the region '%s', or press Enter to return:\n\n  ",
+					  region->name);
+			wgetnstr(local_win, name, 16);
+			if (strlen(name) == 0) {
+				return REGIONS_DIALOG;
+				break;
+			}
+			if (get_region_by_name(name) == NULL) {
+				stage = 1;
+				error = 0;
+			} else
+				error = 1;
+			break;
+		case 1:
+			change_region_name(name, region);
+			sort_region_list();
+			return REGIONS_DIALOG;
+			break;
+		}
 	}
-	change_region_name(name, region);
-	sort_region_list();
-	current_screen = REGIONS_DIALOG;
-	return;
 }
 
-void edit_character_dialog(WINDOW *local_win)
+int edit_character_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -767,80 +768,70 @@ void edit_character_dialog(WINDOW *local_win)
 	character_t *active_character = world->selected_character;
 	/* we can not get into this function if there's no selected_character, but still */
 	if (active_character == NULL) {
-		current_screen = CHARACTERS_DIALOG;
-		return;
+		return CHARACTERS_DIALOG;
 	}
-	mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
-	mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
-	mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
-	mvwprintw(local_win, 5, 2, "Birthdate: %s of year %i",
-		  months[active_character->birthdate.tm_mon],
-		  active_character->birthdate.tm_year);
-	mvwprintw(local_win, 6, 2, "Deathdate: %s of year %i",
-		  months[active_character->deathdate.tm_mon],
-		  active_character->deathdate.tm_year);
-	mvwprintw(local_win, 7, 2, "Heir: %s",
-		  (active_character->heir ==
-		   NULL ? "none" : active_character->heir->name));
-	mvwprintw(local_win, 8, 2, "Lord: %s",
-		  (active_character->lord ==
-		   NULL ? "none" : active_character->lord->name));
-
-	mvwprintw(local_win, 10, 2, "To rename a hero, press 'r'");
-	mvwprintw(local_win, 11, 2, "To change rank, press '+' or '-'");
-	mvwprintw(local_win, 12, 2, "To change money, press 'm'");
-	mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
-	mvwprintw(local_win, 14, 2, "To set heir, press 'h'");
-	mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
-	mvwprintw(local_win, 16, 2, "To edit diplomacy, press 'd'");
-	mvwprintw(local_win, 17, 2, "To return, press 'q'");
-
 	while (1) {
+		mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
+		mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
+		mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
+		mvwprintw(local_win, 5, 2, "Birthdate: %s of year %i",
+				  months[active_character->birthdate.tm_mon],
+				  active_character->birthdate.tm_year);
+		mvwprintw(local_win, 6, 2, "Deathdate: %s of year %i",
+				  months[active_character->deathdate.tm_mon],
+				  active_character->deathdate.tm_year);
+		mvwprintw(local_win, 7, 2, "Heir: %s",
+				  (active_character->heir ==
+				   NULL ? "none" : active_character->heir->name));
+		mvwprintw(local_win, 8, 2, "Lord: %s",
+				  (active_character->lord ==
+				   NULL ? "none" : active_character->lord->name));
+
+		mvwprintw(local_win, 10, 2, "To rename a hero, press 'r'");
+		mvwprintw(local_win, 11, 2, "To change rank, press '+' or '-'");
+		mvwprintw(local_win, 12, 2, "To change money, press 'm'");
+		mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
+		mvwprintw(local_win, 14, 2, "To set heir, press 'h'");
+		mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
+		mvwprintw(local_win, 16, 2, "To edit diplomacy, press 'd'");
+		mvwprintw(local_win, 17, 2, "To return, press 'q'");
+
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case '+':
 			if (active_character->rank < KING)
 				active_character->rank++;
-			return;
 			break;
 		case '-':
 			if (active_character->rank > KNIGHT)
 				active_character->rank--;
-			return;
 			break;
 		case 'b':
-			current_screen = CHARACTER_DATES_DIALOG;
-			return;
+			return CHARACTER_DATES_DIALOG;
 			break;
 		case 'd':
-			current_screen = DIPLOMACY_DIALOG;
-			return;
+			return DIPLOMACY_DIALOG;
 			break;
 		case 'h':
-			current_screen = HEIR_DIALOG;
-			return;
+			return HEIR_DIALOG;
 			break;
 		case 'l':
-			current_screen = FEUDAL_DIALOG;
-			return;
+			return FEUDAL_DIALOG;
 			break;
 		case 'm':
-			current_screen = CHARACTER_MONEY_DIALOG;
-			return;
+			return CHARACTER_MONEY_DIALOG;
 			break;
 		case 'q':
-			current_screen = CHARACTERS_DIALOG;
-			return;
+			return CHARACTERS_DIALOG;
 			break;
 		case 'r':
-			current_screen = RENAME_CHARACTER_DIALOG;
-			return;
+			return RENAME_CHARACTER_DIALOG;
 			break;
 		}
 	}
 }
 
-void rename_character_dialog(WINDOW *local_win)
+int rename_character_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -863,20 +854,18 @@ void rename_character_dialog(WINDOW *local_win)
 		char name[17] = { 0 };
 		wgetnstr(local_win, name, 16);
 		if (strlen(name) == 0) {
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 		}
 		if (get_character_by_name(name) == NULL) {
 			strcpy(character->name, name);
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 		}
 		mvwprintw(local_win, 23, 2,
 			  "Name not unique. Try another one.");
 	}
 }
 
-void change_character_money_dialog(WINDOW *local_win)
+int change_character_money_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -901,8 +890,7 @@ void change_character_money_dialog(WINDOW *local_win)
 			  get_money(character), MONEY_MAX);
 		wgetnstr(local_win, money_ch, MONEY_MAX_DIGITS);
 		if (strlen(money_ch) == 0) {
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 		}
 		for (i = 0; i < strlen(money_ch); i++) {
 			if (!isdigit(money_ch[i])) {
@@ -912,14 +900,13 @@ void change_character_money_dialog(WINDOW *local_win)
 		if (!error) {
 			money = atoi(money_ch);
 			set_money(character, money);
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 		}
 		mvwprintw(local_win, 23, 2, "Error. Try another number.");
 	}
 }
 
-void change_character_dates_dialog(WINDOW *local_win)
+int change_character_dates_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1091,13 +1078,12 @@ void change_character_dates_dialog(WINDOW *local_win)
 			mvwprintw(local_win, 23, 2,
 				  "Changes saved. Press any key to continue.");
 			wgetch(local_win);
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 		}
 	}
 }
 
-void validate_dialog(WINDOW *local_win)
+int validate_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1129,11 +1115,10 @@ void validate_dialog(WINDOW *local_win)
 	wprintw(local_win, "%s", msg);
 
 	wgetch(local_win);
-	current_screen = MAP_EDITOR;
-	return;
+	return MAP_EDITOR;
 }
 
-void edit_time_dialog(WINDOW *local_win)
+int edit_time_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1229,15 +1214,13 @@ void edit_time_dialog(WINDOW *local_win)
 			curs_set(FALSE);
 			noecho();
 			wgetch(local_win);
-			current_screen = MAP_EDITOR;
-			return;
+			return MAP_EDITOR;
 			break;
 		}
 	}
-	return;
 }
 
-void successor_dialog(WINDOW *local_win)
+int editor_successor_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1312,14 +1295,13 @@ void successor_dialog(WINDOW *local_win)
 			set_successor(active_character, heir);
 			break;
 		case 'q':
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 			break;
 		}
 	}
 }
 
-void homage_dialog(WINDOW *local_win)
+int editor_homage_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1404,26 +1386,23 @@ void homage_dialog(WINDOW *local_win)
 		case 10:
 			if (set_lord_ok) {
 				active_character->lord = lord;
-				current_screen = EDIT_CHARACTER_DIALOG;
-				return;
+				return EDIT_CHARACTER_DIALOG;
 			}
 			break;
 		case 'd':
 			if (unset_lord_ok) {
 				active_character->lord = NULL;
-				current_screen = EDIT_CHARACTER_DIALOG;
-				return;
+				return EDIT_CHARACTER_DIALOG;
 			}
 			break;
 		case 'q':
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 			break;
 		}
 	}
 }
 
-void diplomacy_dialog(WINDOW *local_win)
+int editor_diplomacy_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1569,8 +1548,7 @@ void diplomacy_dialog(WINDOW *local_win)
 					      NEUTRAL);
 			break;
 		case 'q':	/* return */
-			current_screen = EDIT_CHARACTER_DIALOG;
-			return;
+			return EDIT_CHARACTER_DIALOG;
 			break;
 		case 'w':	/* declare war */
 			if (war_ok)
@@ -1581,7 +1559,7 @@ void diplomacy_dialog(WINDOW *local_win)
 	}
 }
 
-void help_dialog(WINDOW *local_win)
+int editor_help_dialog(WINDOW *local_win)
 {
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1616,7 +1594,7 @@ void help_dialog(WINDOW *local_win)
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
 	get_input(local_win);
-	current_screen = MAP_EDITOR;
+	return MAP_EDITOR;
 }
 
 int main()
@@ -1657,10 +1635,11 @@ int main()
 	while (1) {
 		switch (current_screen) {
 		case MAIN_SCREEN:
-			editor_start_menu(local_win);
+			current_screen = editor_start_menu(local_win);
 			break;
 		case NEW_GAME:
 			new_game_dialog(local_win);
+			current_screen = MAP_EDITOR;
 			break;
 		case MAP_EDITOR:
 			if (world->grid == NULL) {
@@ -1668,55 +1647,55 @@ int main()
 				piece_t *active_piece = get_noble_by_owner(world->selected_character);
 				cursor = active_piece->tile;
 			}
-			map_editor(local_win);
+			current_screen = map_editor(local_win);
 			break;
 		case CHARACTERS_DIALOG:
-			characters_dialog(local_win);
+			current_screen = characters_dialog(local_win);
 			break;
 		case ADD_CHARACTER_DIALOG:
-			add_character_dialog(local_win);
+			current_screen = add_character_dialog(local_win);
 			break;
 		case REGIONS_DIALOG:
-			regions_dialog(local_win);
+			current_screen = editor_regions_dialog(local_win);
 			break;
 		case ADD_REGION_DIALOG:
-			add_region_dialog(local_win);
+			current_screen = add_region_dialog(local_win);
 			break;
 		case REGION_CHARACTER_DIALOG:
-			region_to_character(local_win);
+			current_screen = region_to_character(local_win);
 			break;
 		case GAME_TIME_DIALOG:
-			edit_time_dialog(local_win);
+			current_screen = edit_time_dialog(local_win);
 			break;
 		case RENAME_REGION_DIALOG:
-			rename_region_dialog(local_win);
+			current_screen = rename_region_dialog(local_win);
 			break;
 		case EDIT_CHARACTER_DIALOG:
-			edit_character_dialog(local_win);
+			current_screen = edit_character_dialog(local_win);
 			break;
 		case RENAME_CHARACTER_DIALOG:
-			rename_character_dialog(local_win);
+			current_screen = rename_character_dialog(local_win);
 			break;
 		case CHARACTER_MONEY_DIALOG:
-			change_character_money_dialog(local_win);
+			current_screen = change_character_money_dialog(local_win);
 			break;
 		case CHARACTER_DATES_DIALOG:
-			change_character_dates_dialog(local_win);
+			current_screen = change_character_dates_dialog(local_win);
 			break;
 		case HEIR_DIALOG:
-			successor_dialog(local_win);
+			current_screen = editor_successor_dialog(local_win);
 			break;
 		case FEUDAL_DIALOG:
-			homage_dialog(local_win);
+			current_screen = editor_homage_dialog(local_win);
 			break;
 		case DIPLOMACY_DIALOG:
-			diplomacy_dialog(local_win);
+			current_screen = editor_diplomacy_dialog(local_win);
 			break;
 		case VALIDATE_DIALOG:
-			validate_dialog(local_win);
+			current_screen = validate_dialog(local_win);
 			break;
 		case HELP_DIALOG:
-			help_dialog(local_win);
+			current_screen = editor_help_dialog(local_win);
 			break;
 		case SHUTDOWN:
 			destroy_world();
