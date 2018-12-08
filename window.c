@@ -1821,6 +1821,7 @@ int editor_start_menu(WINDOW *local_win)
 
 int map_editor(WINDOW *local_win)
 {
+	int retval = MAP_EDITOR;
 	if (!cursor) cursor = world->grid->tiles[0][0];
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
@@ -1831,9 +1832,6 @@ int map_editor(WINDOW *local_win)
 	char tile_char = '.';
 	int color_nr = 0;
 	character_t *character = world->selected_character;
-//	tile_t *cursor = cursor;
-//	    world->grid->tiles[cursor->height][world->grid->
-//							   cursor_width];
 	region_t *region = NULL;
 	if (selected_region == NULL && world->regionlist != NULL)
 		selected_region = world->regionlist;
@@ -1968,7 +1966,7 @@ int map_editor(WINDOW *local_win)
 
 	switch (ch) {
 	case 27:		/* escape */
-		return MAIN_SCREEN;
+		retval = MAIN_SCREEN;
 		break;
 	case 1065:		/* up */
 		if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
@@ -1990,7 +1988,7 @@ int map_editor(WINDOW *local_win)
 			change_tile_region(NULL, cursor);
 		break;
 	case 'h':
-		return CHARACTERS_DIALOG;
+		retval = CHARACTERS_DIALOG;
 		break;
 	case 'n':
 		/* if tile not wlakable, just ignore */
@@ -2005,16 +2003,16 @@ int map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'q':
-		return SHUTDOWN;
+		retval = SHUTDOWN;
 		break;
 	case 'r':
-		return REGIONS_DIALOG;
+		retval = REGIONS_DIALOG;
 		break;
 	case 's':
 		save_game();
 		break;
 	case 't':
-		return GAME_TIME_DIALOG;
+		retval = GAME_TIME_DIALOG;
 		break;
 	case 'u':
 		/* if tile not wlakable, just ignore */
@@ -2029,7 +2027,7 @@ int map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'v':
-		return VALIDATE_DIALOG;
+		retval = VALIDATE_DIALOG;
 		break;
 	case 'w':
 		toggle_walkable(cursor->height, cursor->width);
@@ -2074,11 +2072,12 @@ int map_editor(WINDOW *local_win)
 		world->moves_left = ch - '0';
 		break;
 	case '?':
-		return HELP_DIALOG;
+		retval = HELP_DIALOG;
 		break;
 	default:
-		return MAP_EDITOR;
+		break;
 	}
+	return retval;
 }
 
 int characters_dialog(WINDOW *local_win)

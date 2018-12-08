@@ -14,7 +14,6 @@ int main()
 	}
 
 	create_world();
-//	cursor = world->grid->tiles[0][0];
 	srand((unsigned)time(NULL));
 
 	initscr();
@@ -40,7 +39,7 @@ int main()
 	curs_set(FALSE);
 	WINDOW *local_win = newwin(25, 80, 0, 0);
 
-	current_screen = 0;
+	current_screen = MAIN_SCREEN;
 	while (1) {
 		switch (current_screen) {
 		case MAIN_SCREEN:
@@ -111,6 +110,9 @@ int main()
 			use_default_colors();
 			endwin();
 			return 0;
+			break;
+		default: // return to main screen
+			current_screen = MAIN_SCREEN;
 			break;
 		}
 	}

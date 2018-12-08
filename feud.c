@@ -20,8 +20,6 @@ int main()
 		return 0;
 	}
 
-	int current_screen = MAIN_SCREEN;
-
 	gameover = 0;
 	create_world();
 	srand((unsigned)time(NULL));
