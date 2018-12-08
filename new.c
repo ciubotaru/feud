@@ -248,6 +248,5 @@ void new_game_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 	wgetch(local_win);
-	current_screen = MAP_EDITOR;
 	return;
 }
