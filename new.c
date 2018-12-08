@@ -20,8 +20,8 @@ int new_game_dialog(WINDOW *local_win)
 
 	wprintw(local_win,
 		"\n\n  You are about to create a new game. This will destroy the old game and\n  overwrite the save file. Press 'y' to confirm.");
-	int confirm = wgetch(local_win);
-	if (confirm != 'y' && confirm != 'Y') {
+	int confirm = tolower(wgetch(local_win));
+	if (confirm != 'y') {
 		return 1;
 	}
 

@@ -77,7 +77,7 @@ int get_input(WINDOW * window)
 				return input + 1000;
 		}
 	}
-	return ch;
+	return tolower(ch);
 }
 
 int start_menu(WINDOW *local_win)
@@ -115,20 +115,17 @@ int start_menu(WINDOW *local_win)
 
 	int ch;
 	while (1) {
-		ch = wgetch(local_win);
+		ch = tolower(wgetch(local_win));
 		switch (ch) {
 			case 'l':
-			case 'L':
 				if (savefile_exists) {
 					return MAIN_SCREEN;
 				}
 				break;
 			case 'n':
-			case 'N':
 				return NEW_GAME;
 				break;
 			case 'q':
-			case 'Q':
 				return SHUTDOWN;
 				break;
 			default:
@@ -1792,7 +1789,7 @@ int help_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 19, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
-	get_input(local_win);
+	wgetch(local_win);
 	return MAIN_SCREEN;
 }
 
@@ -1864,7 +1861,7 @@ int editor_start_menu(WINDOW *local_win)
 
 	int ch;
 	while (1) {
-		ch = wgetch(local_win);
+		ch = tolower(wgetch(local_win));
 		switch (ch) {
 		case 'o':
 			return MAP_EDITOR;
@@ -3391,6 +3388,6 @@ int editor_help_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 18, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
-	get_input(local_win);
+	wgetch(local_win);
 	return MAP_EDITOR;
 }
