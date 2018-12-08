@@ -4,10 +4,10 @@
 #include "diplomacy.h"
 #include "world.h"
 
-char *const dipststus_name[] = {
-	"neutral",
-	"alliance",
-	"war"
+char *const dipstatus_name[] = {
+	[NEUTRAL] = "neutral",
+	[ALLIANCE] = "alliance",
+	[WAR] = "war"
 };
 
 dipstatus_t *create_diplomacylist()
@@ -73,7 +73,7 @@ dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 	current->next->status = status;
 	current->next->pending_offer = NULL;
 	current->next->next = NULL;
-	return current;
+	return current->next;
 }
 
 dipstatus_t *get_dipstatus(character_t *character1, character_t *character2)
@@ -86,11 +86,13 @@ dipstatus_t *get_dipstatus(character_t *character1, character_t *character2)
 			&& current->character2->id == character1->id)) {
 			return current;
 		}
-		if (current->next == NULL)
-			break;
 		current = current->next;
 	}
-	current = set_diplomacy(character1, character2, NEUTRAL);
+	/* if nothing was found, create dipstatus */
+	if ((character1->lord != NULL && character1->lord->id == character2->id)
+	    || (character2->lord != NULL && character2->lord->id == character1->id))
+		current = set_diplomacy(character1, character2, ALLIANCE);
+	else current = set_diplomacy(character1, character2, NEUTRAL);
 	return current;
 }
 

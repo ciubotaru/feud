@@ -294,7 +294,7 @@ int draw_map(WINDOW *local_win)
 			wcolor_set(local_win, 10, NULL);
 			break;
 		}
-		wprintw(local_win, "%s", dipststus_name[diplomacy->status]);
+		wprintw(local_win, "%s", dipstatus_name[diplomacy->status]);
 		if (diplomacy->pending_offer != NULL)
 			wprintw(local_win, " *");
 		wcolor_set(local_win, 1, NULL);
@@ -1652,11 +1652,11 @@ int diplomacy_dialog(WINDOW *local_win)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
-						dipststus_name[current_status]);
+						dipstatus_name[current_status]);
 					if (current_dipoffer != NULL)
 						wprintw(local_win,
 							", %s offer %s",
-							dipststus_name
+							dipstatus_name
 							[current_dipoffer->
 							 offer],
 							(current_dipoffer->
@@ -3294,7 +3294,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
-						dipststus_name[current_status]);
+						dipstatus_name[current_status]);
 				}
 				wprintw(local_win, ")");
 				wattron(local_win, COLOR_PAIR(1));

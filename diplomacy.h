@@ -12,7 +12,7 @@ enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
 
 char *const dipofferlist[2];	/* peace offer and alliance offer */
 
-extern char *const dipststus_name[];
+extern char *const dipstatus_name[];
 
 typedef struct dipoffer {
 	character_t *from;
