@@ -342,13 +342,13 @@ int draw_map(WINDOW *local_win)
 		result = claim_region(character, cursor->region);
 		switch (result) {
 		case 1:	/* claimed from nature */
-			add_to_cronicle("%s %s claimed %s.\n",
+			add_to_chronicle("%s %s claimed %s.\n",
 					rank_name[character->rank], character->name,
 					cursor->region->name);
 			update_land_ranking();
 			break;
 		case 2:	/* conquered from enemy */
-			add_to_cronicle("%s %s conquered %s.\n",
+			add_to_chronicle("%s %s conquered %s.\n",
 					rank_name[character->rank], character->name,
 					cursor->region->name);
 			check_death();
@@ -711,7 +711,7 @@ int give_region_dialog(WINDOW *local_win)
 		case 10:
 			if (give_region_ok) {
 				change_region_owner(selected_character, region);
-				add_to_cronicle("%s %s granted %s to %s %s.\n",
+				add_to_chronicle("%s %s granted %s to %s %s.\n",
 						rank_name[active_character->rank],
 						active_character->name,
 						region->name,
@@ -1146,7 +1146,7 @@ int feudal_dialog(WINDOW *local_win)
 		case 'f':
 			if (selected_character != NULL) {
 				selected_character->lord = NULL;
-				add_to_cronicle
+				add_to_chronicle
 				    ("%s %s became a sovereign of his lands.\n",
 				     rank_name[selected_character->rank],
 				     selected_character->name);
@@ -1162,7 +1162,7 @@ int feudal_dialog(WINDOW *local_win)
 				set_character_rank(selected_character,
 						get_character_rank(selected_character)
 						+ 1);
-				add_to_cronicle
+				add_to_chronicle
 				    ("%s %s bestowed the %s title upon their vassal %s.\n",
 				     rank_name[active_character->rank],
 				     active_character->name,
@@ -1440,7 +1440,7 @@ int promote_soldier_dialog(WINDOW *local_win)
 				homage(new_vassal, active_character);
 				current_region = selected_region;
 				change_region_owner(new_vassal, current_region);
-				add_to_cronicle
+				add_to_chronicle
 				    ("%s %s granted %s to their new vassal, %s %s.\n",
 				     rank_name[active_character->rank],
 				     active_character->name, current_region->name,
@@ -1655,7 +1655,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			if (declare_war_ok) {
 				set_diplomacy(active_character, selected_character,
 					      WAR);
-				add_to_cronicle
+				add_to_chronicle
 				    ("%s %s declared war on %s %s.\n",
 				     rank_name[active_character->rank],
 				     active_character->name,
@@ -1667,7 +1667,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			if (quit_alliance_ok) {
 				set_diplomacy(active_character, selected_character,
 					      NEUTRAL);
-				add_to_cronicle
+				add_to_chronicle
 				    ("%s %s broke their alliance with %s %s.\n",
 				     rank_name[active_character->rank],
 				     active_character->name,
@@ -1679,14 +1679,14 @@ int diplomacy_dialog(WINDOW *local_win)
 			if (accept_offer_ok) {
 				close_offer(dipstatus->pending_offer, ACCEPT);
 				if (dipstatus->status == ALLIANCE)
-					add_to_cronicle
+					add_to_chronicle
 					    ("%s %s and %s %s concluded an alliance.\n",
 					     rank_name[active_character->rank],
 					     active_character->name,
 					     rank_name[selected_character->rank],
 					     selected_character->name);
 				else
-					add_to_cronicle
+					add_to_chronicle
 					    ("%s %s and %s %s signed a peace treaty.\n",
 					     rank_name[active_character->rank],
 					     active_character->name,
@@ -1782,7 +1782,7 @@ int self_declaration_dialog(WINDOW *local_win) {
 	}
 	int user_move = get_input(local_win);
 	if (eligible && user_move == 'y') {
-		add_to_cronicle
+		add_to_chronicle
 				    ("%s %s declared themselves a king.\n",
 				     rank_name[active_character->rank],
 				     active_character->name);

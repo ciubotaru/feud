@@ -53,7 +53,7 @@ char *strconcat(const char *input1, const char *input2)
 	return output;
 }
 
-int add_to_cronicle(char *format, ...)
+int add_to_chronicle(char *format, ...)
 {
 	va_list argptr;
 	va_start(argptr, format);

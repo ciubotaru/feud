@@ -313,7 +313,7 @@ int is_gameover()
 	}
 	if (nr_sovereigns == 1) {
 		character = get_sovereign(world->characterlist);
-		add_to_cronicle
+		add_to_chronicle
 		    ("%s is the only sovereign left. The game is over!",
 		     character->name);
 		return 1;
@@ -336,19 +336,19 @@ void check_death()
 		next = current_character->next;
 		/* if a character loses all his land, he loses the game */
 		if (count_tiles_by_owner(current_character) == 0) {
-			add_to_cronicle("%s %s lost all his land.\n",
+			add_to_chronicle("%s %s lost all his land.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_cronicle(message);
+			add_to_chronicle(message);
 			succession(current_character);
 			remove_character(current_character);
 		}
 		/* if a character loses his noble, he loses the game */
 		else if (get_noble_by_owner(current_character) == NULL) {
-			add_to_cronicle("%s %s was killed.\n",
+			add_to_chronicle("%s %s was killed.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_cronicle(message);
+			add_to_chronicle(message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -357,10 +357,10 @@ void check_death()
 			 12 * world->current_time.tm_mon >=
 			 current_character->deathdate.tm_year +
 			 12 * current_character->deathdate.tm_mon) {
-			add_to_cronicle("%s %s died of old age.\n",
+			add_to_chronicle("%s %s died of old age.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_cronicle(message);
+			add_to_chronicle(message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -380,17 +380,17 @@ void succession(character_t *character)
 	character_t *heir = NULL;
 	if (character->heir != NULL) {
 		heir = character->heir;
-		add_to_cronicle("%s %s inherited the property of %s %s.\n",
+		add_to_chronicle("%s %s inherited the property of %s %s.\n",
 				rank_name[heir->rank], heir->name,
 				rank_name[character->rank], character->name);
 	} else if (character->lord != NULL) {
 		heir = character->lord;
-		add_to_cronicle
+		add_to_chronicle
 		    ("%s %s had not named a heir, and their lord, %s %s, inherited everything.\n",
 		     rank_name[character->rank], character->name, rank_name[heir->rank],
 		     heir->name);
 	} else {
-		add_to_cronicle("%s %s had no one to inherit their property.\n",
+		add_to_chronicle("%s %s had no one to inherit their property.\n",
 				rank_name[character->rank], character->name);
 		return;
 	}
@@ -419,7 +419,7 @@ void succession(character_t *character)
 
 	/* the heir inherits grantor's title, if it's higher than his own */
 	if (character->rank > heir->rank) {
-		add_to_cronicle("%s inherited the %s title.\n", heir->name,
+		add_to_chronicle("%s inherited the %s title.\n", heir->name,
 				rank_name[character->rank]);
 		heir->rank = character->rank;
 	}
@@ -448,7 +448,7 @@ void succession(character_t *character)
 		if (character->lord == NULL)
 			heir->lord = NULL;
 		else {
-			add_to_cronicle
+			add_to_chronicle
 			    ("%s %s paid homage to %s %s for their title.\n",
 			     rank_name[heir->rank], heir->name,
 			     rank_name[character->lord->rank], character->lord->name);
