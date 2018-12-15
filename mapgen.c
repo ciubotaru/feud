@@ -248,7 +248,7 @@ void create_regions(uint16_t nr_regions)
 	}
 }
 
-void assign_tiles_to_centers2()
+void assign_tiles_to_centers()
 {
 	uint16_t nr_regions = count_regions();
 	if (world->grid == NULL || nr_regions == 0 || region_centers == NULL)
@@ -290,77 +290,6 @@ void assign_tiles_to_centers2()
 	}
 }
 
-void assign_tiles_to_centers()
-{
-	uint16_t nr_regions = count_regions();
-	if (world->grid == NULL || nr_regions == 0 || region_centers == NULL)
-		return;
-	int i, j, counter;
-	int closest_center;
-	float min_distance = 0;
-	float tmp;
-	region_t *z = NULL;
-	region_t *current = NULL;
-	for (i = 0; i < world->grid->height; i++) {
-		for (j = 0; j < world->grid->width; j++) {
-			closest_center = world->regionlist->id;
-			min_distance =
-			    (float)
-			    sqrt(powf
-				 (((float)i + 0.5 -
-				   region_centers[closest_center][0]),
-				  2) + powf(((float)j + 0.5 -
-					     region_centers[closest_center][1]),
-					    2));
-			counter = 1;
-			current = world->regionlist->next;
-			while (current != NULL) {
-//                      for (k = 1; k < nr_regions; k++) {
-				tmp =
-				    (float)
-				    sqrt(powf
-					 (((float)i + 0.5 -
-					   region_centers[counter][0]),
-					  2) + powf(((float)j + 0.5 -
-						     region_centers[counter]
-						     [1]), 2));
-				if (tmp < min_distance) {
-					closest_center = current->id;
-					min_distance = tmp;
-				}
-				counter++;
-				current = current->next;
-			}
-			z = get_region_by_id(closest_center);
-			change_tile_region(z, world->grid->tiles[i][j]);
-		}
-	}
-}
-
-void recalculate_region_centers2()
-{
-	int i, j, k;
-	int cumul_h = 0, cumul_w = 0;
-	region_t *region = NULL;
-	uint16_t nr_regions = count_regions();
-	for (k = 0; k < nr_regions; k++) {
-		cumul_h = 0;
-		cumul_w = 0;
-		region = get_region_by_id(k + 1);
-		for (i = 0; i < world->grid->height; i++) {
-			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region->id ==
-				    k + 1) {
-					cumul_h += i;
-					cumul_w += j;
-				}
-			}
-		}
-		region_centers[k][0] = (float)cumul_h / region->size;
-		region_centers[k][1] = (float)cumul_w / region->size;
-	}
-}
-
 void recalculate_region_centers()
 {
 	int i, j;
@@ -394,10 +323,10 @@ void voronoi(int nr_regions)
 		return;
 	int i;
 	region_centers = create_region_centers(nr_regions);
-	assign_tiles_to_centers2();
+	assign_tiles_to_centers();
 	for (i = 0; i < voronoi_iterations; i++) {
 		recalculate_region_centers();
-		assign_tiles_to_centers2();
+		assign_tiles_to_centers();
 	}
 	for (i = 0; i < nr_regions; i++)
 		free(region_centers[i]);
