@@ -298,12 +298,12 @@ int draw_map(WINDOW *local_win)
 		wcolor_set(local_win, 1, NULL);
 	}
 
-	int message_len = strlen(message);
+	int message_len = strlen(world->message);
 	if (message_len > 0) {
 		wcolor_set(local_win, 12, NULL);
 		for (i = 0; i < (message_len - 1) / 29 + 1; i++) {
 			mvwprintw(local_win, 20 + i, 50, "%.*s", 29,
-				  &message[29 * i]);
+				  &world->message[29 * i]);
 		}
 		wcolor_set(local_win, 1, NULL);
 	}
@@ -314,7 +314,7 @@ int draw_map(WINDOW *local_win)
 	int ch;
 	ch = get_input(local_win);
 	unsigned char result;
-	message[0] = '\0';
+	world->message[0] = '\0';
 	switch (ch) {
 	case 1065:		//up
 		if (current_mode == VIEW) {
@@ -462,21 +462,21 @@ int draw_map(WINDOW *local_win)
 			**/
 		if (current_mode != VIEW) break;
 		if (character->money < COST_SOLDIER) {
-			strcpy(message, "Not enough money.");
+			strcpy(world->message, "Not enough money.");
 			break;
 		}
 		if (!cursor->walkable) {
-			strcpy(message, "Tile not walkable. Choose another tile.");
+			strcpy(world->message, "Tile not walkable. Choose another tile.");
 			break;
 		}
 		if (piece != NULL) {
-			strcpy(message, "Tile not empty. Choose another tile.");
+			strcpy(world->message, "Tile not empty. Choose another tile.");
 			break;
 		}
 		if (cursor->region == NULL
 			|| cursor->region->owner == NULL
 			|| cursor->region->owner->id != world->selected_character->id) {
-			strcpy(message, "Not your region. Choose another tile.");
+			strcpy(world->message, "Not your region. Choose another tile.");
 			break;
 		}
 		add_piece(1, cursor->height,
@@ -2890,19 +2890,19 @@ int validate_dialog(WINDOW *local_win)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-	char *error_message = NULL;
-	int validation_result = validate_game_data(&error_message);
+//	char *error_message = NULL;
+	int validation_result = validate_game_data();
 
 	if (validation_result == 0) {
 		msg = "All checks passed. Game data are valid.";
-		error_message = malloc(strlen(msg) + 1);
-		if (error_message) memcpy(error_message, msg, strlen(msg) + 1);
+//		error_message = malloc(strlen(msg) + 1);
+		memcpy(world->message, msg, strlen(msg) + 1);
 	}
 	wmove(local_win, 10, 0);
-	for (i = 0; i < (80 - strlen(error_message)) / 2; i++)
+	for (i = 0; i < (80 - strlen(world->message)) / 2; i++)
 		wprintw(local_win, " ");
-	wprintw(local_win, error_message);
-	free(error_message);
+	wprintw(local_win, world->message);
+//	free(error_message);
 
 	msg = "Press any key to continue.";
 	wmove(local_win, 12, 0);

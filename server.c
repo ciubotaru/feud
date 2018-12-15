@@ -780,15 +780,13 @@ void setup_loop()
 			continue;
 		}
 		if (!strcmp(token, "save")) {
-			char *msg;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) {
 				dprintf(STDOUT_FILENO, "OK\n");
 				save_game();
 			}
 			else {
-				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", ((world && strlen(world->message) > 0) ? world->message : "Unknown error"));
 			}
 			continue;
 		}
@@ -973,12 +971,10 @@ void setup_loop()
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
-			char *msg = NULL;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) dprintf(STDOUT_FILENO, "OK\n");
 			else {
-				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: %s\n", world->message);
 			}
 			continue;
 		} else

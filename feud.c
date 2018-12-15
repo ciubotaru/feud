@@ -68,16 +68,13 @@ int main()
 					return 0;
 				}
 				/* check if loaded data are playable */
-				char *error_message = NULL;
-				retval = validate_game_data(&error_message);
+				retval = validate_game_data();
 				if (retval != 0) {
 					destroy_world();
 					endwin();
 					printf
 					    ("Game not playable: %s Exiting...\n",
-					     error_message);
-					if (error_message != NULL)
-						free(error_message);
+					     world->message);
 					return 0;
 				}
 			}

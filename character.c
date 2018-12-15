@@ -353,7 +353,7 @@ int is_gameover()
 
 void check_death()
 {
-	char message[255] = { 0 };
+	world->message[0] = '\0';
 	if (world->check_death == 0)
 		return;
 	/**
@@ -369,7 +369,7 @@ void check_death()
 			add_to_chronicle("%s %s lost all his land.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -378,7 +378,7 @@ void check_death()
 			add_to_chronicle("%s %s was killed.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -390,7 +390,7 @@ void check_death()
 			add_to_chronicle("%s %s died of old age.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}

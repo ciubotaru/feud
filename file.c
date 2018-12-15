@@ -57,7 +57,7 @@ int add_to_chronicle(char *format, ...)
 {
 	va_list argptr;
 	va_start(argptr, format);
-	vsprintf(message, format, argptr);
+	vsprintf(world->message, format, argptr);
 	va_end(argptr);
 
 	if (!getenv("HOME"))
@@ -82,7 +82,7 @@ int add_to_chronicle(char *format, ...)
 
 	fwrite(date_char, sizeof(char), strlen(date_char), fp);
 
-	int bytes_written = fwrite(message, sizeof(char), strlen(message), fp);
+	int bytes_written = fwrite(world->message, sizeof(char), strlen(world->message), fp);
 	fclose(fp);
 	if (bytes_written == 0)
 		return 1;

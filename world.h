@@ -35,6 +35,8 @@ typedef struct {
 	unsigned char check_death;
 
 	dipstatus_t *diplomacylist;
+
+	char message[255];
 } world_t;
 
 world_t *world;
@@ -43,16 +45,6 @@ void create_world(void);
 
 void destroy_world(void);
 
-char message[255];		/* ToDo replace all occurences with user_message */
-
-//char user_message[255];
-
-//char display_message_str[255];
-
-//void add_user_message(char *new_text);
-
-//void msg_to_display(char *new_text);
-
-int validate_game_data(char **error_message);
+int validate_game_data();
 
 #endif

@@ -314,11 +314,9 @@ void standby()
 			continue;
 		}
 		if (!strcmp(token, "go")) {
-			char *msg = NULL;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result != 0) {
-				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: %s\n", world->message);
 				continue;
 			}
 			if (ai_character == NULL) {
@@ -789,19 +787,17 @@ void standby()
 				continue;
 			}
 			dprintf(STDOUT_FILENO, "ack\n");
-			world->moves_left = roll;
+			if (world) world->moves_left = roll;
 			continue;
 		}
 		if (!strcmp(token, "save")) {
-			char *msg;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) {
 				dprintf(STDOUT_FILENO, "ack\n");
 				save_game();
 			}
 			else {
-				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", ((world && strlen(world->message) > 0) ? world->message : "Unknown error"));
 			}
 			continue;
 		}
@@ -985,12 +981,10 @@ void standby()
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
-			char *msg = NULL;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) dprintf(STDOUT_FILENO, "ack\n");
 			else {
-				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: %s\n", world->message);
 			}
 			continue;
 		} else
