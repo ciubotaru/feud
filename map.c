@@ -10,6 +10,7 @@
 tile_t *tile_init()
 {
 	tile_t *instance = malloc(sizeof(tile_t));
+	if (!instance) return NULL;
 	instance->walkable = 1;
 	instance->region = NULL;
 	instance->piece = NULL;
@@ -31,6 +32,7 @@ region_t *create_regionlist()
 
 void fill_region_details(region_t * region, const char *name)
 {
+	if (!region) return;
 	region->id = world->next_region_id;
 	world->next_region_id++;
 	region->size = 0;	/* start with one tile */
@@ -89,6 +91,7 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	else if (tile->region != NULL && new_region != NULL) {
 		tile_t **newlist =
 		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
+		if (!newlist) return;
 		j = 0;
 		for (i = 0; i < tile->region->size; i++) {
 			if ((tile->region->tiles)[i] != tile) {
@@ -111,6 +114,7 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	else if (new_region == NULL) {
 		tile_t **newlist =
 		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
+		if (!newlist) return;
 		j = 0;
 		for (i = 0; i < tile->region->size; i++) {
 			if (tile->region->tiles[i] != tile) {
@@ -385,9 +389,14 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 		return world->grid;
 	int i, j;
 	grid_t *grid = malloc(sizeof(grid_t));
+	if (!grid) return NULL;
 	grid->height = height;
 	grid->width = width;
 	grid->tiles = malloc(height * sizeof(void *));
+	if (!grid->tiles) {
+		free(grid);
+		return NULL;
+	}
 	for (i = 0; i < height; i++) {
 		grid->tiles[i] = malloc(width * sizeof(void *));
 		for (j = 0; j < width; j++) {
@@ -520,6 +529,7 @@ tile_t *get_empty_tile_in_region(region_t *region) {
 	if (!region || region->size == 0) return NULL;
 	/* compute region center */
 	tile_t *center = region_center(region);
+	if (!center) return NULL;
 	if (!center->piece) return center;
 	uint16_t distance_min = world->grid->height + world->grid->width;
 	uint16_t distance = 0;
