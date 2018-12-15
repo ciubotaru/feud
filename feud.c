@@ -78,7 +78,176 @@ int main()
 					return 0;
 				}
 			}
-			current_screen = draw_map(local_win);
+			draw_map(local_win);
+			int ch = get_input(local_win);
+			unsigned char result;
+			switch (ch) {
+				case 1065:		//up
+					if (current_mode == VIEW) {
+						if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
+					} else {
+						if (move_piece(cursor->piece, cursor->height + 1, cursor->width) == 0) {
+							cursor = world->grid->tiles[cursor->height + 1][cursor->width];
+							check_death();
+						}
+					}
+					break;
+				case 1066:		//down
+					if (current_mode == VIEW) {
+						if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
+					} else {
+						if (move_piece(cursor->piece, cursor->height - 1, cursor->width) == 0) {
+							cursor = world->grid->tiles[cursor->height - 1][cursor->width];
+							check_death();
+						}
+					}
+					break;
+				case 1067:		//right
+					if (current_mode == VIEW) {
+						if (cursor->width < world->grid->width - 1) cursor = world->grid->tiles[cursor->height][cursor->width + 1];
+					} else {
+						if (move_piece(cursor->piece, cursor->height, cursor->width + 1) == 0) {
+							cursor = world->grid->tiles[cursor->height][cursor->width + 1];
+							check_death();
+						}
+					}
+					break;
+				case 1068:		//left
+					if (current_mode == VIEW) {
+						if (cursor->width > 0) cursor = world->grid->tiles[cursor->height][cursor->width - 1];
+					} else {
+						if (move_piece(cursor->piece, cursor->height, cursor->width - 1) == 0) {
+							cursor = world->grid->tiles[cursor->height][cursor->width - 1];
+							check_death();
+						}
+					}
+					break;
+				case ' ':		//SPACE end turn
+					gameover = is_gameover();
+					if (gameover) {
+						current_screen = GAME_OVER;
+						break;
+					}
+					world->moves_left = get_dice();
+					if (world->selected_character->next != NULL)
+						world->selected_character = world->selected_character->next;
+					else {
+						/* start the next round and change game date */
+						world->selected_character = world->characterlist;
+						increment_gametime();
+					}
+					cursor = get_noble_by_owner(world->selected_character)->tile;
+					current_mode = VIEW;
+					break;
+				case '\t':		// loop through own pieces
+					if (cursor->piece != NULL && cursor->piece->owner == world->selected_character) {
+						cursor = next_piece(cursor->piece)->tile;
+					}
+					else
+						cursor = get_noble_by_owner(world->selected_character)->tile;
+					break;
+				case 'c':		// claim a region
+					/* set cursor to noble */
+					cursor = get_noble_by_owner(world->selected_character)->tile;
+					result = claim_region(world->selected_character, cursor->region);
+					switch (result) {
+						case 1:	/* claimed from nature */
+							add_to_chronicle("%s %s claimed %s.\n",
+									 rank_name[world->selected_character->rank], world->selected_character->name,
+									 cursor->region->name);
+							update_land_ranking();
+							break;
+						case 2:	/* conquered from enemy */
+							add_to_chronicle("%s %s conquered %s.\n",
+									 rank_name[world->selected_character->rank], world->selected_character->name,
+									 cursor->region->name);
+							check_death();
+							update_land_ranking();
+							break;
+						default:	/* nothing changed */
+							break;
+					}
+					break;
+				case 'd':		// diplomacy list
+					current_screen = DIPLOMACY_DIALOG;
+					break;
+				case 'f':		// feudal stuff
+					current_screen = FEUDAL_DIALOG;
+					break;
+				case 'i':		// game information
+					current_screen = INFORMATION;
+					break;
+				case 'h':		// name a successor
+					current_screen = HEIR_DIALOG;
+					break;
+				case 'k':		// declare yourself king
+					current_screen = SELF_DECLARATION_DIALOG;
+					break;
+				case 'm':		// give money
+					/* check if we have money */
+					if (world->selected_character->money > 0)
+						current_screen = GIVE_MONEY_DIALOG;
+					break;
+				case 'q':		// quit
+					current_screen = START_MENU;
+					break;
+				case 'r':		// give region
+					current_screen = REGIONS_DIALOG;
+					break;
+				case 's':		// save game
+					save_game();
+					break;
+				case 't':		// take money (when 6)
+					if (world->moves_left == 6 && get_money(world->selected_character) < MONEY_MAX) {
+						set_money(world->selected_character, get_money(world->selected_character) + 1);
+						world->moves_left = 0;
+						update_money_ranking();
+					}
+					break;
+				case 'u':		//place a soldier -- dialog
+					/**
+					 * check if in view mode
+					 * check if enough money
+					 * check if walkable
+					 * check if region is our (defined and claimed)
+					 * check if empty
+					**/
+					if (current_mode != VIEW) break;
+					if (world->selected_character->money < COST_SOLDIER) {
+						strcpy(world->message, "Not enough money.");
+						break;
+					}
+					if (!cursor->walkable) {
+						strcpy(world->message, "Tile not walkable. Choose another tile.");
+						break;
+					}
+					if (cursor->piece != NULL) {
+						strcpy(world->message, "Tile not empty. Choose another tile.");
+						break;
+					}
+					if (cursor->region == NULL
+						|| cursor->region->owner == NULL
+						|| cursor->region->owner->id != world->selected_character->id) {
+						strcpy(world->message, "Not your region. Choose another tile.");
+						break;
+					}
+					add_piece(1, cursor->height, cursor->width, world->selected_character);
+					set_money(world->selected_character, get_money(world->selected_character) - COST_SOLDIER);
+					update_money_ranking();
+					update_army_ranking();
+					break;
+				case 'v':		// toggle between 'move piece' and 'explore map'
+					current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
+					if (current_mode == 0) {
+						cursor = get_noble_by_owner(world->selected_character)->tile;
+					}
+					break;
+				case '?':
+					current_screen = HELP_DIALOG;
+					break;
+				default:	// ignore all other keys
+					break;
+			}
 			break;
 		case REGIONS_DIALOG:
 			current_screen = regions_dialog(local_win);

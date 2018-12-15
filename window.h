@@ -47,6 +47,13 @@ enum screenlist {
 	SHUTDOWN
 };
 
+#define MOVE 0
+#define VIEW 1
+
+int current_mode;
+
+extern char *modes[];
+
 extern char *screens[];
 
 struct region *selected_region;
@@ -61,7 +68,7 @@ int get_input();
 
 int start_menu(WINDOW *local_win);
 
-int draw_map(WINDOW *local_win);
+void draw_map(WINDOW *local_win);
 
 int regions_dialog(WINDOW *local_win);
 

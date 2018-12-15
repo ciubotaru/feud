@@ -9,9 +9,6 @@
 #include <ctype.h>		//for isdigit
 #include "world.h"
 
-#define MOVE 0
-#define VIEW 1
-
 char *modes[] = {
 	[MOVE] = "MOVE",
 	[VIEW] = "VIEW",
@@ -111,7 +108,7 @@ int start_menu(WINDOW *local_win)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 	wprintw(local_win, "  [N]ew game\n");
-	if (savefile_exists) wprintw(local_win, "  [L]oad game\n");
+	if (world->grid || savefile_exists) wprintw(local_win, "  [L]oad game\n");
 	wprintw(local_win, "  [Q]uit\n");
 
 	int ch;
@@ -119,7 +116,7 @@ int start_menu(WINDOW *local_win)
 		ch = tolower(wgetch(local_win));
 		switch (ch) {
 			case 'l':
-				if (savefile_exists) {
+				if (world->grid || savefile_exists) {
 					return MAIN_SCREEN;
 				}
 				break;
@@ -135,7 +132,7 @@ int start_menu(WINDOW *local_win)
 	}
 }
 
-int draw_map(WINDOW *local_win)
+void draw_map(WINDOW *local_win)
 {
 	int retval = MAIN_SCREEN;
 	wclear(local_win);
@@ -310,196 +307,7 @@ int draw_map(WINDOW *local_win)
 
 	mvwprintw(local_win, 23, 50, "Mode: %s\n", modes[current_mode]);
 	mvwprintw(local_win, 23, 65, "Help: '?'");
-
-	int ch;
-	ch = get_input(local_win);
-	unsigned char result;
 	world->message[0] = '\0';
-	switch (ch) {
-	case 1065:		//up
-		if (current_mode == VIEW) {
-			if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
-		} else {
-			if (move_piece(piece, cursor->height + 1,
-				   cursor->width) == 0) {
-				cursor = world->grid->tiles[cursor->height + 1][cursor->width];
-				check_death();
-			}
-		}
-		break;
-	case 1066:		//down
-		if (current_mode == VIEW) {
-			if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
-		} else {
-			if (move_piece(piece, cursor->height - 1,
-				   cursor->width) == 0) {
-				cursor = world->grid->tiles[cursor->height - 1][cursor->width];
-				check_death();
-			}
-		}
-		break;
-	case 1067:		//right
-		if (current_mode == VIEW) {
-			if (cursor->width < world->grid->width - 1) cursor = world->grid->tiles[cursor->height][cursor->width + 1];
-		} else {
-			if (move_piece(piece, cursor->height,
-				   cursor->width + 1) == 0) {
-				cursor = world->grid->tiles[cursor->height][cursor->width + 1];
-				check_death();
-			}
-		}
-		break;
-	case 1068:		//left
-		if (current_mode == VIEW) {
-			if (cursor->width > 0) cursor = world->grid->tiles[cursor->height][cursor->width - 1];
-		} else {
-			if (move_piece(piece, cursor->height,
-				   cursor->width - 1) == 0) {
-				cursor = world->grid->tiles[cursor->height][cursor->width - 1];
-				check_death();
-			}
-		}
-		break;
-	case ' ':		//SPACE end turn
-		gameover = is_gameover();
-		if (gameover) {
-			current_screen = GAME_OVER;
-			break;
-		}
-/**
-			else {
-				current_screen = 99;
-				break;
-			}
-**/
-		world->moves_left = get_dice();
-		if (character->next != NULL)
-			character = character->next;
-		else {
-			/* start the next round and change game date */
-			character = world->characterlist;
-			increment_gametime();
-		}
-		world->selected_character = character;
-		piece = get_noble_by_owner(character);
-		cursor = piece->tile;
-		current_mode = VIEW;
-		break;
-	case '\t':		// loop through own pieces
-		if (piece != NULL && piece->owner == world->selected_character) {
-			cursor = next_piece(piece)->tile;
-		}
-		else
-			cursor = get_noble_by_owner(world->selected_character)->tile;
-		break;
-	case 'c':		// claim a region
-		/* first, switch to noble */
-		piece = get_noble_by_owner(character);
-		/* set cursor to noble */
-		cursor = piece->tile;
-		result = claim_region(character, cursor->region);
-		switch (result) {
-		case 1:	/* claimed from nature */
-			add_to_chronicle("%s %s claimed %s.\n",
-					rank_name[character->rank], character->name,
-					cursor->region->name);
-			update_land_ranking();
-			break;
-		case 2:	/* conquered from enemy */
-			add_to_chronicle("%s %s conquered %s.\n",
-					rank_name[character->rank], character->name,
-					cursor->region->name);
-			check_death();
-			update_land_ranking();
-			break;
-		default:	/* nothing changed */
-			break;
-		}
-		break;
-	case 'd':		// diplomacy list
-		retval = DIPLOMACY_DIALOG;
-		break;
-	case 'f':		// feudal stuff
-		retval = FEUDAL_DIALOG;
-		break;
-	case 'i':		// game information
-		retval = INFORMATION;
-		break;
-	case 'h':		// name a successor
-		retval = HEIR_DIALOG;
-		break;
-	case 'k':		// declare yourself king
-		retval = SELF_DECLARATION_DIALOG;
-		break;
-	case 'm':		// give money
-		/* check if we have money */
-		if (character->money > 0)
-			retval = GIVE_MONEY_DIALOG;
-		break;
-	case 'q':		// quit
-		retval = START_MENU;
-		break;
-	case 'r':		// give region
-		retval = REGIONS_DIALOG;
-		break;
-	case 's':		// save game
-		save_game();
-		break;
-	case 't':		// take money (when 6)
-		if (world->moves_left == 6 && get_money(character) < MONEY_MAX) {
-			set_money(character, get_money(character) + 1);
-			world->moves_left = 0;
-			update_money_ranking();
-		}
-		break;
-	case 'u':		//place a soldier -- dialog
-			/**
-			 * check if in view mode
-			 * check if enough money
-			 * check if walkable
-			 * check if region is our (defined and claimed)
-			 * check if empty
-			**/
-		if (current_mode != VIEW) break;
-		if (character->money < COST_SOLDIER) {
-			strcpy(world->message, "Not enough money.");
-			break;
-		}
-		if (!cursor->walkable) {
-			strcpy(world->message, "Tile not walkable. Choose another tile.");
-			break;
-		}
-		if (piece != NULL) {
-			strcpy(world->message, "Tile not empty. Choose another tile.");
-			break;
-		}
-		if (cursor->region == NULL
-			|| cursor->region->owner == NULL
-			|| cursor->region->owner->id != world->selected_character->id) {
-			strcpy(world->message, "Not your region. Choose another tile.");
-			break;
-		}
-		add_piece(1, cursor->height,
-			  cursor->width, character);
-		set_money(character, get_money(character) - COST_SOLDIER);
-		update_money_ranking();
-		update_army_ranking();
-		break;
-	case 'v':		// toggle between 'move piece' and 'explore map'
-		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
-		if (cursor->piece == NULL
-			|| cursor->piece->owner != world->selected_character) {
-			cursor =
-			    get_noble_by_owner(world->selected_character)->tile;
-		}
-		break;
-	case '?':
-		retval = HELP_DIALOG;
-		break;
-	default:	// ignore all other keys
-		break;
-	}
-	return retval;
 }
 
 int regions_dialog(WINDOW *local_win)
