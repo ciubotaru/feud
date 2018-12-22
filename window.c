@@ -278,7 +278,10 @@ void draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
 	if (piece != NULL && piece->owner->id != character->id) {
 		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
-		switch (diplomacy->status) {
+		unsigned char status;
+		if (diplomacy) status = diplomacy->status;
+		else status = NEUTRAL;
+		switch (status) {
 		case NEUTRAL:
 			wcolor_set(local_win, 12, NULL);
 			break;
@@ -289,8 +292,8 @@ void draw_map(WINDOW *local_win)
 			wcolor_set(local_win, 10, NULL);
 			break;
 		}
-		wprintw(local_win, "%s", dipstatus_name[diplomacy->status]);
-		if (diplomacy->pending_offer != NULL)
+		wprintw(local_win, "%s", dipstatus_name[status]);
+		if (diplomacy && diplomacy->pending_offer)
 			wprintw(local_win, " *");
 		wcolor_set(local_win, 1, NULL);
 	}
@@ -1358,8 +1361,14 @@ int diplomacy_dialog(WINDOW *local_win)
 		} else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
-			status = dipstatus->status;
-			dipoffer = dipstatus->pending_offer;
+			if (dipstatus) {
+				status = dipstatus->status;
+				dipoffer = dipstatus->pending_offer;
+			}
+			else {
+				status = NEUTRAL;
+				dipoffer = NULL;
+			}
 		}
 		switch (status) {
 		case NEUTRAL:
@@ -1442,8 +1451,14 @@ int diplomacy_dialog(WINDOW *local_win)
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			current_dipstatus = get_dipstatus(active_character, current);
-			current_status = current_dipstatus->status;
-			current_dipoffer = current_dipstatus->pending_offer;
+			if (current_dipstatus) {
+				current_status = current_dipstatus->status;
+				current_dipoffer = current_dipstatus->pending_offer;
+			}
+			else {
+				current_status = NEUTRAL;
+				current_dipoffer = NULL;
+			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
@@ -1496,7 +1511,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'n':	/* reject offer */
-			if (reject_offer_ok)
+			if (dipstatus && reject_offer_ok)
 				close_offer(dipstatus->pending_offer, REJECT);
 			break;
 		case 'p':	/* offer peace */
@@ -1512,7 +1527,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			return MAIN_SCREEN;
 			break;
 		case 'r':	/* retract offer */
-			if (retract_offer_ok)
+			if (dipstatus && retract_offer_ok)
 				close_offer(dipstatus->pending_offer, REJECT);
 			break;
 		case 'w':	/* declare war */
@@ -1540,7 +1555,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'y':	/* accept offer */
-			if (accept_offer_ok) {
+			if (dipstatus && accept_offer_ok) {
 				close_offer(dipstatus->pending_offer, ACCEPT);
 				if (dipstatus->status == ALLIANCE)
 					add_to_chronicle
@@ -3040,7 +3055,8 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		} else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
-			status = dipstatus->status;
+			if (dipstatus) status = dipstatus->status;
+			else status = NEUTRAL;
 		}
 		switch (status) {
 		case NEUTRAL:
@@ -3084,7 +3100,10 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 			if (active_character != current) {
 				current_dipstatus =
 				    get_dipstatus(active_character, current);
-				current_status = current_dipstatus->status;
+				if (current_dipstatus)
+				    current_status = current_dipstatus->status;
+				else
+				    current_status = NEUTRAL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10

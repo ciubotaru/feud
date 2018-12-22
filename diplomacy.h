@@ -25,6 +25,7 @@ typedef struct dipstatus {
 	character_t *character2;
 	unsigned char status;
 	dipoffer_t *pending_offer;
+	struct dipstatus *prev;
 	struct dipstatus *next;
 } dipstatus_t;
 
