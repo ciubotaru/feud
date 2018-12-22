@@ -245,7 +245,7 @@ void set_character_rank(character_t *character, unsigned char rank)
 
 character_t *get_character_by_order(int characterlist_selector)
 {
-	int counter = characterlist_selector;
+	uint16_t counter = characterlist_selector;
 	character_t *current = world->characterlist;
 	while (current->next != NULL && counter > 0) {
 		counter--;
@@ -289,9 +289,9 @@ void set_successor(character_t *character, character_t *successor)
 	return;
 }
 
-unsigned int count_characters()
+uint16_t count_characters()
 {
-	unsigned int count = 0;
+	uint16_t count = 0;
 	character_t *current = world->characterlist;
 	while (current != NULL) {
 		count++;

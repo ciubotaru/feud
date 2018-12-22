@@ -63,7 +63,7 @@ uint16_t count_tiles_by_owner(character_t *owner);
 
 uint16_t count_regions_by_owner(character_t *owner);
 
-int count_regions();
+uint16_t count_regions();
 
 void update_land_ranking();
 

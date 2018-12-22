@@ -358,8 +358,8 @@ int regions_dialog(WINDOW *local_win)
 		}
 	}
 
-	int counter = 0;
-	int section = 0;
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	current_region = world->regionlist;
 	int regionlist_selector = 0;
 	while (current_region != NULL) {
@@ -532,9 +532,9 @@ int give_region_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -667,9 +667,9 @@ int give_money_dialog(WINDOW *local_win)
 				wprintw(local_win,
 					"  To return, press 'esc'.\n\n");
 
-				int nr_characters = count_characters();
-				int counter = 0;
-				int section = 0;
+				uint16_t nr_characters = count_characters();
+				uint16_t counter = 0;
+				uint16_t section = 0;
 				character_t *current = world->characterlist;
 				characterlist_selector =
 				    get_character_order(receiving_character);
@@ -749,8 +749,8 @@ int info_dialog(WINDOW *local_win)
 	noecho();
 
 	int i;
-	int section = 0;
-	int nr_characters = count_characters();
+	uint16_t section = 0;
+	uint16_t nr_characters = count_characters();
 
 	while (1) {
 		wclear(local_win);
@@ -766,7 +766,7 @@ int info_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 6, 54, "Army");
 		mvwprintw(local_win, 6, 64, "Land");
 
-		int counter = 0;
+		uint16_t counter = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			if (counter >= section * 10
@@ -833,9 +833,9 @@ int successor_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		current = world->characterlist;
 		characterlist_selector = get_character_order(new_heir);
 		while (current != NULL) {
@@ -967,8 +967,8 @@ int feudal_dialog(WINDOW *local_win)
 		}
 		mvwprintw(local_win, 7, 2, "To return, press 'q'.");
 
-		int counter = 0;
-		int section = 0;
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -1086,9 +1086,9 @@ int homage_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		characterlist_selector = get_character_order(selected_character);
 		current = world->characterlist;
 		while (current != NULL) {
@@ -1197,8 +1197,8 @@ int promote_soldier_dialog(WINDOW *local_win)
 				  "To scroll, press up/down keys.");
 			mvwprintw(local_win, 4, 2, "To return, press 'q'.");
 
-			int counter = 0;
-			int section = 0;
+			uint16_t counter = 0;
+			uint16_t section = 0;
 			current_region = world->regionlist;
 			int regionlist_selector = 0;
 			while (current_region != NULL) {
@@ -1432,9 +1432,9 @@ int diplomacy_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
@@ -1963,9 +1963,9 @@ int characters_dialog(WINDOW *local_win)
 	wprintw(local_win, "  To scroll, press up/down keys.\n");
 	wprintw(local_win, "  To return to map editor, press 'q'.\n\n");
 
-	int nr_characters = count_characters();
-	int counter = 0;
-	int section = 0;
+	uint16_t nr_characters = count_characters();
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	character_t *current = world->characterlist;
 	int characterlist_selector;
 	while (current) {
@@ -2141,8 +2141,8 @@ int editor_regions_dialog(WINDOW *local_win)
 	wprintw(local_win, "  To return to map editor, press 'q'.\n\n");
 
 	int nr_regions = count_regions();
-	int counter = 0;
-	int section = 0;
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	region_t *current = world->regionlist;
 	int regionlist_selector =
 	    get_region_order(selected_region);
@@ -2284,9 +2284,9 @@ int region_to_character(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -2849,9 +2849,9 @@ int editor_successor_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -2952,9 +2952,9 @@ int editor_homage_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		characterlist_selector = get_character_order(lord);
 		while (current != NULL) {
@@ -3074,9 +3074,9 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;

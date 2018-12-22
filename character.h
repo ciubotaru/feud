@@ -59,7 +59,7 @@ void set_expected_age(character_t *character);
 
 void set_successor(character_t *character, character_t *successor);
 
-unsigned int count_characters();
+uint16_t count_characters();
 
 void update_money_ranking();
 

@@ -115,7 +115,7 @@ int validate_game_data()
 	}
 
 	/* There should be at least two characters */
-	int nr_characters = count_characters();
+	uint16_t nr_characters = count_characters();
 	if (nr_characters < 2) {
 		msg = "Less than 2 heroes.";
 		goto error;

@@ -344,9 +344,9 @@ uint16_t count_regions_by_owner(character_t * owner)
 	return count;
 }
 
-int count_regions()
+uint16_t count_regions()
 {
-	int counter = 0;
+	uint16_t counter = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 		counter++;

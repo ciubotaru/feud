@@ -231,10 +231,10 @@ void print_status()
 		world->grid->width,
 		world->grid->height);
 	dprintf(STDOUT_FILENO,
-		" Regions: %i\n",
+		" Regions: %u\n",
 		count_regions());
 	dprintf(STDOUT_FILENO,
-		" Players: %i\n",
+		" Players: %u\n",
 		count_characters());
 	character_t *turn = world->selected_character;
 	dprintf(STDOUT_FILENO,
@@ -261,11 +261,11 @@ void print_status_player(character_t *character) {
 	dprintf(STDOUT_FILENO, "Die: %s of %i\n", months[character->deathdate.tm_mon], character->deathdate.tm_year);
 	uint16_t left_months = 12 * (character->deathdate.tm_year - world->current_time.tm_year) + character->deathdate.tm_mon - world->current_time.tm_mon;
 	dprintf(STDOUT_FILENO, "Left: %i year(s) %i month(s)\n", left_months / 12, left_months % 12);
-	dprintf(STDOUT_FILENO, "Regions: %i (%i tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
-	dprintf(STDOUT_FILENO, "Army: %i\n", count_pieces_by_owner(character));
-	dprintf(STDOUT_FILENO, "Money: %i\n", get_money(character));
+	dprintf(STDOUT_FILENO, "Regions: %u (%u tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
+	dprintf(STDOUT_FILENO, "Army: %u\n", count_pieces_by_owner(character));
+	dprintf(STDOUT_FILENO, "Money: %u\n", get_money(character));
 	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
-	dprintf(STDOUT_FILENO, "Vassals: %i\n", count_vassals(character));
+	dprintf(STDOUT_FILENO, "Vassals: %u\n", count_vassals(character));
 	if (world->selected_character == character) dprintf(STDOUT_FILENO,
 		"Moves left: %i\n",
 		world->moves_left);
@@ -823,7 +823,7 @@ void setup_loop()
 				}
 				character_t *current = world->characterlist;
 				while (current != NULL) {
-					printf("%s %i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					printf("%s %u. %s, %s, %u coins, %u soldier(s), %u region(s), %u tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
 					current = current->next;
 				}
 			}

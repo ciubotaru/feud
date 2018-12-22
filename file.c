@@ -824,7 +824,7 @@ unsigned int save_game()
 		goto ret;
 	}
 
-	int nr_pieces = count_pieces();
+	uint16_t nr_pieces = count_pieces();
 	char *pieces_buffer =
 	    calloc(1, PIECES_METADATA_SIZE + nr_pieces * PIECES_UNIT_SIZE + 1);
 	if (!pieces_buffer) {

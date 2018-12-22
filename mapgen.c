@@ -295,7 +295,7 @@ void recalculate_region_centers()
 	int i, j;
 	int cumul_h = 0, cumul_w = 0;
 //      uint16_t nr_regions = count_regions();
-	int counter = 0;
+	uint16_t counter = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 //      while (counter < nr_regions) {
