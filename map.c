@@ -201,6 +201,15 @@ unsigned char claim_region(character_t * character, region_t * region)
 		world->check_death = 1;
 		return 2;
 	}
+
+	/* if we are neutral with current owner, take it and trigger war */
+	if (get_diplomacy(current_owner, character) == NEUTRAL) {
+		change_region_owner(character, region);
+		set_diplomacy(current_owner, character, WAR);
+		/* if previous owner has no other regions, he lost */
+		world->check_death = 1;
+		return 2;
+	}
 	return 0;
 }
 
@@ -450,13 +459,14 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 	piece_t *src_piece = world->grid->tiles[src_height][src_width]->piece;
 	if (src_piece == NULL || src_piece->owner->id != current_character->id)
 		return 0;
+	/* no piece at dest or neutral/enemy piece */
 	piece_t *dst_piece = world->grid->tiles[dst_height][dst_width]->piece;
 	if (dst_piece != NULL) {
 		/* no own piece on destination tile */
 		if (dst_piece->owner->id == current_character->id)
 			return 0;
 		/* no allied piece on destination */
-		if (get_diplomacy(current_character, dst_piece->owner) == 1)
+		if (get_diplomacy(current_character, dst_piece->owner) == ALLIANCE)
 			return 0;
 	}
 	return 1;
@@ -465,6 +475,7 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 			const uint16_t dst_width)
 {
+	character_t *src_character = piece->owner;
 	uint16_t src_height = piece->tile->height;
 	uint16_t src_width = piece->tile->width;
 	unsigned int movable =
@@ -482,8 +493,11 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 		if (dst_piece->type == NOBLE) {
 			succession(dst_character);
 			remove_character(dst_character);
-		} else
+		} else {
 			remove_piece(dst_piece);
+			/* if src and dest are neutral, trigger war */
+			if (get_diplomacy(src_character, dst_character) != WAR) set_diplomacy(src_character, dst_character, WAR);
+		}
 		update_army_ranking();
 	}
 	/* update grid */

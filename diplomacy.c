@@ -38,15 +38,18 @@ dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 {
 	if (character1 == NULL || character2 == NULL) return NULL;
 
+	dipstatus_t *current;
+
 	/* if diplomacylist does not exist, create it */
 	if (world->diplomacylist == NULL) {
 //printf("Diplomacy list does not exist. Creating...\n");
-		world->diplomacylist = create_diplomacylist();
-		fill_diplomacy_details(world->diplomacylist, character1, character2, status);
-		return world->diplomacylist;
+		current = create_diplomacylist();
+		fill_diplomacy_details(current, character1, character2, status);
+		world->diplomacylist = current;
+		return current;
 	}
 
-	dipstatus_t *current = get_dipstatus(character1, character2);
+	current = get_dipstatus(character1, character2);
 	/* if dipstatus between two characters exists, update it */
 	if (current) {
 		current->status = status;
@@ -84,7 +87,10 @@ unsigned char get_diplomacy(character_t *character1, character_t *character2)
 {
 	dipstatus_t *dipstatus = get_dipstatus(character1, character2);
 	if (dipstatus) return dipstatus->status;
-	else return NEUTRAL;
+	if ((character1->lord && character1->lord == character2)
+	    || (character2->lord && character2->lord == character1))
+		return ALLIANCE;
+	return NEUTRAL;
 }
 
 void remove_diplomacy(dipstatus_t *dipstatus)
