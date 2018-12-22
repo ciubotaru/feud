@@ -162,7 +162,6 @@ int new_game_dialog(WINDOW *local_win)
 	char name[17];
 	character_t *character = NULL;
 	region_t *region = world->regionlist;
-	piece_t *piece = NULL;
 	int region_size_min = 100;
 	tile_t *tile = NULL;
 	for (i = 0; i < p; i++) {
@@ -171,7 +170,7 @@ int new_game_dialog(WINDOW *local_win)
 		set_character_rank(character, KING);
 		change_region_owner(character, region);
 		tile = region_center(region);
-		piece = add_piece(NOBLE, tile->height, tile->width, character);
+		add_piece(NOBLE, tile->height, tile->width, character);
 		if (region->size < region_size_min) region_size_min = region->size;
 		region = region->next;
 	}
