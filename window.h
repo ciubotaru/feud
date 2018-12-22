@@ -58,6 +58,10 @@ extern char *screens[];
 
 struct region *selected_region;
 
+extern char const piece_char[];
+
+extern char const noble_char[];
+
 struct tile *cursor;
 
 int current_screen;

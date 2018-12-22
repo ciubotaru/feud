@@ -49,6 +49,20 @@ char *screens[] = {
 
 region_t *selected_region = NULL;
 
+char const piece_char[] = {
+	[NOBLE] = 'n', /* ? */
+	[SOLDIER] = 's',
+	[SHIP] = 'S'
+};
+
+char const noble_char[] = {
+	[KNIGHT] = 'k',
+	[BARON] = 'b',
+	[COUNT] = 'c',
+	[DUKE] = 'd',
+	[KING] = 'K'
+};
+
 tile_t *cursor = NULL;
 
 int check_termsize()
@@ -177,30 +191,11 @@ void draw_map(WINDOW *local_win)
 				    7 + 10;
 				switch (world->grid->tiles[i][j]->piece->type) {
 				case NOBLE:	/* noble */
-					switch (world->grid->tiles[i][j]->
-						piece->owner->rank) {
-					case KNIGHT:
-						tile_char = 'k';
-						break;
-					case BARON:
-						tile_char = 'b';
-						break;
-					case COUNT:
-						tile_char = 'c';
-						break;
-					case DUKE:
-						tile_char = 'd';
-						break;
-					case KING:
-						tile_char = 'K';
-						break;
-					}
+					tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
 					break;
 				case SOLDIER:	/* soldier */
-					tile_char = 's';
-					break;
 				case SHIP:	/* ship */
-					tile_char = 'S';
+					tile_char = piece_char[world->grid->tiles[i][j]->piece->type];
 					break;
 				}
 			} else if (world->grid->tiles[i][j]->walkable) {
@@ -1736,33 +1731,13 @@ int map_editor(WINDOW *local_win)
 				    world->grid->tiles[i][j]->piece->owner->id %
 				    7 + 10;
 				switch (world->grid->tiles[i][j]->piece->type) {
-				case NOBLE:	/* noble */
-					switch (world->grid->tiles[i][j]->
-						piece->owner->rank) {
-					case KNIGHT:
-						tile_char = 'k';
+					case NOBLE:	/* noble */
+						tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
 						break;
-					case BARON:
-						tile_char = 'b';
+					case SOLDIER:	/* soldier */
+					case SHIP:	/* ship */
+						tile_char = piece_char[world->grid->tiles[i][j]->piece->type];
 						break;
-					case COUNT:
-						tile_char = 'c';
-						break;
-					case DUKE:
-						tile_char = 'd';
-						break;
-					case KING:
-						tile_char = 'K';
-						break;
-					}
-					break;
-				case SOLDIER:	/* soldier */
-					tile_char = 's';
-					break;
-/* ToDo change 2 to SHIP when we have ships */
-				case SHIP:	/* ship */
-					tile_char = 'S';
-					break;
 				}
 			} else if (world->grid->tiles[i][j]->walkable) {
 				if (world->grid->tiles[i][j]->region != NULL

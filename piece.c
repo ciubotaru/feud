@@ -6,9 +6,9 @@
 #include "world.h"
 
 char *const piece_name[] = {
-	"noble",
-	"soldier",
-	"ship"
+	[NOBLE] = "noble",
+	[SOLDIER] = "soldier",
+	[SHIP] = "ship"
 };
 
 //uint16_t piece_id = 0;
