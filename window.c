@@ -1597,14 +1597,12 @@ int help_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 11, 2, "'m' -- give money to another player");
 	mvwprintw(local_win, 12, 2, "'q' -- quit editor");
 	mvwprintw(local_win, 13, 2, "'r' -- give a region to another player");
-	mvwprintw(local_win, 14, 2,
-		  "'w' -- toggle walkability of current tile");
-	mvwprintw(local_win, 15, 2, "'s' -- save game to file");
-	mvwprintw(local_win, 16, 2, "'t' -- take money (if dice rolls 6)");
-	mvwprintw(local_win, 17, 2, "'u' -- place a soldier on current tile");
-	mvwprintw(local_win, 18, 2,
+	mvwprintw(local_win, 14, 2, "'s' -- save game to file");
+	mvwprintw(local_win, 15, 2, "'t' -- take money (if dice rolls 6)");
+	mvwprintw(local_win, 16, 2, "'u' -- place a soldier on current tile");
+	mvwprintw(local_win, 17, 2,
 		  "'v' -- toggle between 'move piece' and 'explore map' modes");
-	mvwprintw(local_win, 19, 2, "'?' -- show this help");
+	mvwprintw(local_win, 18, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
 	wgetch(local_win);
