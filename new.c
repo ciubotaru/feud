@@ -159,7 +159,7 @@ int new_game_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 10, 40, "%i", p);
 
 	int decimal = (int) floor(log10(p) + 2);
-	char *name = malloc(6 + decimal);
+	char name[17];
 	character_t *character = NULL;
 	region_t *region = world->regionlist;
 	piece_t *piece = NULL;
@@ -175,7 +175,6 @@ int new_game_dialog(WINDOW *local_win)
 		if (region->size < region_size_min) region_size_min = region->size;
 		region = region->next;
 	}
-	free(name);
 	world->selected_character = world->characterlist;
 
 	int s = MIN(3, region_size_min - 1);

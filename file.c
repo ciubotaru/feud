@@ -47,7 +47,9 @@ static uint16_t selected_character_id;
 
 char *strconcat(const char *input1, const char *input2)
 {
+	if (!input1 || !input2) return NULL;
 	char *output = malloc(strlen(input1) + strlen(input2) + 1);
+	if (!output) return NULL;
 	strcpy(output, input1);
 	strcpy(output + strlen(input1), input2);
 	return output;
@@ -64,10 +66,12 @@ int add_to_chronicle(char *format, ...)
 		return 1;
 	struct stat st = { 0 };
 	char *logdir = strconcat(getenv("HOME"), SAVE_DIRNAME);
+	if (!logdir) return 2;
 	if (stat(logdir, &st) == -1) {
 		mkdir(logdir, 0700);
 	}
 	char *logfile = strconcat(logdir, LOG_FILENAME);
+	if (!logfile) return 2;
 	free(logdir);
 
 	FILE *fp = fopen(logfile, "a");
@@ -210,9 +214,11 @@ int deserialize_grid(char **buffer, int *pos)
 	memcpy(&height_be, *buffer + buffer_pos, sizeof(uint16_t));
 	memcpy(&width_be, *buffer + buffer_pos + sizeof(uint16_t),
 	       sizeof(uint16_t));
+	uint16_t height = be16toh(height_be);
+	uint16_t width = be16toh(width_be);
 	if (world->grid != NULL)
 		remove_grid();
-	world->grid = create_grid(be16toh(height_be), be16toh(width_be));
+	world->grid = create_grid(height, width);
 	if (!world->grid)
 		return 1;
 
@@ -244,6 +250,7 @@ int deserialize_pieces(char **buffer, int *pos)
 	buffer_pos = *pos + PIECES_METADATA_SIZE;
 	unsigned char type;
 	uint16_t id_be, height_be, width_be, owner_be;
+	uint16_t height, width, owner;
 	for (i = 0; i < nr_pieces; i++) {
 		memcpy(&id_be, *buffer + buffer_pos, sizeof(uint16_t));
 		memcpy(&type, *buffer + buffer_pos + sizeof(uint16_t), 1);
@@ -255,16 +262,18 @@ int deserialize_pieces(char **buffer, int *pos)
 		memcpy(&owner_be,
 		       *buffer + buffer_pos + 1 + 3 * sizeof(uint16_t),
 		       sizeof(uint16_t));
+		height = be16toh(height_be);
+		width = be16toh(width_be);
+		owner = be16toh(owner_be);
 		current =
-		    add_piece(type, be16toh(height_be), be16toh(width_be),
-			      get_character_by_id(be16toh(owner_be)));
+		    add_piece(type, height, width,
+			      get_character_by_id(owner));
 		if (!current)
 			return 1;
 		current->id = be16toh(id_be);
 		world->next_piece_id = current->id;
-		world->grid->tiles[be16toh(height_be)][be16toh(width_be)]->
+		world->grid->tiles[height][width]->
 		    piece = current;
-//if (current->rank > 0) set_character_rank(current->owner, rank);
 		buffer_pos += PIECES_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -378,11 +387,13 @@ unsigned int load_game()
 		return 1;
 	struct stat st = { 0 };
 	char *savedir = strconcat(getenv("HOME"), SAVE_DIRNAME);
+	if (!savedir) return 1;
 	if (stat(savedir, &st) == -1) {
 		mkdir(savedir, 0700);
 	}
 	char *savefile = strconcat(savedir, SAVE_FILENAME);
 	free(savedir);
+	if (!savefile) return 1;
 
 	if (stat(savefile, &st) == -1) {
 		free(savefile);
@@ -396,6 +407,10 @@ unsigned int load_game()
 		return 3;
 
 	char *buffer = malloc(file_size);	/* included nullterm */
+	if (!buffer) {
+		fclose(fp);
+		return 4;
+	}
 	size_t bytes_read = fread(buffer, 1, file_size, fp);
 	fclose(fp);
 	if (!bytes_read) {
@@ -472,7 +487,7 @@ int serialize_characterlist(char **buffer)
 		memcpy(*buffer + pos + offset, &id_be, sizeof(uint16_t));	/* id */
 		offset += sizeof(uint16_t);
 		memcpy(*buffer + pos + offset, current->name,
-		       strlen(current->name));
+		       strlen(current->name) + 1);
 		offset += 17;
 		money_be = htobe16(current->money);
 		memcpy(*buffer + pos + offset, &money_be, sizeof(uint16_t));
@@ -517,7 +532,7 @@ int serialize_regionlist(char **buffer)
 		memcpy(*buffer + pos + sizeof(uint16_t), &size_be, sizeof(uint16_t));
 **/
 		memcpy(*buffer + pos + sizeof(uint16_t), current->name,
-		       strlen(current->name));
+		       strlen(current->name) + 1);
 		owner_be =
 		    (current->owner != NULL ? htobe16(current->owner->id) : 0);
 		memcpy(*buffer + pos + sizeof(uint16_t) + 17, &owner_be,
@@ -702,11 +717,13 @@ unsigned int save_game()
 	/* write to file */
 	struct stat st = { 0 };
 	char *savedir = strconcat(getenv("HOME"), SAVE_DIRNAME);
+	if (!savedir) return 2;
 	if (stat(savedir, &st) == -1) {
 		mkdir(savedir, 0700);
 	}
 	char *savefile = strconcat(savedir, SAVE_FILENAME);
 	free(savedir);
+	if (!savefile) return 2;
 	FILE *fp = fopen(savefile, "w");
 	free(savefile);
 	if (!fp) {
