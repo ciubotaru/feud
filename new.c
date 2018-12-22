@@ -242,7 +242,7 @@ int new_game_dialog(WINDOW *local_win)
 	save_game();
 
 	wprintw(local_win,
-		"\n\n  Map created and saved. You can edit it now. Press any key.");
+		"\n\n  Map created and saved. To continue, press any key.");
 	curs_set(FALSE);
 	noecho();
 	wgetch(local_win);
