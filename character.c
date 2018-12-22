@@ -25,6 +25,7 @@ character_t *create_characterlist()
 
 static void fill_character_details(character_t *character, const char *name)
 {
+	if (!character) return;
 	character->id = world->next_character_id;
 	world->next_character_id++;
 	strcpy(character->name, name);
@@ -77,7 +78,7 @@ character_t *add_character_before(character_t *parent, const char *name)
 	character_t *current = world->characterlist;
 
 	/*fast-forward to parent or to the end of list*/
-	while (current != parent && current != NULL) {
+	while (current != parent && current->next != NULL) {
 		current = current->next;
 	}
 
