@@ -9,7 +9,7 @@ enum piece_type {NOBLE, SOLDIER, SHIP};
 
 typedef struct piece {
 	uint16_t id;
-	enum piece_type type;
+	unsigned char type;
 	struct tile *tile;
 	character_t *owner;
 	struct piece *next;

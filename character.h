@@ -15,7 +15,7 @@ typedef struct character {
 	uint16_t id;
 	char name[17];		/* 16 + endchar */
 	uint16_t money;
-	enum ranklist rank;
+	unsigned char rank;
 	uint16_t rank_land;
 	uint16_t rank_army;
 	uint16_t rank_money;
