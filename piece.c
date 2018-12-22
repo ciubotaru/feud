@@ -30,12 +30,12 @@ static void fill_piece_details(piece_t * piece, const enum piece_type type,
 			       const uint16_t height, const uint16_t width,
 			       character_t * owner)
 {
+	if (!piece) return;
 	piece->id = world->next_piece_id;
 	piece->type = type;
 	piece->tile = world->grid->tiles[height][width];
 	piece->owner = owner;
 	world->grid->tiles[height][width]->piece = piece;
-//      grid->tiles[height][width]->region->owner->id = owner->id;
 	world->next_piece_id++;
 }
 
@@ -56,6 +56,7 @@ piece_t *add_piece(const enum piece_type type, const uint16_t height,
 
 	if (world->piecelist == NULL) {
 		world->piecelist = create_piecelist();
+		if (!world->piecelist) return NULL;
 		fill_piece_details(world->piecelist, type, height, width,
 				   owner);
 		return world->piecelist;
