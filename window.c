@@ -148,7 +148,6 @@ int start_menu(WINDOW *local_win)
 
 void draw_map(WINDOW *local_win)
 {
-	int retval = MAIN_SCREEN;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
