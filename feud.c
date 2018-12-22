@@ -265,7 +265,7 @@ int main()
 			current_screen = info_dialog(local_win);
 			break;
 		case GAME_OVER:
-			current_screen = info_dialog(local_win);
+			info_dialog(local_win);
 			current_screen = SHUTDOWN;
 			break;
 		case HEIR_DIALOG:
