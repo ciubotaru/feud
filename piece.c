@@ -54,25 +54,27 @@ piece_t *add_piece(const enum piece_type type, const uint16_t height,
 	/* only one noble allowed */
 	if ((type == 0) && (get_noble_by_owner(owner) != NULL)) return NULL;
 
-	if (world->piecelist == NULL) {
-		world->piecelist = create_piecelist();
+	piece_t *current = world->piecelist;
+	if (!current) {
+		world->piecelist = calloc(sizeof(piece_t), 1);
 		if (!world->piecelist) return NULL;
-		fill_piece_details(world->piecelist, type, height, width,
-				   owner);
+		fill_piece_details(world->piecelist, type, height, width, owner);
 		return world->piecelist;
 	}
-	piece_t *current = world->piecelist;
 
 	/*fast-forward to the end of list */
 	while (current->next != NULL) {
+		if (current->owner == owner && current->next->owner != owner) break;
 		current = current->next;
 	}
 
 	/* now we can add a new variable */
+	piece_t *next = current->next;
 	current->next = calloc(sizeof(piece_t), 1);
 	if (!current->next)
 		return NULL;
 	fill_piece_details(current->next, type, height, width, owner);
+	current->next->next = next;
 	return current->next;
 }
 
