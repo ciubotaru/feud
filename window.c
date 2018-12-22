@@ -1809,6 +1809,7 @@ int map_editor(WINDOW *local_win)
 /**
 	mvwprintw(local_win, 19, 50, "Diplomacy: %s", (piece == NULL || piece->owner->id == character->id ? " " : dipstatuslist[get_diplomacy(piece->owner, character)]));
 **/
+	mvwprintw(local_win, 23, 65, "Help: '?'");
 
 	int ch;
 	ch = get_input(local_win);
