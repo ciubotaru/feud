@@ -188,7 +188,7 @@ void draw_map(WINDOW *local_win)
 			} else if (world->grid->tiles[i][j]->piece != NULL) {
 				color_nr =
 				    world->grid->tiles[i][j]->piece->owner->id %
-				    7 + 10;
+				    6 + 10;
 				switch (world->grid->tiles[i][j]->piece->type) {
 				case NOBLE:	/* noble */
 					tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
@@ -204,7 +204,7 @@ void draw_map(WINDOW *local_win)
 				    owner != NULL)
 					color_nr =
 					    world->grid->tiles[i][j]->region->
-					    owner->id % 7 + 10;
+					    owner->id % 6 + 10;
 				else
 					color_nr = 1;
 				tile_char = '.';
@@ -273,9 +273,7 @@ void draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
 	if (piece != NULL && piece->owner->id != character->id) {
 		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
-		unsigned char status;
-		if (diplomacy) status = diplomacy->status;
-		else status = NEUTRAL;
+		unsigned char status = get_diplomacy(piece->owner, character);
 		switch (status) {
 		case NEUTRAL:
 			wcolor_set(local_win, 12, NULL);
@@ -1729,7 +1727,7 @@ int map_editor(WINDOW *local_win)
 			if (world->grid->tiles[i][j]->piece != NULL) {
 				color_nr =
 				    world->grid->tiles[i][j]->piece->owner->id %
-				    7 + 10;
+				    6 + 10;
 				switch (world->grid->tiles[i][j]->piece->type) {
 					case NOBLE:	/* noble */
 						tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
@@ -1745,7 +1743,7 @@ int map_editor(WINDOW *local_win)
 				    owner != NULL)
 					color_nr =
 					    world->grid->tiles[i][j]->region->
-					    owner->id % 7 + 10;
+					    owner->id % 6 + 10;
 				else
 					color_nr = 1;
 				tile_char = '.';
