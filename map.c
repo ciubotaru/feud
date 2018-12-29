@@ -44,13 +44,15 @@ void fill_region_details(region_t * region, const char *name)
 
 region_t *add_region(const char *name)
 {
+	region_t *current;
 	if (world->regionlist == NULL) {
-		world->regionlist = create_regionlist();
-		fill_region_details(world->regionlist, name);
-		return world->regionlist;
+		current = create_regionlist();
+		fill_region_details(current, name);
+		world->regionlist = current;
+		return current;
 	}
 
-	region_t *current = world->regionlist;
+	current = world->regionlist;
 
 	/*fast-forward to the end of list */
 	while (current->next != NULL) {
@@ -81,9 +83,9 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	if (tile->region == NULL && new_region != NULL) {
 		tile->region = new_region;
 		new_region->size++;
-		new_region->tiles =
-		    realloc(new_region->tiles,
-			    (new_region->size) * sizeof(tile_t *));
+		tile_t **tmp = realloc(new_region->tiles,
+		    (new_region->size) * sizeof(tile_t *));
+		if (tmp) new_region->tiles = tmp;
 		new_region->tiles[new_region->size - 1] = tile;
 		return;
 	}
@@ -100,9 +102,9 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 			}
 		}
 		tile->region->size--;
-		new_region->tiles =
-		    realloc(new_region->tiles,
-			    (new_region->size + 1) * sizeof(tile_t *));
+		tile_t **tmp = realloc(new_region->tiles,
+		    (new_region->size + 1) * sizeof(tile_t *));
+		if (tmp) new_region->tiles = tmp;
 		new_region->size++;
 		new_region->tiles[new_region->size - 1] = tile;
 		free(tile->region->tiles);
@@ -111,7 +113,7 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 		return;
 	}
 	/* remove tile from region */
-	else if (new_region == NULL) {
+	else if (tile->region != NULL && new_region == NULL) {
 		tile_t **newlist =
 		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
 		if (!newlist) return;
@@ -398,24 +400,39 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 		return world->grid;
 	int i, j;
 	grid_t *grid = malloc(sizeof(grid_t));
-	if (!grid) return NULL;
+	if (!grid) goto create_grid_error;
 	grid->height = height;
 	grid->width = width;
 	grid->tiles = malloc(height * sizeof(void *));
-	if (!grid->tiles) {
-		free(grid);
-		return NULL;
-	}
+	if (!grid->tiles) goto create_grid_error;
 	for (i = 0; i < height; i++) {
 		grid->tiles[i] = malloc(width * sizeof(void *));
+		if (!grid->tiles[i]) goto create_grid_error;
 		for (j = 0; j < width; j++) {
 			grid->tiles[i][j] = tile_init();
+			if (!grid->tiles[i][j]) goto create_grid_error;
 			grid->tiles[i][j]->height = i;
 			grid->tiles[i][j]->width = j;
 		}
 	}
 	world->grid = grid;
 	return world->grid;
+create_grid_error:
+	if (grid) {
+		if (grid->tiles) {
+			for (i = 0; i < height; i++) {
+				if (grid->tiles[i]) {
+					for (j = 0; j < width; j++) {
+						if (grid->tiles[i][j]) free(grid->tiles[i][j]);
+					}
+					free(grid->tiles[i]);
+				}
+			}
+			free(grid->tiles);
+		}
+		free(grid);
+	}
+	return NULL;
 }
 
 void remove_grid()
