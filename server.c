@@ -303,11 +303,12 @@ void setup_loop()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!token) continue;
 		if (!strcmp(token, "about")) {
 			print_about();
 			continue;
 		}
-		else if (!strcmp(token, "board")) {
+		if (!strcmp(token, "board")) {
 			uint16_t coords[2];
 			int i;
 			int success = 1;
@@ -559,7 +560,8 @@ void setup_loop()
 					continue;
 				}
 				char *money_ch = strtok(NULL, " \n");
-				uint16_t money = (uint16_t) atoi(money_ch);
+				uint16_t money = 0;
+				if (money_ch) money = (uint16_t) atoi(money_ch);
 				set_money(character, money);
 				dprintf(STDOUT_FILENO, "OK\n");
 				continue;
@@ -614,6 +616,12 @@ void setup_loop()
 				char *rank_ch = strtok(NULL, " \n");
 				int rank = 0;
 				int success = 1;
+				if (!rank_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid rank (type 'help player' for more info)\n");
+					success = 0;
+					continue;
+				}
 				switch (rank_ch[0]) {
 				case 'k':
 					rank = 4;
@@ -998,6 +1006,7 @@ int main(int argc, char **argv)
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
+	if (!stdin_buffer) return 0;
 	stdin_buffer->size = 0;
 	stage = SETUP_LOOP;
 	while (1) {

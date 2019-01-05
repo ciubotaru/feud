@@ -284,6 +284,7 @@ void standby()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!token) continue;
 		if (!strcmp(token, "about")) {
 			print_about();
 			continue;
@@ -569,7 +570,8 @@ void standby()
 					continue;
 				}
 				char *money_ch = strtok(NULL, " \n");
-				uint16_t money = (uint16_t) atoi(money_ch);
+				uint16_t money = 0;
+				if (money_ch) money = (uint16_t) atoi(money_ch);
 				set_money(character, money);
 				dprintf(STDOUT_FILENO, "ack\n");
 				continue;
@@ -624,6 +626,12 @@ void standby()
 				char *rank_ch = strtok(NULL, " \n");
 				int rank = 0;
 				int success = 1;
+				if (!rank_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid rank (type 'help player' for more info)\n");
+					success = 0;
+					continue;
+				}
 				switch (rank_ch[0]) {
 				case 'k':
 					rank = 4;
@@ -1030,10 +1038,14 @@ void think()
 **/
 		uint16_t nr_ai_pieces = count_pieces_by_owner(ai_character) + 1;
 		piece_t *current_piece = world->piecelist;
+		if (!current_piece) {
+			stage = GAMEOVER;
+			return;
+		}
 		int random_nr;
 		if (nr_ai_pieces > 1) random_nr = rand() % nr_ai_pieces + 1;
 		else random_nr = 1;
-		while (current_piece != NULL) {
+		while (current_piece->next != NULL) {
 			if (current_piece->owner == ai_character) {
 				random_nr--;
 				if (random_nr == 0) break;
@@ -1088,6 +1100,7 @@ int main(int argc, char **argv)
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
+	if (!stdin_buffer) return 0;
 	stdin_buffer->size = 0;
 	stage = STANDBY;
 	while (1) {
