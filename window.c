@@ -166,6 +166,7 @@ void draw_map(WINDOW *local_win)
 	char tile_char = '.';
 	int color_nr = 0;
 	int character_age_mon = 0;
+	tile_t *current_tile = NULL;
 	for (i = 24 + h_offset; i > h_offset; i--) {
 		for (j = w_offset; j < 48 + w_offset; j++) {
 /**
@@ -184,32 +185,33 @@ void draw_map(WINDOW *local_win)
 			    || j >= world->grid->width) {
 				color_nr = 1;
 				tile_char = ' ';
-			} else if (world->grid->tiles[i][j]->piece != NULL) {
-				color_nr =
-				    world->grid->tiles[i][j]->piece->owner->id %
-				    6 + 10;
-				switch (world->grid->tiles[i][j]->piece->type) {
-				case NOBLE:	/* noble */
-					tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
-					break;
-				case SOLDIER:	/* soldier */
-				case SHIP:	/* ship */
-					tile_char = piece_char[world->grid->tiles[i][j]->piece->type];
-					break;
-				}
-			} else if (world->grid->tiles[i][j]->walkable) {
-				if (world->grid->tiles[i][j]->region != NULL
-				    && world->grid->tiles[i][j]->region->
-				    owner != NULL)
-					color_nr =
-					    world->grid->tiles[i][j]->region->
-					    owner->id % 6 + 10;
-				else
-					color_nr = 1;
-				tile_char = '.';
 			} else {
-				color_nr = 1;	//blue
-				tile_char = '~';
+				current_tile = world->grid->tiles[i][j];
+				if (current_tile->piece != NULL) {
+					color_nr = current_tile->piece->owner->id %
+					    6 + 10;
+					switch (current_tile->piece->type) {
+						case NOBLE:	/* noble */
+							tile_char = noble_char[current_tile->piece->owner->rank];
+							break;
+						case SOLDIER:	/* soldier */
+						case SHIP:	/* ship */
+							tile_char = piece_char[current_tile->piece->type];
+							break;
+					}
+				}
+				else if (current_tile->walkable) {
+					if (current_tile->region != NULL
+					    && current_tile->region->owner != NULL)
+						color_nr = current_tile->region->owner->id % 6 + 10;
+					else
+						color_nr = 1;
+					tile_char = '.';
+				}
+				else {
+					color_nr = 1;	//blue
+					tile_char = '~';
+				}
 			}
 			if (cursor->height == i
 			    && cursor->width == j) {
@@ -274,15 +276,15 @@ void draw_map(WINDOW *local_win)
 		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
 		unsigned char status = get_diplomacy(piece->owner, character);
 		switch (status) {
-		case NEUTRAL:
-			wcolor_set(local_win, 12, NULL);
-			break;
-		case ALLIANCE:
-			wcolor_set(local_win, 11, NULL);
-			break;
-		case WAR:
-			wcolor_set(local_win, 10, NULL);
-			break;
+			case NEUTRAL:
+				wcolor_set(local_win, 12, NULL);
+				break;
+			case ALLIANCE:
+				wcolor_set(local_win, 11, NULL);
+				break;
+			case WAR:
+				wcolor_set(local_win, 10, NULL);
+				break;
 		}
 		wprintw(local_win, "%s", dipstatus_name[status]);
 		if (diplomacy && diplomacy->pending_offer)
@@ -1707,6 +1709,7 @@ int map_editor(WINDOW *local_win)
 	region = selected_region;
 	piece_t *piece = cursor->piece;
 
+	tile_t *current_tile = NULL;
 	for (i = 24 * (h_multiplier + 1) - 1; i >= 24 * h_multiplier; i--) {
 		if (i >= world->grid->height) {
 			wprintw(local_win, "\n");
@@ -1717,30 +1720,27 @@ int map_editor(WINDOW *local_win)
 			  world->grid->width ? 48 * (w_multiplier +
 						     1) : world->grid->width);
 		     j++) {
+			current_tile = world->grid->tiles[i][j];
 /**
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
 **/
-			if (world->grid->tiles[i][j]->piece != NULL) {
-				color_nr =
-				    world->grid->tiles[i][j]->piece->owner->id %
+			if (current_tile->piece != NULL) {
+				color_nr = current_tile->piece->owner->id %
 				    6 + 10;
-				switch (world->grid->tiles[i][j]->piece->type) {
+				switch (current_tile->piece->type) {
 					case NOBLE:	/* noble */
-						tile_char = noble_char[world->grid->tiles[i][j]->piece->owner->rank];
+						tile_char = noble_char[current_tile->piece->owner->rank];
 						break;
 					case SOLDIER:	/* soldier */
 					case SHIP:	/* ship */
-						tile_char = piece_char[world->grid->tiles[i][j]->piece->type];
+						tile_char = piece_char[current_tile->piece->type];
 						break;
 				}
-			} else if (world->grid->tiles[i][j]->walkable) {
-				if (world->grid->tiles[i][j]->region != NULL
-				    && world->grid->tiles[i][j]->region->
-				    owner != NULL)
-					color_nr =
-					    world->grid->tiles[i][j]->region->
-					    owner->id % 6 + 10;
+			} else if (current_tile->walkable) {
+				if (current_tile->region != NULL
+				    && current_tile->region->owner != NULL)
+					color_nr = current_tile->region->owner->id % 6 + 10;
 				else
 					color_nr = 1;
 				tile_char = '.';
@@ -1748,7 +1748,7 @@ int map_editor(WINDOW *local_win)
 				color_nr = 1;	/* blue */
 				tile_char = '~';
 			}
-			if (cursor == world->grid->tiles[i][j]) {
+			if (cursor == current_tile) {
 				if (color_nr == 1)
 					color_nr = 26;
 				else
