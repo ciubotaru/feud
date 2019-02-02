@@ -15,4 +15,6 @@ char **load_region_names(const int size);
 
 char **load_character_names(const int size);
 
+int savefile_exists();
+
 #endif				/* GAMEFILE_H */

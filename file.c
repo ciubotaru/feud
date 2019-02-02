@@ -1092,3 +1092,25 @@ err:
 	free(character_names);
 	return NULL;
 }
+
+int savefile_exists() {
+	int retval = 0;
+	size_t len1, len2, len3;
+	char *prefix = getenv("HOME");
+	char *filename;
+	if (prefix) {
+		len1 = strlen(prefix);
+		len2 = strlen(SAVE_DIRNAME);
+		len3 = strlen(SAVE_FILENAME);
+		filename = malloc(len1 + len2 + len3 + 1);
+		if (!filename) {
+			return SHUTDOWN;
+		}
+		memcpy(filename, prefix, len1);
+		memcpy(filename + len1, SAVE_DIRNAME, len2);
+		memcpy(filename + (len1 + len2), SAVE_FILENAME, len3 + 1);
+		if (access(filename, F_OK) != -1) retval = 1;
+		free(filename);
+	}
+	return retval;
+}

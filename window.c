@@ -97,32 +97,14 @@ int start_menu(WINDOW *local_win)
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
-	int savefile_exists;
-	savefile_exists = 0;
-	size_t len1, len2, len3;
-	char *prefix = getenv("HOME");
-	char *filename;
-	if (prefix) {
-		len1 = strlen(prefix);
-		len2 = strlen(SAVE_DIRNAME);
-		len3 = strlen(SAVE_FILENAME);
-		filename = malloc(len1 + len2 + len3 + 1);
-		if (!filename) {
-			return SHUTDOWN;
-		}
-		memcpy(filename, prefix, len1);
-		memcpy(filename + len1, SAVE_DIRNAME, len2);
-		memcpy(filename + (len1 + len2), SAVE_FILENAME, len3 + 1);
-		if (access(filename, F_OK) != -1) savefile_exists = 1;
-		free(filename);
-	}
+	int sf_exists = savefile_exists();
 
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 	wprintw(local_win, "  [N]ew game\n");
-	if (world->grid || savefile_exists) wprintw(local_win, "  [L]oad game\n");
+	if (world->grid || sf_exists) wprintw(local_win, "  [L]oad game\n");
 	wprintw(local_win, "  [Q]uit\n");
 
 	int ch;
@@ -130,7 +112,7 @@ int start_menu(WINDOW *local_win)
 		ch = tolower(wgetch(local_win));
 		switch (ch) {
 			case 'l':
-				if (world->grid || savefile_exists) {
+				if (world->grid || sf_exists) {
 					return MAIN_SCREEN;
 				}
 				break;
