@@ -1,3 +1,8 @@
+# This is the default list of region names.
+# To use your own names, make a list of names,
+# one name per line, and save them in a file
+# named "regions.txt" in "~/.feud" directory.
+
 Iaronet
 Usiqar
 Fliobbajan

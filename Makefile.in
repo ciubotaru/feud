@@ -5,6 +5,7 @@ CFLAGS = @CFLAGS@
 OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o mapgen.o new.o piece.o server.o time.o window.o world.o
 CLI_OBJS = map.o character.o dice.o diplomacy.o file.o piece.o time.o world.o
 EXECS = feud feud-editor feud-ai feud-server
+DATAFILES = characters.txt regions.txt
 
 .PHONY: all clean distclean install uninstall
 
@@ -33,14 +34,21 @@ clean:
 distclean: clean
 	rm config.log config.status Makefile
 
-install:
+install: uninstall
 	if [ ! -d $(DESTDIR)$(prefix)/bin ]; then mkdir -p $(DESTDIR)$(prefix)/bin; fi
 	for EXEC in $(EXECS); do \
-	if [ -e $(DESTDIR)$(prefix)/bin/$$EXEC ]; then rm $(DESTDIR)$(prefix)/bin/$$EXEC; fi; \
 	install -m 755 $$EXEC $(DESTDIR)$(prefix)/bin/$$EXEC; \
+	done
+	if [ ! -d $(DESTDIR)$(datarootdir)/feud ]; then mkdir -p $(DESTDIR)$(datarootdir)/feud; fi
+	for DATAFILE in $(DATAFILES); do \
+	install -m 644 $$DATAFILE $(DESTDIR)$(datarootdir)/feud/$$EXEC; \
 	done
 
 uninstall:
 	for EXEC in $(EXECS); do \
 	if [ -e $(DESTDIR)$(prefix)/bin/$$EXEC ]; then rm $(DESTDIR)$(prefix)/bin/$$EXEC; fi; \
+	done
+	for DATAFILE in $(DATAFILES); do \
+	if [ -e $(DESTDIR)$(datarootdir)/feud/$$DATAFILE ]; then \
+	rm $(DESTDIR)$(datarootdir)/feud/$$DATAFILE; fi; \
 	done
