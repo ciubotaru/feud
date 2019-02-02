@@ -28,7 +28,7 @@ void create_regions(uint16_t nr_regions)
 {
 	if (world->regionlist != NULL || nr_regions == 0)
 		return;
-	char **region_names_new = load_region_names(nr_regions);
+	char **region_names_new = load_namelist("regions.txt", "Region", nr_regions);
 	int i;
 	for (i = 0; i < nr_regions; i++) {
 		add_region(region_names_new[i]);
@@ -41,7 +41,7 @@ void create_characters(uint16_t nr_characters)
 {
 	if (world->characterlist != NULL || nr_characters == 0)
 		return;
-	char **character_names_new = load_character_names(nr_characters);
+	char **character_names_new = load_namelist("characters.txt", "Player", nr_characters);
 	int i;
 	for (i = 0; i < nr_characters; i++) {
 		add_character(character_names_new[i]);

@@ -977,119 +977,104 @@ unsigned int save_game()
 	return retval;
 }
 
-char **load_region_names(const int size) {
+char **load_namelist(const char *filename, const char *placeholder, const int size) {
 	/**
-	 * First, search for file named "regions.txt" in ~/.feud.
+	 * First, search for filename in ~/.feud.
 	 * If not found, search in DATADIR.
-	 * If not found, use "Player###" naming
+	 * If not found, use numbered naming
 	**/
-
-	char *regions_file[3];
-	regions_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/regions.txt");
-	regions_file[1] = strconcat(DATADIR, "/regions.txt");
-	regions_file[2] = "regions.txt";
+	char *namelist_file[3];
+	namelist_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/", filename);
+	namelist_file[1] = strconcat(DATADIR, "/", filename);
+	namelist_file[2] = malloc(sizeof(char) * strlen(filename) + 1);
+	if (!namelist_file[2]) return NULL;
+	strncpy(namelist_file[2], filename, strlen(filename));
 	int i = 0;
 	int retval;
 	for (i = 0; i < 3; i++) {
-		if (!regions_file[i]) continue;
-		retval = access(regions_file[i], F_OK|R_OK);
+		if (!namelist_file[i]) continue;
+		retval = access(namelist_file[i], F_OK|R_OK);
 		if (retval != -1) break;
 	}
-
-	FILE *fp = NULL;
-	int lines_read = 0;
-	char **region_names = malloc(sizeof(char *) * size);
-	if (!region_names) return NULL;
-	char buffer[17];
-	if (retval != -1) {
-		fp = fopen(regions_file[i], "r+");
-		if (fp) {
-			while(! feof(fp) && lines_read < size) {
-				char *result = fgets(buffer, 17, fp);
-				if (result == NULL) {
-					break;
-				}
-				if (buffer[0] == '#' || buffer[0] == '\n' || buffer[0] == '\r')	continue;
-				region_names[lines_read] = malloc(sizeof(char) * 17);
-				sscanf(buffer, "%16s\n", region_names[lines_read]);
-				lines_read++;
-			}
-			fclose(fp);
-		}
+	int current_line = 0;
+	char **namelist = malloc(sizeof(char *) * size);
+	if (!namelist) return NULL;
+	FILE *fp = fopen(namelist_file[i], "r+");
+	if (!fp) {
+		free(namelist);
+		return NULL;
 	}
-
-	if (lines_read < size) {
-		int digits = floor(log10(abs(size))) + 1;
-		for (i = lines_read; i < size; i++) {
-			region_names[i] = malloc(sizeof(char) * 17);
-			if (!region_names[i]) goto err;
-			sprintf(region_names[i], "Region%0*d", digits, i + 1);
-		}
-	}
-	return region_names;
-err:
-	for (i = 0; i < size; i++) {
-		if (region_names[i]) free(region_names[i]);
-	}
-	free(region_names);
-	return NULL;
-}
-
-char **load_character_names(const int size) {
 	/**
-	 * First, search for file named "characters.txt" in ~/.feud.
-	 * If not found, search in DATADIR.
-	 * If not found, use "Region###" naming
+	 * read first char
+	 * if space, skip
+	 * if #, fast-forward to next line
+	 * if empty line, ff to next line
+	 * else read 16 chars and ff to next line
 	**/
-
-	char *characters_file[3];
-	characters_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/characters.txt");
-	characters_file[1] = strconcat(DATADIR, "/characters.txt");
-	characters_file[2] = "characters.txt";
-	int i = 0;
-	int retval;
-	for (i = 0; i < 3; i++) {
-		if (!characters_file[i]) continue;
-		retval = access(characters_file[i], F_OK|R_OK);
-		if (retval != -1) break;
-	}
-
-	FILE *fp = NULL;
-	int lines_read = 0;
-	char **character_names = malloc(sizeof(char *) * size);
-	if (!character_names) return NULL;
-	char buffer[17];
-	if (retval != -1) {
-		fp = fopen(characters_file[i], "r+");
-		if (fp) {
-			while(! feof(fp) && lines_read < size) {
-				char *result = fgets(buffer, 17, fp);
-				if (result == NULL) {
-					break;
-				}
-				if (buffer[0] == '#' || buffer[0] == '\n' || buffer[0] == '\r')	continue;
-				character_names[lines_read] = malloc(sizeof(char) * 17);
-				sscanf(buffer, "%16s\n", character_names[lines_read]);
-				lines_read++;
+	int current_char = 0;
+	int current_char_nr = 0;
+	int fast_forward = 0;
+	namelist[0] = malloc(17);
+	if (!namelist[0]) goto err;
+	while (current_line < size && !feof(fp)) {
+		current_char = fgetc(fp);
+		if (fast_forward == 1) {
+			if ((char) current_char == '\n') {
+				fast_forward = 0;
+				current_char_nr = 0;
+				continue;
 			}
-			fclose(fp);
+		}
+		else {
+			if (current_char_nr == 0) {
+				if ((char) current_char == '#') {
+					fast_forward = 1;
+					continue;
+				}
+				if ((char) current_char != '\n' && (char) current_char != '\r') {
+					namelist[current_line] = malloc(sizeof(char) * 17);
+					if (!namelist[current_line]) goto err;
+					namelist[current_line][0] = (char) current_char;
+					current_char_nr++;
+					continue;
+				}
+			}
+			else if (current_char_nr < 16) {
+				if ((char) current_char == '\n' || (char) current_char == '\r') {
+					namelist[current_line][current_char_nr] = '\0';
+					current_line++;
+					current_char_nr = 0;
+					continue;
+				}
+				else {
+					strncpy(namelist[current_line]+current_char_nr, (char *) &current_char, 1);
+					current_char_nr++;
+					continue;
+				}
+			}
+			else {
+				namelist[current_line][current_char_nr] = '\0';
+				current_char_nr = 0;
+				fast_forward = 1;
+				current_line++;
+			}
 		}
 	}
-
-	if (lines_read < size) {
+	fclose(fp);
+	if (current_line < size) {
 		int digits = floor(log10(abs(size))) + 1;
-		for (i = lines_read; i < size; i++) {
-			character_names[i] = malloc(sizeof(char) * 17);
-			if (!character_names[i]) goto err;
-			sprintf(character_names[i], "Player%0*d", digits, i + 1);
+		for (i = current_line; i < size; i++) {
+			namelist[i] = malloc(sizeof(char) * 17);
+			if (!namelist[i]) goto err;
+			sprintf(namelist[i], "%s%0*d", placeholder, digits, i + 1);
 		}
 	}
-	return character_names;
+	return namelist;
 err:
 	for (i = 0; i < size; i++) {
-		if (character_names[i]) free(character_names[i]);
+		if (namelist[i]) free(namelist[i]);
 	}
-	free(character_names);
+	free(namelist);
 	return NULL;
 }
 
