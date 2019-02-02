@@ -1650,24 +1650,33 @@ int editor_start_menu(WINDOW *local_win)
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
+	int sf_exists = savefile_exists();
+
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
-	wprintw(local_win, "  To open a saved game, press 'o'.\n");
-	wprintw(local_win, "  To create a new game, press 'c'.\n");
-	wprintw(local_win, "  To exit, press 'q'.");
+	wprintw(local_win, "  [N]ew game\n");
+	if (world->grid || sf_exists) wprintw(local_win, "  [L]oad game\n");
+	wprintw(local_win, "  [Q]uit\n");
 
 	int ch;
 	while (1) {
 		ch = tolower(wgetch(local_win));
 		switch (ch) {
-		case 'o':
-			return MAP_EDITOR;
-		case 'c':
-			return NEW_GAME;
-		case 'q':
-			return SHUTDOWN;
+			case 'l':
+				if (world->grid || sf_exists) {
+					return MAP_EDITOR;
+				}
+				break;
+			case 'n':
+				return NEW_GAME;
+				break;
+			case 'q':
+				return SHUTDOWN;
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -1797,9 +1806,11 @@ int map_editor(WINDOW *local_win)
 	ch = get_input(local_win);
 
 	switch (ch) {
-	case 27:		/* escape */
+	/**
+	case 27:
 		retval = MAIN_SCREEN;
 		break;
+	**/
 	case 1065:		/* up */
 		if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
 		break;
@@ -1835,7 +1846,7 @@ int map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'q':
-		retval = SHUTDOWN;
+		retval = START_MENU;
 		break;
 	case 'r':
 		retval = REGIONS_DIALOG;
