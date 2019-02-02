@@ -11,7 +11,7 @@ EXECS = feud feud-editor feud-ai feud-server
 all: $(EXECS)
 
 $(OBJS): %.o: %.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) -DDATADIR=\"$(datarootdir)/feud\" $< -o $@
 
 feud: $(CLI_OBJS) feud.o new.o mapgen.o window.o
 	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o new.o mapgen.o window.o -lncurses -lm

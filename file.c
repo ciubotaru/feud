@@ -5,6 +5,9 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>	/* for log10() */
+#include <unistd.h>	/* for R_OK */
+#include <ctype.h>	/* for isalnum */
 
 #if defined(__linux__) || defined(__CYGWIN__)
 
@@ -972,4 +975,62 @@ unsigned int save_game()
 	fclose(fp);
  ret:
 	return retval;
+}
+
+char **load_region_names(const int size) {
+	/**
+	 * First, search for file named "regions.txt" in ~/.feud.
+	 * If not found, search in DATADIR.
+	 * If not found, use "Region###" naming
+	**/
+
+	char *regions_file[3];
+	regions_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/regions.txt");
+	regions_file[1] = strconcat(DATADIR, "/regions.txt");
+	regions_file[2] = "regions.txt";
+	int i = 0;
+	int retval;
+	for (i = 0; i < 3; i++) {
+		if (!regions_file[i]) continue;
+		retval = access(regions_file[i], F_OK|R_OK);
+		if (retval != -1) break;
+	}
+
+	FILE *fp = NULL;
+	int lines_read = 0;
+	char **region_names = malloc(sizeof(char *) * size);
+	if (!region_names) return NULL;
+	char buffer[17];
+	if (retval != -1) {
+		fp = fopen(regions_file[i], "r+");
+		if (fp) {
+			while(! feof(fp) && lines_read < size) {
+				char *result = fgets(buffer, 17, fp);
+				if (result == NULL) {
+					break;
+				}
+				if (buffer[0] == '#' || buffer[0] == '\n' || buffer[0] == '\r')	continue;
+				region_names[lines_read] = malloc(sizeof(char) * 17);
+				sscanf(buffer, "%16s\n", region_names[lines_read]);
+				lines_read++;
+			}
+			fclose(fp);
+		}
+	}
+
+	if (lines_read < size) {
+		int digits = floor(log10(abs(size))) + 1;
+		for (i = lines_read; i < size; i++) {
+			region_names[i] = malloc(sizeof(char) * 17);
+			if (!region_names[i]) goto err;
+			sprintf(region_names[i], "Region%0*d", digits, i + 1);
+		}
+	}
+	return region_names;
+err:
+	for (i = 0; i < size; i++) {
+		if (region_names[i]) free(region_names[i]);
+	}
+	free(region_names);
+	return NULL;
 }

@@ -11,4 +11,6 @@ unsigned int load_game();
 
 unsigned int save_game();
 
+char **load_region_names(const int size);
+
 #endif				/* GAMEFILE_H */
