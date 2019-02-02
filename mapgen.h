@@ -21,6 +21,8 @@ float **create_region_centers(uint16_t nr_regions);
 
 void create_regions(uint16_t nr_regions);
 
+void create_characters(uint16_t nr_characters);
+
 void assign_tiles_to_centers();
 
 void recalculate_region_centers();

@@ -37,6 +37,19 @@ void create_regions(uint16_t nr_regions)
 	free(region_names_new);
 }
 
+void create_characters(uint16_t nr_characters)
+{
+	if (world->characterlist != NULL || nr_characters == 0)
+		return;
+	char **character_names_new = load_character_names(nr_characters);
+	int i;
+	for (i = 0; i < nr_characters; i++) {
+		add_character(character_names_new[i]);
+		free(character_names_new[i]);
+	}
+	free(character_names_new);
+}
+
 void assign_tiles_to_centers()
 {
 	uint16_t nr_regions = count_regions();

@@ -981,7 +981,7 @@ char **load_region_names(const int size) {
 	/**
 	 * First, search for file named "regions.txt" in ~/.feud.
 	 * If not found, search in DATADIR.
-	 * If not found, use "Region###" naming
+	 * If not found, use "Player###" naming
 	**/
 
 	char *regions_file[3];
@@ -1032,5 +1032,63 @@ err:
 		if (region_names[i]) free(region_names[i]);
 	}
 	free(region_names);
+	return NULL;
+}
+
+char **load_character_names(const int size) {
+	/**
+	 * First, search for file named "characters.txt" in ~/.feud.
+	 * If not found, search in DATADIR.
+	 * If not found, use "Region###" naming
+	**/
+
+	char *characters_file[3];
+	characters_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/characters.txt");
+	characters_file[1] = strconcat(DATADIR, "/characters.txt");
+	characters_file[2] = "characters.txt";
+	int i = 0;
+	int retval;
+	for (i = 0; i < 3; i++) {
+		if (!characters_file[i]) continue;
+		retval = access(characters_file[i], F_OK|R_OK);
+		if (retval != -1) break;
+	}
+
+	FILE *fp = NULL;
+	int lines_read = 0;
+	char **character_names = malloc(sizeof(char *) * size);
+	if (!character_names) return NULL;
+	char buffer[17];
+	if (retval != -1) {
+		fp = fopen(characters_file[i], "r+");
+		if (fp) {
+			while(! feof(fp) && lines_read < size) {
+				char *result = fgets(buffer, 17, fp);
+				if (result == NULL) {
+					break;
+				}
+				if (buffer[0] == '#' || buffer[0] == '\n' || buffer[0] == '\r')	continue;
+				character_names[lines_read] = malloc(sizeof(char) * 17);
+				sscanf(buffer, "%16s\n", character_names[lines_read]);
+				lines_read++;
+			}
+			fclose(fp);
+		}
+	}
+
+	if (lines_read < size) {
+		int digits = floor(log10(abs(size))) + 1;
+		for (i = lines_read; i < size; i++) {
+			character_names[i] = malloc(sizeof(char) * 17);
+			if (!character_names[i]) goto err;
+			sprintf(character_names[i], "Player%0*d", digits, i + 1);
+		}
+	}
+	return character_names;
+err:
+	for (i = 0; i < size; i++) {
+		if (character_names[i]) free(character_names[i]);
+	}
+	free(character_names);
 	return NULL;
 }
