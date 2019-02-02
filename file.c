@@ -45,13 +45,40 @@
 
 static uint16_t selected_character_id;
 
-char *strconcat(const char *input1, const char *input2)
+#define strconcat(...) (char *) strconcat_( count_arguments(#__VA_ARGS__), __VA_ARGS__)
+
+inline static unsigned int count_arguments(char *s)
 {
-	if (!input1 || !input2) return NULL;
-	char *output = malloc(strlen(input1) + strlen(input2) + 1);
-	if (!output) return NULL;
-	strcpy(output, input1);
-	strcpy(output + strlen(input1), input2);
+	unsigned i, argc = 1;
+	for (i = 0; s[i]; i++)
+		if (s[i] == ',')
+			argc++;
+	return argc;
+}
+
+static char *strconcat_(unsigned int count, ...)
+{
+	unsigned int i;
+	size_t len = 0;
+	va_list args;
+	va_start(args, count);
+	for (i = 0; i < count; i++) {
+		const char *tmp = va_arg(args, char *);
+		len += strlen(tmp);
+	}
+	va_end(args);
+
+	char *output = malloc(len + 1);
+	if (output == NULL) return NULL;
+
+	char *dst = output;
+	va_start(args, count);
+	for (i = 0; i < count; i++) {
+		const char *src = va_arg(args, char *);
+		while (*dst++ = *src++);
+		dst--;
+	}
+	va_end(args);
 	return output;
 }
 
@@ -64,15 +91,8 @@ int add_to_chronicle(char *format, ...)
 
 	if (!getenv("HOME"))
 		return 1;
-	struct stat st = { 0 };
-	char *logdir = strconcat(getenv("HOME"), SAVE_DIRNAME);
-	if (!logdir) return 2;
-	if (stat(logdir, &st) == -1) {
-		mkdir(logdir, 0700);
-	}
-	char *logfile = strconcat(logdir, LOG_FILENAME);
+	char *logfile = strconcat(getenv("HOME"), SAVE_DIRNAME, LOG_FILENAME);
 	if (!logfile) return 2;
-	free(logdir);
 
 	FILE *fp = fopen(logfile, "a");
 	free(logfile);
@@ -386,13 +406,7 @@ unsigned int load_game()
 	if (!getenv("HOME"))
 		return 1;
 	struct stat st = { 0 };
-	char *savedir = strconcat(getenv("HOME"), SAVE_DIRNAME);
-	if (!savedir) return 1;
-	if (stat(savedir, &st) == -1) {
-		mkdir(savedir, 0700);
-	}
-	char *savefile = strconcat(savedir, SAVE_FILENAME);
-	free(savedir);
+	char *savefile = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
 	if (!savefile) return 1;
 
 	if (stat(savefile, &st) == -1) {
@@ -715,14 +729,7 @@ unsigned int save_game()
 	if (!getenv("HOME"))
 		return 1;
 	/* write to file */
-	struct stat st = { 0 };
-	char *savedir = strconcat(getenv("HOME"), SAVE_DIRNAME);
-	if (!savedir) return 2;
-	if (stat(savedir, &st) == -1) {
-		mkdir(savedir, 0700);
-	}
-	char *savefile = strconcat(savedir, SAVE_FILENAME);
-	free(savedir);
+	char *savefile = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
 	if (!savefile) return 2;
 	FILE *fp = fopen(savefile, "w");
 	free(savefile);
