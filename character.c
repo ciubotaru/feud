@@ -244,17 +244,6 @@ void set_character_rank(character_t *character, unsigned char rank)
 	character->rank = rank;
 }
 
-character_t *get_character_by_order(int characterlist_selector)
-{
-	uint16_t counter = characterlist_selector;
-	character_t *current = world->characterlist;
-	while (current->next != NULL && counter > 0) {
-		counter--;
-		current = current->next;
-	}
-	return current;
-}
-
 int transfer_money(character_t *source, character_t *destination, const int amount)
 {
 	/* check if source and destination exist. NEEDED? */

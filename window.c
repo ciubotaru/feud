@@ -487,11 +487,12 @@ int give_region_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector = get_character_order(selected_character);
+	int characterlist_selector;
 	region_t *region = selected_region;
 	int give_region_ok = 0;
 
 	while (1) {
+		characterlist_selector = get_character_order(selected_character);
 		give_region_ok = 0;
 		wclear(local_win);
 		for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
@@ -538,18 +539,12 @@ int give_region_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				selected_character =
-				    get_character_by_order(characterlist_selector);
-			}
+			if (selected_character->prev)
+				selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				selected_character =
-				    get_character_by_order(characterlist_selector);
-			}
+			if (selected_character->next)
+				selected_character = selected_character->next;
 			break;
 		case 10:
 			if (give_region_ok) {
@@ -844,25 +839,25 @@ int successor_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (new_heir->prev) new_heir = new_heir->prev;
-			break;
-		case 1066:
-			if (new_heir->next) new_heir = new_heir->next;
-			break;
-		case 10:
-			if (new_heir != active_character) {
-				set_successor(active_character, new_heir);
-				heir = new_heir;
-			}
-			break;
-		case 'd':
-			heir = NULL;
-			set_successor(active_character, heir);
-			break;
-		case 'q':
-			return MAIN_SCREEN;
-			break;
+			case 1065:
+				if (new_heir->prev) new_heir = new_heir->prev;
+				break;
+			case 1066:
+				if (new_heir->next) new_heir = new_heir->next;
+				break;
+			case 10:
+				if (new_heir != active_character) {
+					set_successor(active_character, new_heir);
+					heir = new_heir;
+				}
+				break;
+			case 'd':
+				heir = NULL;
+				set_successor(active_character, heir);
+				break;
+			case 'q':
+				return MAIN_SCREEN;
+				break;
 		}
 	}
 }
@@ -2810,10 +2805,11 @@ int editor_successor_dialog(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	int i;
+	character_t *current;
 	character_t *active_character = world->selected_character;
 	character_t *heir = active_character->heir;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *new_heir = world->selected_character;
+	int characterlist_selector;
 
 	while (1) {
 		curs_set(FALSE);
@@ -2831,7 +2827,8 @@ int editor_successor_dialog(WINDOW *local_win)
 		uint16_t nr_characters = count_characters();
 		uint16_t counter = 0;
 		uint16_t section = 0;
-		character_t *current = world->characterlist;
+		current = world->characterlist;
+		characterlist_selector = get_character_order(new_heir);
 		while (current != NULL) {
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -2859,28 +2856,25 @@ int editor_successor_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (characterlist_selector > 0)
-				characterlist_selector--;
-			break;
-		case 1066:
-			if (characterlist_selector < nr_characters - 1)
-				characterlist_selector++;
-			break;
-		case 10:
-			heir = get_character_by_order(characterlist_selector);
-			if (heir->id != active_character->id)
+			case 1065:
+				if (new_heir->prev) new_heir = new_heir->prev;
+				break;
+			case 1066:
+				if (new_heir->next) new_heir = new_heir->next;
+				break;
+			case 10:
+				if (new_heir != active_character) {
+					set_successor(active_character, new_heir);
+					heir = new_heir;
+				}
+				break;
+			case 'd':
+				heir = NULL;
 				set_successor(active_character, heir);
-			else
-				heir = active_character->heir;
-			break;
-		case 'd':
-			heir = NULL;
-			set_successor(active_character, heir);
-			break;
-		case 'q':
-			return EDIT_CHARACTER_DIALOG;
-			break;
+				break;
+			case 'q':
+				return EDIT_CHARACTER_DIALOG;
+				break;
 		}
 	}
 }

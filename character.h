@@ -51,8 +51,6 @@ unsigned char get_character_rank(character_t *character);
 
 void set_character_rank(character_t *character, unsigned char rank);
 
-character_t *get_character_by_order(int characterlist_selector);
-
 int transfer_money(character_t *source, character_t *destination, const int amount);
 
 void set_expected_age(character_t *character);
