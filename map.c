@@ -39,6 +39,7 @@ void fill_region_details(region_t * region, const char *name)
 	strcpy(region->name, name);
 	region->owner = NULL;
 	region->tiles = NULL;
+	region->prev = NULL;
 	region->next = NULL;
 }
 
@@ -64,6 +65,7 @@ region_t *add_region(const char *name)
 	if (!current->next)
 		return NULL;
 	fill_region_details(current->next, name);
+	current->next->prev = current;
 	return current->next;
 }
 
@@ -282,17 +284,16 @@ void remove_region(region_t * region)
 		return;
 
 	clear_region(region);
-	region_t *prev = NULL;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 		if (current == region) {
-			if (prev) prev->next = current->next;
+			if (current->prev) current->prev->next = current->next;
 			else world->regionlist = current->next;
+			if (current->next) current->next->prev = current->prev;
 			region_t *tmp = current;
 			free(tmp);
 			return;
 		}
-		prev = current;
 		current = current->next;
 	}
 }
@@ -300,21 +301,22 @@ void remove_region(region_t * region)
 void sort_region_list() {
 	if (world->regionlist == NULL || world->regionlist->next == NULL) return;
 	int permutations;
-	region_t *previous, *current, *next;
+	region_t *current, *next;
 	do {
 		current = world->regionlist;
-		previous = NULL;
 		next = current->next;
 		permutations = 0;
 		while (next != NULL) {
 			if (strcmp(current->name, next->name) > 0) {
 				permutations++;
-				if (previous != NULL) previous->next = next;
+				if (current->prev != NULL) current->prev->next = next;
 				else world->regionlist = next;
+				if (next->next) next->next->prev = current;
+				next->prev = current->prev;
 				current->next = next->next;
+				current->prev = next;
 				next->next = current;
 			}
-			previous = current;
 			current = next;
 			next = next->next;
 		}

@@ -28,6 +28,7 @@ typedef struct region {
 	char name[17];
 	tile_t **tiles;		/* pointer to an array of pointers to tiles */
 	character_t *owner;
+	struct region *prev;
 	struct region *next;
 } region_t;
 
