@@ -236,6 +236,7 @@ int new_game_dialog(WINDOW *local_win)
 
 	world->moves_left = get_dice();
 	save_game();
+	clearlog();
 
 	wprintw(local_win,
 		"\n\n  Map created and saved. To continue, press any key.");

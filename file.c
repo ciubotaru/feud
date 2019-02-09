@@ -85,6 +85,24 @@ static char *strconcat_(unsigned int count, ...)
 	return output;
 }
 
+void clearlog() {
+	if (!getenv("HOME")) return;
+	struct stat st = { 0 };
+	char *logdir = strconcat(getenv("HOME"), SAVE_DIRNAME);
+	if (!logdir) return;
+	if (stat(logdir, &st) == -1) {
+		mkdir(logdir, 0700);
+	}
+	char *logfile = strconcat(logdir, LOG_FILENAME);
+	if (!logfile) return;
+	free(logdir);
+
+	FILE *fp = fopen(logfile, "w");
+	free(logfile);
+	if (fp == NULL) return;
+	fclose(fp);
+}
+
 int add_to_chronicle(char *format, ...)
 {
 	va_list argptr;
