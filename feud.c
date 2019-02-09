@@ -267,6 +267,7 @@ int main()
 		case GAME_OVER:
 			info_dialog(local_win);
 			delete_savefile();
+			rename_logfile();
 			current_screen = SHUTDOWN;
 			break;
 		case HEIR_DIALOG:

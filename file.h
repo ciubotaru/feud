@@ -19,4 +19,6 @@ int savefile_exists();
 
 void delete_savefile();
 
+void rename_logfile();
+
 #endif				/* GAMEFILE_H */

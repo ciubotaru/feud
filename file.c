@@ -8,6 +8,7 @@
 #include <math.h>	/* for log10() */
 #include <unistd.h>	/* for R_OK */
 #include <ctype.h>	/* for isalnum */
+#include <time.h>
 
 #if defined(__linux__) || defined(__CYGWIN__)
 
@@ -1119,4 +1120,19 @@ void delete_savefile() {
 	if (!filename) return;
 	if (access(filename, F_OK) == 0) remove(filename);
 	free(filename);
+}
+
+void rename_logfile() {
+	if (!getenv("HOME")) return;
+	char *old_filename = strconcat(getenv("HOME"), SAVE_DIRNAME, LOG_FILENAME);
+	if (!old_filename) return;
+	char unixtime[100];
+//	time_t *now;
+	time_t time_now = time(NULL);
+	snprintf(unixtime, 99, "%i", (int) time_now);
+	char *new_filename = strconcat(getenv("HOME"), SAVE_DIRNAME, "/", unixtime, ".log");
+	if (!new_filename) return;
+	rename(old_filename, new_filename);
+	free(old_filename);
+	free(new_filename);
 }
