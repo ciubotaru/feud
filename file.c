@@ -1112,3 +1112,11 @@ int savefile_exists() {
 	free(filename);
 	return retval;
 }
+
+void delete_savefile() {
+	if (!getenv("HOME")) return;
+	char *filename = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
+	if (!filename) return;
+	if (access(filename, F_OK) == 0) remove(filename);
+	free(filename);
+}

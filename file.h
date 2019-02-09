@@ -17,4 +17,6 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 
 int savefile_exists();
 
+void delete_savefile();
+
 #endif				/* GAMEFILE_H */
