@@ -16,12 +16,18 @@ float **create_region_centers(uint16_t nr_regions)
 		return NULL;
 	int i;
 	region_centers = malloc(sizeof(float *) * nr_regions);
+	if (!region_centers) return NULL;
 	for (i = 0; i < nr_regions; i++) {
 		region_centers[i] = malloc(sizeof(float) * 2);
+		if (!region_centers[i]) goto err;
 		region_centers[i][0] = fmod(rand(), world->grid->height);
 		region_centers[i][1] = fmod(rand(), world->grid->width);
 	}
 	return region_centers;
+err:
+	for (i = 0; i < nr_regions; i++) if (region_centers[i]) free(region_centers[i]);
+	free(region_centers);
+	return NULL;
 }
 
 void create_regions(uint16_t nr_regions)
@@ -138,11 +144,17 @@ void voronoi(int nr_regions)
 unsigned char **create_height_grid() {
 	if (!world->grid || !world->grid->tiles) return NULL;
 	unsigned char **grid = malloc(sizeof(char *) * world->grid->height);
+	if (!grid) return NULL;
 	int i;
 	for (i = 0; i < world->grid->height; i++) {
 		grid[i] = malloc(world->grid->width);
+		if (!grid[i]) goto err;
 	}
 	return grid;
+err:
+	for (i = 0; i < world->grid->height; i++) if (grid[i]) free(grid[i]);
+	free(grid);
+	return NULL;
 }
 
 void delete_height_grid(unsigned char **grid) {
@@ -168,6 +180,7 @@ void blur_height_grid(unsigned char **grid) {
 	if (!world->grid || !world->grid->tiles) return;
 	int i, j, x, y, x_min, x_max, y_min, y_max, count;
 	unsigned char **grid_tmp = create_height_grid();
+	if (!grid_tmp) return;
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
 			grid_tmp[i][j] = grid[i][j];
