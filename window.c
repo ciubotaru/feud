@@ -378,55 +378,33 @@ int regions_dialog(WINDOW *local_win)
 
 	int user_move = get_input(local_win);
 	switch (user_move) {
-	case 1065:
-		if (regionlist_selector > 0) {
-			regionlist_selector--;
-			counter = 0;
-			current_region = world->regionlist;
-			while (current_region != NULL) {
-				if (current_region->owner != NULL
-				    && current_region->owner ==
-				    world->selected_character) {
-					if (counter == regionlist_selector) {
-						selected_region = current_region;
-						break;
-					}
-					counter++;
-				}
-				current_region = current_region->next;
+		case 1065:
+			if (regionlist_selector > 0) {
+				regionlist_selector--;
+				do {
+					selected_region = selected_region->prev;
+				} while (selected_region && selected_region->owner != world->selected_character);
 			}
-		}
-		break;
-	case 1066:
-		if (regionlist_selector < nr_regions - 1) {
-			regionlist_selector++;
-			counter = 0;
-			current_region = world->regionlist;
-			while (current_region != NULL) {
-				if (current_region->owner != NULL
-				    && current_region->owner ==
-				    world->selected_character) {
-					if (counter == regionlist_selector) {
-						selected_region = current_region;
-						break;
-					}
-					counter++;
-				}
-				current_region = current_region->next;
+			break;
+		case 1066:
+			if (regionlist_selector < nr_regions - 1) {
+				regionlist_selector++;
+				do {
+					selected_region = selected_region->next;
+				} while (selected_region && selected_region->owner != world->selected_character);
 			}
-		}
-		break;
-	case 'e':
-		retval = EDIT_REGION_DIALOG;
-		break;
-	case 'g':		/* give to another character */
-		retval = GIVE_REGION_DIALOG;
-		break;
-	case 'q':		/* return to map */
-		retval = MAIN_SCREEN;
-		break;
-	default:
-		break;
+			break;
+		case 'e':
+			retval = EDIT_REGION_DIALOG;
+			break;
+		case 'g':		/* give to another character */
+			retval = GIVE_REGION_DIALOG;
+			break;
+		case 'q':		/* return to map */
+			retval = MAIN_SCREEN;
+			break;
+		default:
+			break;
 	}
 	return retval;
 }
@@ -1224,47 +1202,17 @@ int promote_soldier_dialog(WINDOW *local_win)
 			case 1065:
 				if (regionlist_selector > 0) {
 					regionlist_selector--;
-					counter = 0;
-					current_region = world->regionlist;
-					while (current_region != NULL) {
-						if (current_region->owner !=
-						    NULL
-						    && current_region->owner ==
-						    world->selected_character) {
-							if (counter ==
-							    regionlist_selector)
-							{
-								selected_region = current_region;
-								break;
-							}
-							counter++;
-						}
-						current_region =
-						    current_region->next;
-					}
-				}
+                    do {
+                        selected_region = selected_region->prev;
+					} while (selected_region && selected_region->owner != world->selected_character);
+                }
 				break;
 			case 1066:
 				if (regionlist_selector < nr_regions - 1) {
 					regionlist_selector++;
-					counter = 0;
-					current_region = world->regionlist;
-					while (current_region != NULL) {
-						if (current_region->owner !=
-						    NULL
-						    && current_region->owner ==
-						    world->selected_character) {
-							if (counter ==
-							    regionlist_selector)
-							{
-								selected_region = current_region;
-								break;
-							}
-							counter++;
-						}
-						current_region =
-						    current_region->next;
-					}
+					do {
+                        selected_region = selected_region->next;
+					} while (selected_region && selected_region->owner != world->selected_character);
 				}
 				break;
 			case 'q':	/* return to map */
@@ -2138,38 +2086,24 @@ int editor_regions_dialog(WINDOW *local_win)
 	int user_move = get_input(local_win);
 	switch (user_move) {
 	case 1065:
-		if (regionlist_selector > 0) {
-			--regionlist_selector;
-			selected_region =
-			    get_region_by_order(regionlist_selector);
-		}
+		if (selected_region->prev)
+			selected_region = selected_region->prev;
 		break;
 	case 1066:
-		if (regionlist_selector < nr_regions - 1) {
-			regionlist_selector++;
-			selected_region =
-			    get_region_by_order(regionlist_selector);
-		}
+		if (selected_region->next)
+			selected_region = selected_region->next;
 		break;
 	case 'a':
 		retval = ADD_REGION_DIALOG;
 		break;
 	case 'd':
-		counter = 0;
-		current = world->regionlist;
-		while (counter < regionlist_selector) {
-			current = current->next;
-			counter++;
-		}
-		if (current != NULL) {
-			remove_region(current);
-			sort_region_list();
-			if (regionlist_selector > 0) {
-				regionlist_selector--;
-				selected_region =
-				    get_region_by_order(regionlist_selector);
-			}
-		}
+		current = selected_region;
+		if (selected_region->next)
+			selected_region = selected_region->next;
+		else if (selected_region->prev)
+			selected_region = selected_region->prev;
+		else selected_region = NULL;
+		remove_region(current);
 		break;
 	case 'e':
 		retval = RENAME_REGION_DIALOG;
