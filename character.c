@@ -334,7 +334,7 @@ int is_gameover()
 	if (nr_sovereigns == 1) {
 		character = get_sovereign(world->characterlist);
 		add_to_chronicle
-		    ("%s is the only sovereign left. The game is over!",
+		    ("%s is the only sovereign left. The game is over!\n",
 		     character->name);
 		return 1;
 	}
