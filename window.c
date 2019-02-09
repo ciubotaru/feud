@@ -2239,9 +2239,10 @@ int region_to_character(WINDOW *local_win)
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	region_t *region = selected_region;
-	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *selected_character;
+	if (region->owner) selected_character = region->owner;
+	else selected_character = world->selected_character;
+	int characterlist_selector;
 
 	while (1) {
 		curs_set(FALSE);
@@ -2261,6 +2262,7 @@ int region_to_character(WINDOW *local_win)
 		uint16_t nr_characters = count_characters();
 		uint16_t counter = 0;
 		uint16_t section = 0;
+		characterlist_selector = get_character_order(selected_character);
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -2286,47 +2288,25 @@ int region_to_character(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
-			break;
-		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
-			break;
-		case 10:
-			change_region_owner(selected_character, region);
-			return REGIONS_DIALOG;
-			break;
-		case 'd':
-			change_region_owner(NULL, region);
-			return REGIONS_DIALOG;
-			break;
-		case 'q':
-			return REGIONS_DIALOG;
-			break;
+			case 1065:
+				if (selected_character->prev)
+					selected_character = selected_character->prev;
+				break;
+			case 1066:
+				if (selected_character->next)
+					selected_character = selected_character->next;
+				break;
+			case 10:
+				change_region_owner(selected_character, region);
+				return REGIONS_DIALOG;
+				break;
+			case 'd':
+				change_region_owner(NULL, region);
+				return REGIONS_DIALOG;
+				break;
+			case 'q':
+				return REGIONS_DIALOG;
+				break;
 		}
 	}
 }
@@ -2955,27 +2935,27 @@ int editor_homage_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (lord->prev) lord = lord->prev;
-			break;
-		case 1066:
-			if (lord->next) lord = lord->next;
-			break;
-		case 10:
-			if (set_lord_ok) {
-				active_character->lord = lord;
+			case 1065:
+				if (lord->prev) lord = lord->prev;
+				break;
+			case 1066:
+				if (lord->next) lord = lord->next;
+				break;
+			case 10:
+				if (set_lord_ok) {
+					active_character->lord = lord;
+					return EDIT_CHARACTER_DIALOG;
+				}
+				break;
+			case 'd':
+				if (unset_lord_ok) {
+					active_character->lord = NULL;
+					return EDIT_CHARACTER_DIALOG;
+				}
+				break;
+			case 'q':
 				return EDIT_CHARACTER_DIALOG;
-			}
-			break;
-		case 'd':
-			if (unset_lord_ok) {
-				active_character->lord = NULL;
-				return EDIT_CHARACTER_DIALOG;
-			}
-			break;
-		case 'q':
-			return EDIT_CHARACTER_DIALOG;
-			break;
+				break;
 		}
 	}
 }
@@ -2988,8 +2968,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	int characterlist_selector;
 
 	unsigned char alliance_ok, neutral_ok, war_ok;
 
@@ -3017,32 +2996,32 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 			else status = NEUTRAL;
 		}
 		switch (status) {
-		case NEUTRAL:
-			mvwprintw(local_win, 2, 2,
-				  "To change to alliance, press 'a'");
-			alliance_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to war, press 'w'");
-			war_ok = 1;
-			break;
-		case ALLIANCE:
-			mvwprintw(local_win, 2, 2,
-				  "To change to neutral, press 'n'");
-			neutral_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to war, press 'w'");
-			war_ok = 1;
-			break;
-		case WAR:
-			mvwprintw(local_win, 2, 2,
-				  "To change to alliance, press 'a'");
-			alliance_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to neutral, press 'n'");
-			neutral_ok = 1;
-			break;
-		case 3:
-			break;
+			case NEUTRAL:
+				mvwprintw(local_win, 2, 2,
+					  "To change to alliance, press 'a'");
+				alliance_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to war, press 'w'");
+				war_ok = 1;
+				break;
+			case ALLIANCE:
+				mvwprintw(local_win, 2, 2,
+					  "To change to neutral, press 'n'");
+				neutral_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to war, press 'w'");
+				war_ok = 1;
+				break;
+			case WAR:
+				mvwprintw(local_win, 2, 2,
+					  "To change to alliance, press 'a'");
+				alliance_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to neutral, press 'n'");
+				neutral_ok = 1;
+				break;
+			case 3:
+				break;
 		}
 
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
@@ -3054,6 +3033,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
+		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
 				current_dipstatus =
@@ -3090,34 +3070,12 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->prev)
+				selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->next)
+				selected_character = selected_character->next;
 			break;
 		case 'a':	/* alliance */
 			if (alliance_ok)
