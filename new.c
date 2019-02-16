@@ -20,8 +20,8 @@ int new_game_dialog(WINDOW *local_win)
 
 	wprintw(local_win,
 		"\n\n  You are about to create a new game. This will destroy the old game and\n  overwrite the save file. Press 'y' to confirm.");
-	int confirm = wgetch(local_win);
-	if (confirm != 'y' && confirm != 'Y') {
+	int confirm = tolower(wgetch(local_win));
+	if (confirm != 'y') {
 		return 1;
 	}
 
@@ -158,24 +158,20 @@ int new_game_dialog(WINDOW *local_win)
 	wclrtoeol(local_win);
 	mvwprintw(local_win, 10, 40, "%i", p);
 
-	int decimal = (int) floor(log10(p) + 2);
-	char *name = malloc(6 + decimal);
-	character_t *character = NULL;
+	create_characters(p);
+	character_t *character = world->characterlist;
 	region_t *region = world->regionlist;
-	piece_t *piece = NULL;
 	int region_size_min = 100;
 	tile_t *tile = NULL;
 	for (i = 0; i < p; i++) {
-		sprintf(name, "Player%0*d", decimal,  i + 1);
-		character = add_character(name);
 		set_character_rank(character, KING);
 		change_region_owner(character, region);
 		tile = region_center(region);
-		piece = add_piece(NOBLE, tile->height, tile->width, character);
+		add_piece(NOBLE, tile->height, tile->width, character);
 		if (region->size < region_size_min) region_size_min = region->size;
 		region = region->next;
+		character = character->next;
 	}
-	free(name);
 	world->selected_character = world->characterlist;
 
 	int s = MIN(3, region_size_min - 1);
@@ -240,9 +236,10 @@ int new_game_dialog(WINDOW *local_win)
 
 	world->moves_left = get_dice();
 	save_game();
+	clearlog();
 
 	wprintw(local_win,
-		"\n\n  Map created and saved. You can edit it now. Press any key.");
+		"\n\n  Map created and saved. To continue, press any key.");
 	curs_set(FALSE);
 	noecho();
 	wgetch(local_win);

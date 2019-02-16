@@ -25,6 +25,7 @@ character_t *create_characterlist()
 
 static void fill_character_details(character_t *character, const char *name)
 {
+	if (!character) return;
 	character->id = world->next_character_id;
 	world->next_character_id++;
 	strcpy(character->name, name);
@@ -77,7 +78,7 @@ character_t *add_character_before(character_t *parent, const char *name)
 	character_t *current = world->characterlist;
 
 	/*fast-forward to parent or to the end of list*/
-	while (current != parent && current != NULL) {
+	while (current != parent && current->next != NULL) {
 		current = current->next;
 	}
 
@@ -243,17 +244,6 @@ void set_character_rank(character_t *character, unsigned char rank)
 	character->rank = rank;
 }
 
-character_t *get_character_by_order(int characterlist_selector)
-{
-	int counter = characterlist_selector;
-	character_t *current = world->characterlist;
-	while (current->next != NULL && counter > 0) {
-		counter--;
-		current = current->next;
-	}
-	return current;
-}
-
 int transfer_money(character_t *source, character_t *destination, const int amount)
 {
 	/* check if source and destination exist. NEEDED? */
@@ -289,9 +279,9 @@ void set_successor(character_t *character, character_t *successor)
 	return;
 }
 
-unsigned int count_characters()
+uint16_t count_characters()
 {
-	unsigned int count = 0;
+	uint16_t count = 0;
 	character_t *current = world->characterlist;
 	while (current != NULL) {
 		count++;
@@ -344,7 +334,7 @@ int is_gameover()
 	if (nr_sovereigns == 1) {
 		character = get_sovereign(world->characterlist);
 		add_to_chronicle
-		    ("%s is the only sovereign left. The game is over!",
+		    ("%s is the only sovereign left. The game is over!\n",
 		     character->name);
 		return 1;
 	}
@@ -353,7 +343,7 @@ int is_gameover()
 
 void check_death()
 {
-	char message[255] = { 0 };
+	world->message[0] = '\0';
 	if (world->check_death == 0)
 		return;
 	/**
@@ -369,7 +359,7 @@ void check_death()
 			add_to_chronicle("%s %s lost all his land.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -378,7 +368,7 @@ void check_death()
 			add_to_chronicle("%s %s was killed.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}
@@ -390,7 +380,7 @@ void check_death()
 			add_to_chronicle("%s %s died of old age.\n",
 					rank_name[current_character->rank],
 					current_character->name);
-			add_to_chronicle(message);
+			add_to_chronicle(world->message);
 			succession(current_character);
 			remove_character(current_character);
 		}

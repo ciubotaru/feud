@@ -67,19 +67,16 @@ void add_user_message(char *new_text)
 }
 **/
 
-int validate_game_data(char **error_message)
+int validate_game_data()
 {
 	/* returns 0 if game is playable or 1 otherwise */
+	if (!world) create_world();
 	char *msg;
 	int error = 0;
 	int i, j;
 	character_t *character = NULL;
 	region_t *region = NULL;
 	piece_t *piece = NULL;
-	if (world == NULL) {
-		msg = "World not created";
-		goto error;
-	}
 	int total_months =
 	    world->current_time.tm_year * 12 + world->current_time.tm_mon;
 
@@ -118,7 +115,7 @@ int validate_game_data(char **error_message)
 	}
 
 	/* There should be at least two characters */
-	int nr_characters = count_characters();
+	uint16_t nr_characters = count_characters();
 	if (nr_characters < 2) {
 		msg = "Less than 2 heroes.";
 		goto error;
@@ -256,9 +253,6 @@ int validate_game_data(char **error_message)
 	return 0;
 
  error:
-	if (error_message) {
-		*error_message = malloc(strlen(msg) + 1);
-		memcpy(*error_message, msg, strlen(msg) + 1);
-	}
+	memcpy(world->message, msg, strlen(msg) + 1);
 	return 1;
 }

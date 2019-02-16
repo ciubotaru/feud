@@ -28,6 +28,7 @@ typedef struct region {
 	char name[17];
 	tile_t **tiles;		/* pointer to an array of pointers to tiles */
 	character_t *owner;
+	struct region *prev;
 	struct region *next;
 } region_t;
 
@@ -63,7 +64,7 @@ uint16_t count_tiles_by_owner(character_t *owner);
 
 uint16_t count_regions_by_owner(character_t *owner);
 
-int count_regions();
+uint16_t count_regions();
 
 void update_land_ranking();
 

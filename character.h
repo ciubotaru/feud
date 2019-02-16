@@ -15,7 +15,7 @@ typedef struct character {
 	uint16_t id;
 	char name[17];		/* 16 + endchar */
 	uint16_t money;
-	enum ranklist rank;
+	unsigned char rank;
 	uint16_t rank_land;
 	uint16_t rank_army;
 	uint16_t rank_money;
@@ -51,15 +51,13 @@ unsigned char get_character_rank(character_t *character);
 
 void set_character_rank(character_t *character, unsigned char rank);
 
-character_t *get_character_by_order(int characterlist_selector);
-
 int transfer_money(character_t *source, character_t *destination, const int amount);
 
 void set_expected_age(character_t *character);
 
 void set_successor(character_t *character, character_t *successor);
 
-unsigned int count_characters();
+uint16_t count_characters();
 
 void update_money_ranking();
 

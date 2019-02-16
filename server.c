@@ -8,7 +8,6 @@
 #include "world.h"
 
 #define MAXLINE 1024
-#define ABOUT_STRING "Feud Server v0.0.3"
 
 #define SETUP_LOOP 0
 #define GAME_LOOP 1
@@ -45,7 +44,7 @@ void reset()
 
 void print_about()
 {
-	dprintf(STDOUT_FILENO, "%s\n", ABOUT_STRING);
+	dprintf(STDOUT_FILENO, "Feud Server v%s\n", PACKAGE_VERSION);
 	return;
 }
 
@@ -231,10 +230,10 @@ void print_status()
 		world->grid->width,
 		world->grid->height);
 	dprintf(STDOUT_FILENO,
-		" Regions: %i\n",
+		" Regions: %u\n",
 		count_regions());
 	dprintf(STDOUT_FILENO,
-		" Players: %i\n",
+		" Players: %u\n",
 		count_characters());
 	character_t *turn = world->selected_character;
 	dprintf(STDOUT_FILENO,
@@ -261,11 +260,11 @@ void print_status_player(character_t *character) {
 	dprintf(STDOUT_FILENO, "Die: %s of %i\n", months[character->deathdate.tm_mon], character->deathdate.tm_year);
 	uint16_t left_months = 12 * (character->deathdate.tm_year - world->current_time.tm_year) + character->deathdate.tm_mon - world->current_time.tm_mon;
 	dprintf(STDOUT_FILENO, "Left: %i year(s) %i month(s)\n", left_months / 12, left_months % 12);
-	dprintf(STDOUT_FILENO, "Regions: %i (%i tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
-	dprintf(STDOUT_FILENO, "Army: %i\n", count_pieces_by_owner(character));
-	dprintf(STDOUT_FILENO, "Money: %i\n", get_money(character));
+	dprintf(STDOUT_FILENO, "Regions: %u (%u tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
+	dprintf(STDOUT_FILENO, "Army: %u\n", count_pieces_by_owner(character));
+	dprintf(STDOUT_FILENO, "Money: %u\n", get_money(character));
 	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
-	dprintf(STDOUT_FILENO, "Vassals: %i\n", count_vassals(character));
+	dprintf(STDOUT_FILENO, "Vassals: %u\n", count_vassals(character));
 	if (world->selected_character == character) dprintf(STDOUT_FILENO,
 		"Moves left: %i\n",
 		world->moves_left);
@@ -303,11 +302,12 @@ void setup_loop()
 		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
 		char *token = strtok(command, " \n");	/* remove trailing newline */
+		if (!token) continue;
 		if (!strcmp(token, "about")) {
 			print_about();
 			continue;
 		}
-		else if (!strcmp(token, "board")) {
+		if (!strcmp(token, "board")) {
 			uint16_t coords[2];
 			int i;
 			int success = 1;
@@ -559,7 +559,8 @@ void setup_loop()
 					continue;
 				}
 				char *money_ch = strtok(NULL, " \n");
-				uint16_t money = (uint16_t) atoi(money_ch);
+				uint16_t money = 0;
+				if (money_ch) money = (uint16_t) atoi(money_ch);
 				set_money(character, money);
 				dprintf(STDOUT_FILENO, "OK\n");
 				continue;
@@ -614,6 +615,12 @@ void setup_loop()
 				char *rank_ch = strtok(NULL, " \n");
 				int rank = 0;
 				int success = 1;
+				if (!rank_ch) {
+					dprintf(STDOUT_FILENO,
+						"Error: invalid rank (type 'help player' for more info)\n");
+					success = 0;
+					continue;
+				}
 				switch (rank_ch[0]) {
 				case 'k':
 					rank = 4;
@@ -780,15 +787,13 @@ void setup_loop()
 			continue;
 		}
 		if (!strcmp(token, "save")) {
-			char *msg;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) {
 				dprintf(STDOUT_FILENO, "OK\n");
 				save_game();
 			}
 			else {
-				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: Not saving. %s\n", ((world && strlen(world->message) > 0) ? world->message : "Unknown error"));
 			}
 			continue;
 		}
@@ -825,7 +830,7 @@ void setup_loop()
 				}
 				character_t *current = world->characterlist;
 				while (current != NULL) {
-					printf("%s %i. %s, %s, %i coins, %i soldier(s), %i region(s), %i tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
+					printf("%s %u. %s, %s, %u coins, %u soldier(s), %u region(s), %u tile(s)\n", (current == world->selected_character ? "*" : " "), current->id, current->name, rank_name[current->rank], current->money, count_pieces_by_owner(current), count_regions_by_owner(current), count_tiles_by_owner(current));
 					current = current->next;
 				}
 			}
@@ -973,12 +978,10 @@ void setup_loop()
 			continue;
 		}
 		if (!strcmp(token, "validate")) {
-			char *msg = NULL;
-			int result = validate_game_data(&msg);
+			int result = validate_game_data();
 			if (result == 0) dprintf(STDOUT_FILENO, "OK\n");
 			else {
-				dprintf(STDOUT_FILENO, "Error: %s\n", msg);
-				free(msg);
+				dprintf(STDOUT_FILENO, "Error: %s\n", world->message);
 			}
 			continue;
 		} else
@@ -1002,6 +1005,7 @@ int main(int argc, char **argv)
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
+	if (!stdin_buffer) return 0;
 	stdin_buffer->size = 0;
 	stage = SETUP_LOOP;
 	while (1) {

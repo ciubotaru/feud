@@ -43,7 +43,7 @@ Turns and moves
 
 The players move their pieces (and perform other actions) in turns. The
 number of tiles that a player is allowed to move his pieces is determined
-by a random number from one to siz (a roll of an ordinary six-sided dice).
+by a random number from one to six (a roll of an ordinary six-sided dice).
 Within this number, the player can move any piece, in any order.
 
 If a player gets six, he can take money (see below) instead of moving.
@@ -77,7 +77,11 @@ be increased by:
 Diplomacy
 ---------
 
-Players can be: allies, enemies or neutral. Lord and vassal are always allies.
+Players can be: allies, enemies or neutral:
+  * Allies can not claim each other's land or take each other's pieces.
+  * Taking a piece or claiming a region from a neutral player triggers war.
+Lord and vassal are always allies.
+
 Diplomatic relations are established as follows:
 * Neutral players can negotiate an alliance (one offers alliance, and the other
   one accepts the offer).

@@ -10,6 +10,7 @@
 tile_t *tile_init()
 {
 	tile_t *instance = malloc(sizeof(tile_t));
+	if (!instance) return NULL;
 	instance->walkable = 1;
 	instance->region = NULL;
 	instance->piece = NULL;
@@ -31,24 +32,28 @@ region_t *create_regionlist()
 
 void fill_region_details(region_t * region, const char *name)
 {
+	if (!region) return;
 	region->id = world->next_region_id;
 	world->next_region_id++;
 	region->size = 0;	/* start with one tile */
 	strcpy(region->name, name);
 	region->owner = NULL;
 	region->tiles = NULL;
+	region->prev = NULL;
 	region->next = NULL;
 }
 
 region_t *add_region(const char *name)
 {
+	region_t *current;
 	if (world->regionlist == NULL) {
-		world->regionlist = create_regionlist();
-		fill_region_details(world->regionlist, name);
-		return world->regionlist;
+		current = create_regionlist();
+		fill_region_details(current, name);
+		world->regionlist = current;
+		return current;
 	}
 
-	region_t *current = world->regionlist;
+	current = world->regionlist;
 
 	/*fast-forward to the end of list */
 	while (current->next != NULL) {
@@ -60,6 +65,7 @@ region_t *add_region(const char *name)
 	if (!current->next)
 		return NULL;
 	fill_region_details(current->next, name);
+	current->next->prev = current;
 	return current->next;
 }
 
@@ -79,9 +85,9 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	if (tile->region == NULL && new_region != NULL) {
 		tile->region = new_region;
 		new_region->size++;
-		new_region->tiles =
-		    realloc(new_region->tiles,
-			    (new_region->size) * sizeof(tile_t *));
+		tile_t **tmp = realloc(new_region->tiles,
+		    (new_region->size) * sizeof(tile_t *));
+		if (tmp) new_region->tiles = tmp;
 		new_region->tiles[new_region->size - 1] = tile;
 		return;
 	}
@@ -89,6 +95,7 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	else if (tile->region != NULL && new_region != NULL) {
 		tile_t **newlist =
 		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
+		if (!newlist) return;
 		j = 0;
 		for (i = 0; i < tile->region->size; i++) {
 			if ((tile->region->tiles)[i] != tile) {
@@ -97,9 +104,9 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 			}
 		}
 		tile->region->size--;
-		new_region->tiles =
-		    realloc(new_region->tiles,
-			    (new_region->size + 1) * sizeof(tile_t *));
+		tile_t **tmp = realloc(new_region->tiles,
+		    (new_region->size + 1) * sizeof(tile_t *));
+		if (tmp) new_region->tiles = tmp;
 		new_region->size++;
 		new_region->tiles[new_region->size - 1] = tile;
 		free(tile->region->tiles);
@@ -108,9 +115,10 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 		return;
 	}
 	/* remove tile from region */
-	else if (new_region == NULL) {
+	else if (tile->region != NULL && new_region == NULL) {
 		tile_t **newlist =
 		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
+		if (!newlist) return;
 		j = 0;
 		for (i = 0; i < tile->region->size; i++) {
 			if (tile->region->tiles[i] != tile) {
@@ -197,6 +205,15 @@ unsigned char claim_region(character_t * character, region_t * region)
 		world->check_death = 1;
 		return 2;
 	}
+
+	/* if we are neutral with current owner, take it and trigger war */
+	if (get_diplomacy(current_owner, character) == NEUTRAL) {
+		change_region_owner(character, region);
+		set_diplomacy(current_owner, character, WAR);
+		/* if previous owner has no other regions, he lost */
+		world->check_death = 1;
+		return 2;
+	}
 	return 0;
 }
 
@@ -267,17 +284,16 @@ void remove_region(region_t * region)
 		return;
 
 	clear_region(region);
-	region_t *prev = NULL;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 		if (current == region) {
-			if (prev) prev->next = current->next;
+			if (current->prev) current->prev->next = current->next;
 			else world->regionlist = current->next;
+			if (current->next) current->next->prev = current->prev;
 			region_t *tmp = current;
 			free(tmp);
 			return;
 		}
-		prev = current;
 		current = current->next;
 	}
 }
@@ -285,21 +301,22 @@ void remove_region(region_t * region)
 void sort_region_list() {
 	if (world->regionlist == NULL || world->regionlist->next == NULL) return;
 	int permutations;
-	region_t *previous, *current, *next;
+	region_t *current, *next;
 	do {
 		current = world->regionlist;
-		previous = NULL;
 		next = current->next;
 		permutations = 0;
 		while (next != NULL) {
 			if (strcmp(current->name, next->name) > 0) {
 				permutations++;
-				if (previous != NULL) previous->next = next;
+				if (current->prev != NULL) current->prev->next = next;
 				else world->regionlist = next;
+				if (next->next) next->next->prev = current;
+				next->prev = current->prev;
 				current->next = next->next;
+				current->prev = next;
 				next->next = current;
 			}
-			previous = current;
 			current = next;
 			next = next->next;
 		}
@@ -340,9 +357,9 @@ uint16_t count_regions_by_owner(character_t * owner)
 	return count;
 }
 
-int count_regions()
+uint16_t count_regions()
 {
-	int counter = 0;
+	uint16_t counter = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 		counter++;
@@ -385,19 +402,39 @@ grid_t *create_grid(const uint16_t height, const uint16_t width)
 		return world->grid;
 	int i, j;
 	grid_t *grid = malloc(sizeof(grid_t));
+	if (!grid) goto create_grid_error;
 	grid->height = height;
 	grid->width = width;
 	grid->tiles = malloc(height * sizeof(void *));
+	if (!grid->tiles) goto create_grid_error;
 	for (i = 0; i < height; i++) {
 		grid->tiles[i] = malloc(width * sizeof(void *));
+		if (!grid->tiles[i]) goto create_grid_error;
 		for (j = 0; j < width; j++) {
 			grid->tiles[i][j] = tile_init();
+			if (!grid->tiles[i][j]) goto create_grid_error;
 			grid->tiles[i][j]->height = i;
 			grid->tiles[i][j]->width = j;
 		}
 	}
 	world->grid = grid;
 	return world->grid;
+create_grid_error:
+	if (grid) {
+		if (grid->tiles) {
+			for (i = 0; i < height; i++) {
+				if (grid->tiles[i]) {
+					for (j = 0; j < width; j++) {
+						if (grid->tiles[i][j]) free(grid->tiles[i][j]);
+					}
+					free(grid->tiles[i]);
+				}
+			}
+			free(grid->tiles);
+		}
+		free(grid);
+	}
+	return NULL;
 }
 
 void remove_grid()
@@ -441,13 +478,14 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 	piece_t *src_piece = world->grid->tiles[src_height][src_width]->piece;
 	if (src_piece == NULL || src_piece->owner->id != current_character->id)
 		return 0;
+	/* no piece at dest or neutral/enemy piece */
 	piece_t *dst_piece = world->grid->tiles[dst_height][dst_width]->piece;
 	if (dst_piece != NULL) {
 		/* no own piece on destination tile */
 		if (dst_piece->owner->id == current_character->id)
 			return 0;
 		/* no allied piece on destination */
-		if (get_diplomacy(current_character, dst_piece->owner) == 1)
+		if (get_diplomacy(current_character, dst_piece->owner) == ALLIANCE)
 			return 0;
 	}
 	return 1;
@@ -456,6 +494,7 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 			const uint16_t dst_width)
 {
+	character_t *src_character = piece->owner;
 	uint16_t src_height = piece->tile->height;
 	uint16_t src_width = piece->tile->width;
 	unsigned int movable =
@@ -473,8 +512,11 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 		if (dst_piece->type == NOBLE) {
 			succession(dst_character);
 			remove_character(dst_character);
-		} else
+		} else {
 			remove_piece(dst_piece);
+			/* if src and dest are neutral, trigger war */
+			if (get_diplomacy(src_character, dst_character) != WAR) set_diplomacy(src_character, dst_character, WAR);
+		}
 		update_army_ranking();
 	}
 	/* update grid */
@@ -520,6 +562,7 @@ tile_t *get_empty_tile_in_region(region_t *region) {
 	if (!region || region->size == 0) return NULL;
 	/* compute region center */
 	tile_t *center = region_center(region);
+	if (!center) return NULL;
 	if (!center->piece) return center;
 	uint16_t distance_min = world->grid->height + world->grid->width;
 	uint16_t distance = 0;

@@ -9,9 +9,6 @@
 #include <ctype.h>		//for isdigit
 #include "world.h"
 
-#define MOVE 0
-#define VIEW 1
-
 char *modes[] = {
 	[MOVE] = "MOVE",
 	[VIEW] = "VIEW",
@@ -52,6 +49,20 @@ char *screens[] = {
 
 region_t *selected_region = NULL;
 
+char const piece_char[] = {
+	[NOBLE] = 'n', /* ? */
+	[SOLDIER] = 's',
+	[SHIP] = 'S'
+};
+
+char const noble_char[] = {
+	[KNIGHT] = 'k',
+	[BARON] = 'b',
+	[COUNT] = 'c',
+	[DUKE] = 'd',
+	[KING] = 'K'
+};
+
 tile_t *cursor = NULL;
 
 int check_termsize()
@@ -76,8 +87,9 @@ int get_input(WINDOW * window)
 			    || input == 68)
 				return input + 1000;
 		}
+		else return tolower(ch2);
 	}
-	return ch;
+	return tolower(ch);
 }
 
 int start_menu(WINDOW *local_win)
@@ -85,50 +97,29 @@ int start_menu(WINDOW *local_win)
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
-	int savefile_exists;
-	savefile_exists = 0;
-	size_t len1, len2, len3;
-	char *prefix = getenv("HOME");
-	char *filename;
-	if (prefix) {
-		len1 = strlen(prefix);
-		len2 = strlen(SAVE_DIRNAME);
-		len3 = strlen(SAVE_FILENAME);
-		filename = malloc(len1 + len2 + len3 + 1);
-		if (!filename) {
-			return SHUTDOWN;
-		}
-		memcpy(filename, prefix, len1);
-		memcpy(filename + len1, SAVE_DIRNAME, len2);
-		memcpy(filename + (len1 + len2), SAVE_FILENAME, len3 + 1);
-		if (access(filename, F_OK) != -1) savefile_exists = 1;
-		free(filename);
-	}
+	int sf_exists = savefile_exists();
 
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 	wprintw(local_win, "  [N]ew game\n");
-	if (savefile_exists) wprintw(local_win, "  [L]oad game\n");
+	if (world->grid || sf_exists) wprintw(local_win, "  [L]oad game\n");
 	wprintw(local_win, "  [Q]uit\n");
 
 	int ch;
 	while (1) {
-		ch = wgetch(local_win);
+		ch = tolower(wgetch(local_win));
 		switch (ch) {
 			case 'l':
-			case 'L':
-				if (savefile_exists) {
+				if (world->grid || sf_exists) {
 					return MAIN_SCREEN;
 				}
 				break;
 			case 'n':
-			case 'N':
 				return NEW_GAME;
 				break;
 			case 'q':
-			case 'Q':
 				return SHUTDOWN;
 				break;
 			default:
@@ -137,9 +128,8 @@ int start_menu(WINDOW *local_win)
 	}
 }
 
-int draw_map(WINDOW *local_win)
+void draw_map(WINDOW *local_win)
 {
-	int retval = MAIN_SCREEN;
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
@@ -158,6 +148,7 @@ int draw_map(WINDOW *local_win)
 	char tile_char = '.';
 	int color_nr = 0;
 	int character_age_mon = 0;
+	tile_t *current_tile = NULL;
 	for (i = 24 + h_offset; i > h_offset; i--) {
 		for (j = w_offset; j < 48 + w_offset; j++) {
 /**
@@ -176,51 +167,33 @@ int draw_map(WINDOW *local_win)
 			    || j >= world->grid->width) {
 				color_nr = 1;
 				tile_char = ' ';
-			} else if (world->grid->tiles[i][j]->piece != NULL) {
-				color_nr =
-				    world->grid->tiles[i][j]->piece->owner->id %
-				    7 + 10;
-				switch (world->grid->tiles[i][j]->piece->type) {
-				case NOBLE:	/* noble */
-					switch (world->grid->tiles[i][j]->
-						piece->owner->rank) {
-					case KNIGHT:
-						tile_char = 'k';
-						break;
-					case BARON:
-						tile_char = 'b';
-						break;
-					case COUNT:
-						tile_char = 'c';
-						break;
-					case DUKE:
-						tile_char = 'd';
-						break;
-					case KING:
-						tile_char = 'K';
-						break;
-					}
-					break;
-				case SOLDIER:	/* soldier */
-					tile_char = 's';
-					break;
-				case SHIP:	/* ship */
-					tile_char = 'S';
-					break;
-				}
-			} else if (world->grid->tiles[i][j]->walkable) {
-				if (world->grid->tiles[i][j]->region != NULL
-				    && world->grid->tiles[i][j]->region->
-				    owner != NULL)
-					color_nr =
-					    world->grid->tiles[i][j]->region->
-					    owner->id % 7 + 10;
-				else
-					color_nr = 1;
-				tile_char = '.';
 			} else {
-				color_nr = 1;	//blue
-				tile_char = '~';
+				current_tile = world->grid->tiles[i][j];
+				if (current_tile->piece != NULL) {
+					color_nr = current_tile->piece->owner->id %
+					    6 + 10;
+					switch (current_tile->piece->type) {
+						case NOBLE:	/* noble */
+							tile_char = noble_char[current_tile->piece->owner->rank];
+							break;
+						case SOLDIER:	/* soldier */
+						case SHIP:	/* ship */
+							tile_char = piece_char[current_tile->piece->type];
+							break;
+					}
+				}
+				else if (current_tile->walkable) {
+					if (current_tile->region != NULL
+					    && current_tile->region->owner != NULL)
+						color_nr = current_tile->region->owner->id % 6 + 10;
+					else
+						color_nr = 1;
+					tile_char = '.';
+				}
+				else {
+					color_nr = 1;	//blue
+					tile_char = '~';
+				}
 			}
 			if (cursor->height == i
 			    && cursor->width == j) {
@@ -283,224 +256,37 @@ int draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
 	if (piece != NULL && piece->owner->id != character->id) {
 		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
-		switch (diplomacy->status) {
-		case NEUTRAL:
-			wcolor_set(local_win, 12, NULL);
-			break;
-		case ALLIANCE:
-			wcolor_set(local_win, 11, NULL);
-			break;
-		case WAR:
-			wcolor_set(local_win, 10, NULL);
-			break;
+		unsigned char status = get_diplomacy(piece->owner, character);
+		switch (status) {
+			case NEUTRAL:
+				wcolor_set(local_win, 12, NULL);
+				break;
+			case ALLIANCE:
+				wcolor_set(local_win, 11, NULL);
+				break;
+			case WAR:
+				wcolor_set(local_win, 10, NULL);
+				break;
 		}
-		wprintw(local_win, "%s", dipstatus_name[diplomacy->status]);
-		if (diplomacy->pending_offer != NULL)
+		wprintw(local_win, "%s", dipstatus_name[status]);
+		if (diplomacy && diplomacy->pending_offer)
 			wprintw(local_win, " *");
 		wcolor_set(local_win, 1, NULL);
 	}
 
-	int message_len = strlen(message);
+	int message_len = strlen(world->message);
 	if (message_len > 0) {
 		wcolor_set(local_win, 12, NULL);
 		for (i = 0; i < (message_len - 1) / 29 + 1; i++) {
 			mvwprintw(local_win, 20 + i, 50, "%.*s", 29,
-				  &message[29 * i]);
+				  &world->message[29 * i]);
 		}
 		wcolor_set(local_win, 1, NULL);
 	}
 
 	mvwprintw(local_win, 23, 50, "Mode: %s\n", modes[current_mode]);
 	mvwprintw(local_win, 23, 65, "Help: '?'");
-
-	int ch;
-	ch = get_input(local_win);
-	unsigned char result;
-	message[0] = '\0';
-	switch (ch) {
-	case 1065:		//up
-		if (current_mode == VIEW) {
-			if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
-		} else {
-			if (move_piece(piece, cursor->height + 1,
-				   cursor->width) == 0) {
-				cursor = world->grid->tiles[cursor->height + 1][cursor->width];
-				check_death();
-			}
-		}
-		break;
-	case 1066:		//down
-		if (current_mode == VIEW) {
-			if (cursor->height > 0) cursor = world->grid->tiles[cursor->height - 1][cursor->width];
-		} else {
-			if (move_piece(piece, cursor->height - 1,
-				   cursor->width) == 0) {
-				cursor = world->grid->tiles[cursor->height - 1][cursor->width];
-				check_death();
-			}
-		}
-		break;
-	case 1067:		//right
-		if (current_mode == VIEW) {
-			if (cursor->width < world->grid->width - 1) cursor = world->grid->tiles[cursor->height][cursor->width + 1];
-		} else {
-			if (move_piece(piece, cursor->height,
-				   cursor->width + 1) == 0) {
-				cursor = world->grid->tiles[cursor->height][cursor->width + 1];
-				check_death();
-			}
-		}
-		break;
-	case 1068:		//left
-		if (current_mode == VIEW) {
-			if (cursor->width > 0) cursor = world->grid->tiles[cursor->height][cursor->width - 1];
-		} else {
-			if (move_piece(piece, cursor->height,
-				   cursor->width - 1) == 0) {
-				cursor = world->grid->tiles[cursor->height][cursor->width - 1];
-				check_death();
-			}
-		}
-		break;
-	case ' ':		//SPACE end turn
-		gameover = is_gameover();
-		if (gameover) {
-			current_screen = GAME_OVER;
-			break;
-		}
-/**
-			else {
-				current_screen = 99;
-				break;
-			}
-**/
-		world->moves_left = get_dice();
-		if (character->next != NULL)
-			character = character->next;
-		else {
-			/* start the next round and change game date */
-			character = world->characterlist;
-			increment_gametime();
-		}
-		world->selected_character = character;
-		piece = get_noble_by_owner(character);
-		cursor = piece->tile;
-		current_mode = VIEW;
-		break;
-	case '\t':		// loop through own pieces
-		if (piece != NULL) {
-			piece_t *active_piece = next_piece(piece);
-			cursor = active_piece->tile;
-		}
-		break;
-	case 'c':		// claim a region
-		/* first, switch to noble */
-		piece = get_noble_by_owner(character);
-		/* set cursor to noble */
-		cursor = piece->tile;
-		result = claim_region(character, cursor->region);
-		switch (result) {
-		case 1:	/* claimed from nature */
-			add_to_chronicle("%s %s claimed %s.\n",
-					rank_name[character->rank], character->name,
-					cursor->region->name);
-			update_land_ranking();
-			break;
-		case 2:	/* conquered from enemy */
-			add_to_chronicle("%s %s conquered %s.\n",
-					rank_name[character->rank], character->name,
-					cursor->region->name);
-			check_death();
-			update_land_ranking();
-			break;
-		default:	/* nothing changed */
-			break;
-		}
-		break;
-	case 'd':		// diplomacy list
-		retval = DIPLOMACY_DIALOG;
-		break;
-	case 'f':		// feudal stuff
-		retval = FEUDAL_DIALOG;
-		break;
-	case 'i':		// game information
-		retval = INFORMATION;
-		break;
-	case 'h':		// name a successor
-		retval = HEIR_DIALOG;
-		break;
-	case 'k':		// declare yourself king
-		retval = SELF_DECLARATION_DIALOG;
-		break;
-	case 'm':		// give money
-		/* check if we have money */
-		if (character->money > 0)
-			retval = GIVE_MONEY_DIALOG;
-		break;
-	case 'q':		// quit
-		retval = START_MENU;
-		break;
-	case 'r':		// give region
-		retval = REGIONS_DIALOG;
-		break;
-	case 's':		// save game
-		save_game();
-		break;
-	case 't':		// take money (when 6)
-		if (world->moves_left == 6 && get_money(character) < MONEY_MAX) {
-			set_money(character, get_money(character) + 1);
-			world->moves_left = 0;
-			update_money_ranking();
-		}
-		break;
-	case 'u':		//place a soldier -- dialog
-			/**
-			 * check if in view mode
-			 * check if enough money
-			 * check if walkable
-			 * check if region is our (defined and claimed)
-			 * check if empty
-			**/
-		if (current_mode != VIEW) break;
-		if (character->money < COST_SOLDIER) {
-			strcpy(message, "Not enough money.");
-			break;
-		}
-		if (!cursor->walkable) {
-			strcpy(message, "Tile not walkable. Choose another tile.");
-			break;
-		}
-		if (piece != NULL) {
-			strcpy(message, "Tile not empty. Choose another tile.");
-			break;
-		}
-		if (cursor->region == NULL
-			|| cursor->region->owner == NULL
-			|| cursor->region->owner->id != world->selected_character->id) {
-			strcpy(message, "Not your region. Choose another tile.");
-			break;
-		}
-		add_piece(1, cursor->height,
-			  cursor->width, character);
-		set_money(character, get_money(character) - COST_SOLDIER);
-		update_money_ranking();
-		update_army_ranking();
-		break;
-	case 'v':		// toggle between 'move piece' and 'explore map'
-		current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */
-		if (current_mode == 0) {
-			piece =
-			    get_noble_by_owner(world->selected_character);
-			cursor = piece->tile;
-		}
-		break;
-	case '?':
-		retval = HELP_DIALOG;
-		break;
-	default:	// ignore all other keys
-		break;
-	}
-	return retval;
+	world->message[0] = '\0';
 }
 
 int regions_dialog(WINDOW *local_win)
@@ -551,8 +337,8 @@ int regions_dialog(WINDOW *local_win)
 		}
 	}
 
-	int counter = 0;
-	int section = 0;
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	current_region = world->regionlist;
 	int regionlist_selector = 0;
 	while (current_region != NULL) {
@@ -592,55 +378,33 @@ int regions_dialog(WINDOW *local_win)
 
 	int user_move = get_input(local_win);
 	switch (user_move) {
-	case 1065:
-		if (regionlist_selector > 0) {
-			regionlist_selector--;
-			counter = 0;
-			current_region = world->regionlist;
-			while (current_region != NULL) {
-				if (current_region->owner != NULL
-				    && current_region->owner ==
-				    world->selected_character) {
-					if (counter == regionlist_selector) {
-						selected_region = current_region;
-						break;
-					}
-					counter++;
-				}
-				current_region = current_region->next;
+		case 1065:
+			if (regionlist_selector > 0) {
+				regionlist_selector--;
+				do {
+					selected_region = selected_region->prev;
+				} while (selected_region && selected_region->owner != world->selected_character);
 			}
-		}
-		break;
-	case 1066:
-		if (regionlist_selector < nr_regions - 1) {
-			regionlist_selector++;
-			counter = 0;
-			current_region = world->regionlist;
-			while (current_region != NULL) {
-				if (current_region->owner != NULL
-				    && current_region->owner ==
-				    world->selected_character) {
-					if (counter == regionlist_selector) {
-						selected_region = current_region;
-						break;
-					}
-					counter++;
-				}
-				current_region = current_region->next;
+			break;
+		case 1066:
+			if (regionlist_selector < nr_regions - 1) {
+				regionlist_selector++;
+				do {
+					selected_region = selected_region->next;
+				} while (selected_region && selected_region->owner != world->selected_character);
 			}
-		}
-		break;
-	case 'e':
-		retval = EDIT_REGION_DIALOG;
-		break;
-	case 'g':		/* give to another character */
-		retval = GIVE_REGION_DIALOG;
-		break;
-	case 'q':		/* return to map */
-		retval = MAIN_SCREEN;
-		break;
-	default:
-		break;
+			break;
+		case 'e':
+			retval = EDIT_REGION_DIALOG;
+			break;
+		case 'g':		/* give to another character */
+			retval = GIVE_REGION_DIALOG;
+			break;
+		case 'q':		/* return to map */
+			retval = MAIN_SCREEN;
+			break;
+		default:
+			break;
 	}
 	return retval;
 }
@@ -701,11 +465,12 @@ int give_region_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector = get_character_order(selected_character);
+	int characterlist_selector;
 	region_t *region = selected_region;
 	int give_region_ok = 0;
 
 	while (1) {
+		characterlist_selector = get_character_order(selected_character);
 		give_region_ok = 0;
 		wclear(local_win);
 		for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
@@ -725,9 +490,9 @@ int give_region_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -752,18 +517,12 @@ int give_region_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				selected_character =
-				    get_character_by_order(characterlist_selector);
-			}
+			if (selected_character->prev)
+				selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				selected_character =
-				    get_character_by_order(characterlist_selector);
-			}
+			if (selected_character->next)
+				selected_character = selected_character->next;
 			break;
 		case 10:
 			if (give_region_ok) {
@@ -860,9 +619,9 @@ int give_money_dialog(WINDOW *local_win)
 				wprintw(local_win,
 					"  To return, press 'esc'.\n\n");
 
-				int nr_characters = count_characters();
-				int counter = 0;
-				int section = 0;
+				uint16_t nr_characters = count_characters();
+				uint16_t counter = 0;
+				uint16_t section = 0;
 				character_t *current = world->characterlist;
 				characterlist_selector =
 				    get_character_order(receiving_character);
@@ -942,8 +701,8 @@ int info_dialog(WINDOW *local_win)
 	noecho();
 
 	int i;
-	int section = 0;
-	int nr_characters = count_characters();
+	uint16_t section = 0;
+	uint16_t nr_characters = count_characters();
 
 	while (1) {
 		wclear(local_win);
@@ -959,7 +718,7 @@ int info_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 6, 54, "Army");
 		mvwprintw(local_win, 6, 64, "Land");
 
-		int counter = 0;
+		uint16_t counter = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			if (counter >= section * 10
@@ -1026,9 +785,9 @@ int successor_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		current = world->characterlist;
 		characterlist_selector = get_character_order(new_heir);
 		while (current != NULL) {
@@ -1058,25 +817,25 @@ int successor_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (new_heir->prev) new_heir = new_heir->prev;
-			break;
-		case 1066:
-			if (new_heir->next) new_heir = new_heir->next;
-			break;
-		case 10:
-			if (new_heir != active_character) {
-				set_successor(active_character, new_heir);
-				heir = new_heir;
-			}
-			break;
-		case 'd':
-			heir = NULL;
-			set_successor(active_character, heir);
-			break;
-		case 'q':
-			return MAIN_SCREEN;
-			break;
+			case 1065:
+				if (new_heir->prev) new_heir = new_heir->prev;
+				break;
+			case 1066:
+				if (new_heir->next) new_heir = new_heir->next;
+				break;
+			case 10:
+				if (new_heir != active_character) {
+					set_successor(active_character, new_heir);
+					heir = new_heir;
+				}
+				break;
+			case 'd':
+				heir = NULL;
+				set_successor(active_character, heir);
+				break;
+			case 'q':
+				return MAIN_SCREEN;
+				break;
 		}
 	}
 }
@@ -1160,8 +919,8 @@ int feudal_dialog(WINDOW *local_win)
 		}
 		mvwprintw(local_win, 7, 2, "To return, press 'q'.");
 
-		int counter = 0;
-		int section = 0;
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -1279,9 +1038,9 @@ int homage_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		characterlist_selector = get_character_order(selected_character);
 		current = world->characterlist;
 		while (current != NULL) {
@@ -1390,8 +1149,8 @@ int promote_soldier_dialog(WINDOW *local_win)
 				  "To scroll, press up/down keys.");
 			mvwprintw(local_win, 4, 2, "To return, press 'q'.");
 
-			int counter = 0;
-			int section = 0;
+			uint16_t counter = 0;
+			uint16_t section = 0;
 			current_region = world->regionlist;
 			int regionlist_selector = 0;
 			while (current_region != NULL) {
@@ -1443,47 +1202,17 @@ int promote_soldier_dialog(WINDOW *local_win)
 			case 1065:
 				if (regionlist_selector > 0) {
 					regionlist_selector--;
-					counter = 0;
-					current_region = world->regionlist;
-					while (current_region != NULL) {
-						if (current_region->owner !=
-						    NULL
-						    && current_region->owner ==
-						    world->selected_character) {
-							if (counter ==
-							    regionlist_selector)
-							{
-								selected_region = current_region;
-								break;
-							}
-							counter++;
-						}
-						current_region =
-						    current_region->next;
-					}
-				}
+                    do {
+                        selected_region = selected_region->prev;
+					} while (selected_region && selected_region->owner != world->selected_character);
+                }
 				break;
 			case 1066:
 				if (regionlist_selector < nr_regions - 1) {
 					regionlist_selector++;
-					counter = 0;
-					current_region = world->regionlist;
-					while (current_region != NULL) {
-						if (current_region->owner !=
-						    NULL
-						    && current_region->owner ==
-						    world->selected_character) {
-							if (counter ==
-							    regionlist_selector)
-							{
-								selected_region = current_region;
-								break;
-							}
-							counter++;
-						}
-						current_region =
-						    current_region->next;
-					}
+					do {
+                        selected_region = selected_region->next;
+					} while (selected_region && selected_region->owner != world->selected_character);
 				}
 				break;
 			case 'q':	/* return to map */
@@ -1551,8 +1280,14 @@ int diplomacy_dialog(WINDOW *local_win)
 		} else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
-			status = dipstatus->status;
-			dipoffer = dipstatus->pending_offer;
+			if (dipstatus) {
+				status = dipstatus->status;
+				dipoffer = dipstatus->pending_offer;
+			}
+			else {
+				status = NEUTRAL;
+				dipoffer = NULL;
+			}
 		}
 		switch (status) {
 		case NEUTRAL:
@@ -1625,9 +1360,9 @@ int diplomacy_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
@@ -1635,8 +1370,14 @@ int diplomacy_dialog(WINDOW *local_win)
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			current_dipstatus = get_dipstatus(active_character, current);
-			current_status = current_dipstatus->status;
-			current_dipoffer = current_dipstatus->pending_offer;
+			if (current_dipstatus) {
+				current_status = current_dipstatus->status;
+				current_dipoffer = current_dipstatus->pending_offer;
+			}
+			else {
+				current_status = NEUTRAL;
+				current_dipoffer = NULL;
+			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
@@ -1689,7 +1430,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'n':	/* reject offer */
-			if (reject_offer_ok)
+			if (dipstatus && reject_offer_ok)
 				close_offer(dipstatus->pending_offer, REJECT);
 			break;
 		case 'p':	/* offer peace */
@@ -1705,7 +1446,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			return MAIN_SCREEN;
 			break;
 		case 'r':	/* retract offer */
-			if (retract_offer_ok)
+			if (dipstatus && retract_offer_ok)
 				close_offer(dipstatus->pending_offer, REJECT);
 			break;
 		case 'w':	/* declare war */
@@ -1733,7 +1474,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'y':	/* accept offer */
-			if (accept_offer_ok) {
+			if (dipstatus && accept_offer_ok) {
 				close_offer(dipstatus->pending_offer, ACCEPT);
 				if (dipstatus->status == ALLIANCE)
 					add_to_chronicle
@@ -1782,17 +1523,15 @@ int help_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 11, 2, "'m' -- give money to another player");
 	mvwprintw(local_win, 12, 2, "'q' -- quit editor");
 	mvwprintw(local_win, 13, 2, "'r' -- give a region to another player");
-	mvwprintw(local_win, 14, 2,
-		  "'w' -- toggle walkability of current tile");
-	mvwprintw(local_win, 15, 2, "'s' -- save game to file");
-	mvwprintw(local_win, 16, 2, "'t' -- take money (if dice rolls 6)");
-	mvwprintw(local_win, 17, 2, "'u' -- place a soldier on current tile");
-	mvwprintw(local_win, 18, 2,
+	mvwprintw(local_win, 14, 2, "'s' -- save game to file");
+	mvwprintw(local_win, 15, 2, "'t' -- take money (if dice rolls 6)");
+	mvwprintw(local_win, 16, 2, "'u' -- place a soldier on current tile");
+	mvwprintw(local_win, 17, 2,
 		  "'v' -- toggle between 'move piece' and 'explore map' modes");
-	mvwprintw(local_win, 19, 2, "'?' -- show this help");
+	mvwprintw(local_win, 18, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
-	get_input(local_win);
+	wgetch(local_win);
 	return MAIN_SCREEN;
 }
 
@@ -1854,24 +1593,33 @@ int editor_start_menu(WINDOW *local_win)
 	wclear(local_win);
 	wattrset(local_win, A_BOLD);
 
+	int sf_exists = savefile_exists();
+
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
-	wprintw(local_win, "  To open a saved game, press 'o'.\n");
-	wprintw(local_win, "  To create a new game, press 'c'.\n");
-	wprintw(local_win, "  To exit, press 'q'.");
+	wprintw(local_win, "  [N]ew game\n");
+	if (world->grid || sf_exists) wprintw(local_win, "  [L]oad game\n");
+	wprintw(local_win, "  [Q]uit\n");
 
 	int ch;
 	while (1) {
-		ch = wgetch(local_win);
+		ch = tolower(wgetch(local_win));
 		switch (ch) {
-		case 'o':
-			return MAP_EDITOR;
-		case 'c':
-			return NEW_GAME;
-		case 'q':
-			return SHUTDOWN;
+			case 'l':
+				if (world->grid || sf_exists) {
+					return MAP_EDITOR;
+				}
+				break;
+			case 'n':
+				return NEW_GAME;
+				break;
+			case 'q':
+				return SHUTDOWN;
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -1895,6 +1643,7 @@ int map_editor(WINDOW *local_win)
 	region = selected_region;
 	piece_t *piece = cursor->piece;
 
+	tile_t *current_tile = NULL;
 	for (i = 24 * (h_multiplier + 1) - 1; i >= 24 * h_multiplier; i--) {
 		if (i >= world->grid->height) {
 			wprintw(local_win, "\n");
@@ -1905,50 +1654,27 @@ int map_editor(WINDOW *local_win)
 			  world->grid->width ? 48 * (w_multiplier +
 						     1) : world->grid->width);
 		     j++) {
+			current_tile = world->grid->tiles[i][j];
 /**
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
 **/
-			if (world->grid->tiles[i][j]->piece != NULL) {
-				color_nr =
-				    world->grid->tiles[i][j]->piece->owner->id %
-				    7 + 10;
-				switch (world->grid->tiles[i][j]->piece->type) {
-				case NOBLE:	/* noble */
-					switch (world->grid->tiles[i][j]->
-						piece->owner->rank) {
-					case KNIGHT:
-						tile_char = 'k';
+			if (current_tile->piece != NULL) {
+				color_nr = current_tile->piece->owner->id %
+				    6 + 10;
+				switch (current_tile->piece->type) {
+					case NOBLE:	/* noble */
+						tile_char = noble_char[current_tile->piece->owner->rank];
 						break;
-					case BARON:
-						tile_char = 'b';
+					case SOLDIER:	/* soldier */
+					case SHIP:	/* ship */
+						tile_char = piece_char[current_tile->piece->type];
 						break;
-					case COUNT:
-						tile_char = 'c';
-						break;
-					case DUKE:
-						tile_char = 'd';
-						break;
-					case KING:
-						tile_char = 'K';
-						break;
-					}
-					break;
-				case SOLDIER:	/* soldier */
-					tile_char = 's';
-					break;
-/* ToDo change 2 to SHIP when we have ships */
-				case SHIP:	/* ship */
-					tile_char = 'S';
-					break;
 				}
-			} else if (world->grid->tiles[i][j]->walkable) {
-				if (world->grid->tiles[i][j]->region != NULL
-				    && world->grid->tiles[i][j]->region->
-				    owner != NULL)
-					color_nr =
-					    world->grid->tiles[i][j]->region->
-					    owner->id % 7 + 10;
+			} else if (current_tile->walkable) {
+				if (current_tile->region != NULL
+				    && current_tile->region->owner != NULL)
+					color_nr = current_tile->region->owner->id % 6 + 10;
 				else
 					color_nr = 1;
 				tile_char = '.';
@@ -1956,7 +1682,7 @@ int map_editor(WINDOW *local_win)
 				color_nr = 1;	/* blue */
 				tile_char = '~';
 			}
-			if (cursor == world->grid->tiles[i][j]) {
+			if (cursor == current_tile) {
 				if (color_nr == 1)
 					color_nr = 26;
 				else
@@ -2017,14 +1743,17 @@ int map_editor(WINDOW *local_win)
 /**
 	mvwprintw(local_win, 19, 50, "Diplomacy: %s", (piece == NULL || piece->owner->id == character->id ? " " : dipstatuslist[get_diplomacy(piece->owner, character)]));
 **/
+	mvwprintw(local_win, 23, 65, "Help: '?'");
 
 	int ch;
 	ch = get_input(local_win);
 
 	switch (ch) {
-	case 27:		/* escape */
+	/**
+	case 27:
 		retval = MAIN_SCREEN;
 		break;
+	**/
 	case 1065:		/* up */
 		if (cursor->height < world->grid->height - 1) cursor = world->grid->tiles[cursor->height + 1][cursor->width];
 		break;
@@ -2060,7 +1789,7 @@ int map_editor(WINDOW *local_win)
 				  cursor->width, character);
 		break;
 	case 'q':
-		retval = SHUTDOWN;
+		retval = START_MENU;
 		break;
 	case 'r':
 		retval = REGIONS_DIALOG;
@@ -2156,9 +1885,9 @@ int characters_dialog(WINDOW *local_win)
 	wprintw(local_win, "  To scroll, press up/down keys.\n");
 	wprintw(local_win, "  To return to map editor, press 'q'.\n\n");
 
-	int nr_characters = count_characters();
-	int counter = 0;
-	int section = 0;
+	uint16_t nr_characters = count_characters();
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	character_t *current = world->characterlist;
 	int characterlist_selector;
 	while (current) {
@@ -2334,8 +2063,8 @@ int editor_regions_dialog(WINDOW *local_win)
 	wprintw(local_win, "  To return to map editor, press 'q'.\n\n");
 
 	int nr_regions = count_regions();
-	int counter = 0;
-	int section = 0;
+	uint16_t counter = 0;
+	uint16_t section = 0;
 	region_t *current = world->regionlist;
 	int regionlist_selector =
 	    get_region_order(selected_region);
@@ -2357,38 +2086,24 @@ int editor_regions_dialog(WINDOW *local_win)
 	int user_move = get_input(local_win);
 	switch (user_move) {
 	case 1065:
-		if (regionlist_selector > 0) {
-			--regionlist_selector;
-			selected_region =
-			    get_region_by_order(regionlist_selector);
-		}
+		if (selected_region->prev)
+			selected_region = selected_region->prev;
 		break;
 	case 1066:
-		if (regionlist_selector < nr_regions - 1) {
-			regionlist_selector++;
-			selected_region =
-			    get_region_by_order(regionlist_selector);
-		}
+		if (selected_region->next)
+			selected_region = selected_region->next;
 		break;
 	case 'a':
 		retval = ADD_REGION_DIALOG;
 		break;
 	case 'd':
-		counter = 0;
-		current = world->regionlist;
-		while (counter < regionlist_selector) {
-			current = current->next;
-			counter++;
-		}
-		if (current != NULL) {
-			remove_region(current);
-			sort_region_list();
-			if (regionlist_selector > 0) {
-				regionlist_selector--;
-				selected_region =
-				    get_region_by_order(regionlist_selector);
-			}
-		}
+		current = selected_region;
+		if (selected_region->next)
+			selected_region = selected_region->next;
+		else if (selected_region->prev)
+			selected_region = selected_region->prev;
+		else selected_region = NULL;
+		remove_region(current);
 		break;
 	case 'e':
 		retval = RENAME_REGION_DIALOG;
@@ -2458,9 +2173,10 @@ int region_to_character(WINDOW *local_win)
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	region_t *region = selected_region;
-	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *selected_character;
+	if (region->owner) selected_character = region->owner;
+	else selected_character = world->selected_character;
+	int characterlist_selector;
 
 	while (1) {
 		curs_set(FALSE);
@@ -2477,9 +2193,10 @@ int region_to_character(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
+		characterlist_selector = get_character_order(selected_character);
 		character_t *current = world->characterlist;
 		while (current != NULL) {
 			section = characterlist_selector / 10;
@@ -2505,47 +2222,25 @@ int region_to_character(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
-			break;
-		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
-			break;
-		case 10:
-			change_region_owner(selected_character, region);
-			return REGIONS_DIALOG;
-			break;
-		case 'd':
-			change_region_owner(NULL, region);
-			return REGIONS_DIALOG;
-			break;
-		case 'q':
-			return REGIONS_DIALOG;
-			break;
+			case 1065:
+				if (selected_character->prev)
+					selected_character = selected_character->prev;
+				break;
+			case 1066:
+				if (selected_character->next)
+					selected_character = selected_character->next;
+				break;
+			case 10:
+				change_region_owner(selected_character, region);
+				return REGIONS_DIALOG;
+				break;
+			case 'd':
+				change_region_owner(NULL, region);
+				return REGIONS_DIALOG;
+				break;
+			case 'q':
+				return REGIONS_DIALOG;
+				break;
 		}
 	}
 }
@@ -2891,19 +2586,19 @@ int validate_dialog(WINDOW *local_win)
 		wprintw(local_win, " ");
 	wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-	char *error_message = NULL;
-	int validation_result = validate_game_data(&error_message);
+//	char *error_message = NULL;
+	int validation_result = validate_game_data();
 
 	if (validation_result == 0) {
 		msg = "All checks passed. Game data are valid.";
-		error_message = malloc(strlen(msg) + 1);
-		if (error_message) memcpy(error_message, msg, strlen(msg) + 1);
+//		error_message = malloc(strlen(msg) + 1);
+		memcpy(world->message, msg, strlen(msg) + 1);
 	}
 	wmove(local_win, 10, 0);
-	for (i = 0; i < (80 - strlen(error_message)) / 2; i++)
+	for (i = 0; i < (80 - strlen(world->message)) / 2; i++)
 		wprintw(local_win, " ");
-	wprintw(local_win, error_message);
-	free(error_message);
+	wprintw(local_win, world->message);
+//	free(error_message);
 
 	msg = "Press any key to continue.";
 	wmove(local_win, 12, 0);
@@ -3024,10 +2719,11 @@ int editor_successor_dialog(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	int i;
+	character_t *current;
 	character_t *active_character = world->selected_character;
 	character_t *heir = active_character->heir;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	character_t *new_heir = world->selected_character;
+	int characterlist_selector;
 
 	while (1) {
 		curs_set(FALSE);
@@ -3042,10 +2738,11 @@ int editor_successor_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 4, 2, "To remove heir, press 'd'.\n");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
-		character_t *current = world->characterlist;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
+		current = world->characterlist;
+		characterlist_selector = get_character_order(new_heir);
 		while (current != NULL) {
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -3073,28 +2770,25 @@ int editor_successor_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (characterlist_selector > 0)
-				characterlist_selector--;
-			break;
-		case 1066:
-			if (characterlist_selector < nr_characters - 1)
-				characterlist_selector++;
-			break;
-		case 10:
-			heir = get_character_by_order(characterlist_selector);
-			if (heir->id != active_character->id)
+			case 1065:
+				if (new_heir->prev) new_heir = new_heir->prev;
+				break;
+			case 1066:
+				if (new_heir->next) new_heir = new_heir->next;
+				break;
+			case 10:
+				if (new_heir != active_character) {
+					set_successor(active_character, new_heir);
+					heir = new_heir;
+				}
+				break;
+			case 'd':
+				heir = NULL;
 				set_successor(active_character, heir);
-			else
-				heir = active_character->heir;
-			break;
-		case 'd':
-			heir = NULL;
-			set_successor(active_character, heir);
-			break;
-		case 'q':
-			return EDIT_CHARACTER_DIALOG;
-			break;
+				break;
+			case 'q':
+				return EDIT_CHARACTER_DIALOG;
+				break;
 		}
 	}
 }
@@ -3145,9 +2839,9 @@ int editor_homage_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 3, 2, "To scroll, press up/down keys.\n");
 		mvwprintw(local_win, 4, 2, "To return, press 'q'.\n\n");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		characterlist_selector = get_character_order(lord);
 		while (current != NULL) {
@@ -3175,27 +2869,27 @@ int editor_homage_dialog(WINDOW *local_win)
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
-		case 1065:
-			if (lord->prev) lord = lord->prev;
-			break;
-		case 1066:
-			if (lord->next) lord = lord->next;
-			break;
-		case 10:
-			if (set_lord_ok) {
-				active_character->lord = lord;
+			case 1065:
+				if (lord->prev) lord = lord->prev;
+				break;
+			case 1066:
+				if (lord->next) lord = lord->next;
+				break;
+			case 10:
+				if (set_lord_ok) {
+					active_character->lord = lord;
+					return EDIT_CHARACTER_DIALOG;
+				}
+				break;
+			case 'd':
+				if (unset_lord_ok) {
+					active_character->lord = NULL;
+					return EDIT_CHARACTER_DIALOG;
+				}
+				break;
+			case 'q':
 				return EDIT_CHARACTER_DIALOG;
-			}
-			break;
-		case 'd':
-			if (unset_lord_ok) {
-				active_character->lord = NULL;
-				return EDIT_CHARACTER_DIALOG;
-			}
-			break;
-		case 'q':
-			return EDIT_CHARACTER_DIALOG;
-			break;
+				break;
 		}
 	}
 }
@@ -3208,8 +2902,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 	int i;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
-	int characterlist_selector =
-	    get_character_order(world->selected_character);
+	int characterlist_selector;
 
 	unsigned char alliance_ok, neutral_ok, war_ok;
 
@@ -3233,51 +2926,56 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		} else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
-			status = dipstatus->status;
+			if (dipstatus) status = dipstatus->status;
+			else status = NEUTRAL;
 		}
 		switch (status) {
-		case NEUTRAL:
-			mvwprintw(local_win, 2, 2,
-				  "To change to alliance, press 'a'");
-			alliance_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to war, press 'w'");
-			war_ok = 1;
-			break;
-		case ALLIANCE:
-			mvwprintw(local_win, 2, 2,
-				  "To change to neutral, press 'n'");
-			neutral_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to war, press 'w'");
-			war_ok = 1;
-			break;
-		case WAR:
-			mvwprintw(local_win, 2, 2,
-				  "To change to alliance, press 'a'");
-			alliance_ok = 1;
-			mvwprintw(local_win, 3, 2,
-				  "To change to neutral, press 'n'");
-			neutral_ok = 1;
-			break;
-		case 3:
-			break;
+			case NEUTRAL:
+				mvwprintw(local_win, 2, 2,
+					  "To change to alliance, press 'a'");
+				alliance_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to war, press 'w'");
+				war_ok = 1;
+				break;
+			case ALLIANCE:
+				mvwprintw(local_win, 2, 2,
+					  "To change to neutral, press 'n'");
+				neutral_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to war, press 'w'");
+				war_ok = 1;
+				break;
+			case WAR:
+				mvwprintw(local_win, 2, 2,
+					  "To change to alliance, press 'a'");
+				alliance_ok = 1;
+				mvwprintw(local_win, 3, 2,
+					  "To change to neutral, press 'n'");
+				neutral_ok = 1;
+				break;
+			case 3:
+				break;
 		}
 
 		mvwprintw(local_win, 4, 2, "To scroll, press up/down keys.");
 		mvwprintw(local_win, 5, 2, "To return, press 'q'.");
 
-		int nr_characters = count_characters();
-		int counter = 0;
-		int section = 0;
+		uint16_t nr_characters = count_characters();
+		uint16_t counter = 0;
+		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
 		unsigned char current_status = 0;
+		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
 				current_dipstatus =
 				    get_dipstatus(active_character, current);
-				current_status = current_dipstatus->status;
+				if (current_dipstatus)
+				    current_status = current_dipstatus->status;
+				else
+				    current_status = NEUTRAL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -3306,34 +3004,12 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case 1065:
-			if (characterlist_selector > 0) {
-				characterlist_selector--;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->prev)
+				selected_character = selected_character->prev;
 			break;
 		case 1066:
-			if (characterlist_selector < nr_characters - 1) {
-				characterlist_selector++;
-				counter = 0;
-				current = world->characterlist;
-				while (current != NULL) {
-					if (counter == characterlist_selector) {
-						selected_character = current;
-						break;
-					}
-					counter++;
-					current = current->next;
-				}
-			}
+			if (selected_character->next)
+				selected_character = selected_character->next;
 			break;
 		case 'a':	/* alliance */
 			if (alliance_ok)
@@ -3391,6 +3067,6 @@ int editor_help_dialog(WINDOW *local_win)
 	mvwprintw(local_win, 18, 2, "'?' -- show this help");
 
 	mvwprintw(local_win, 23, 2, "To return, press any key");
-	get_input(local_win);
+	wgetch(local_win);
 	return MAP_EDITOR;
 }

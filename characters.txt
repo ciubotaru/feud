@@ -1,0 +1,25 @@
+# This is the default list of character names.
+# To use your own names, make a list of names,
+# one name per line, and save them in a file
+# named "characters.txt" in "~/.feud" directory.
+
+Somigig
+Grikug
+Graman
+Ertguth
+Kertug
+Urgan
+Adgulg
+Bog
+Zupaugh
+Xug
+Qiandoin
+Qinyr
+Froilrerth
+Chithir
+Cynder
+Brorron
+Dommias
+Azzirreot
+Kymmarrass
+Kiaddrorinth

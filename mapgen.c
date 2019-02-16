@@ -4,213 +4,6 @@
 #include <stdio.h>
 #include "world.h"
 
-/**
- * Names are taken from under the following terms:
- * "You're free to use names on this site to name anything in any of your own works"
- **/
-char *region_names[] = {
-	"Iaronet",
-	"Usiqar",
-	"Fliobbajan",
-	"Shaetticyre",
-	"Prebiathra",
-	"Zeocharune",
-	"Bioppolas",
-	"Tochiotopia",
-	"Paecioxath",
-	"Eocrianon",
-	"Plioddeorim",
-	"Klurrearim",
-	"Imminara",
-	"Kriahialas",
-	"Eorricia",
-	"Immanor",
-	"Qiyedore",
-	"Iccimos",
-	"Aegrotope",
-	"Ewiarune",
-	"Koglorona",
-	"Aexover",
-	"Draemiros",
-	"Eofedalar",
-	"Ekkearos",
-	"Iaggudolon",
-	"Aralion",
-	"Vreaniorea",
-	"Qaenearoth",
-	"Ioggisia",
-	"Iotteogus",
-	"Eklolyn",
-	"Ebbivion",
-	"Maephorune",
-	"Slionenary",
-	"Huciothae",
-	"Creawamond",
-	"Paxiamel",
-	"Clifetika",
-	"Preddodalar",
-	"Preppurune",
-	"Erionem",
-	"Stoppunor",
-	"Vrabbevar",
-	"Qoviaven",
-	"Cheanuria",
-	"Viapeatopia",
-	"Vroyimos",
-	"Feassicion",
-	"Tippolan",
-	"Klealathae",
-	"Wigganon",
-	"Eazeodalar",
-	"Iabrivion",
-	"Pocotria",
-	"Flioppiajan",
-	"Illoran",
-	"Aeceven",
-	"Heshisos",
-	"Aheaque",
-	"Striagoria",
-	"Keopoxar",
-	"Ioyedin",
-	"Ianatika",
-	"Iawethra",
-	"Wriappiatara",
-	"Obrebis",
-	"Eachunet",
-	"Driosethra",
-	"Dreolala",
-	"Iovinica",
-	"Gawinata",
-	"Kicepia",
-	"Draeyinary",
-	"Jashespea",
-	"Plaennodell",
-	"Atioros",
-	"Haemmeavion",
-	"Fliajetia",
-	"Cloyialyn",
-	"Iafanys",
-	"Zulioxath",
-	"Olleorynn",
-	"Gioppispea",
-	"Gricogoth",
-	"Estidolon",
-	"Erigarth",
-	"Oglether",
-	"Fashidell",
-	"Leozoroth",
-	"Eazelyn",
-	"Attinon",
-	"Featteoterra",
-	"Oneolas",
-	"Mokleamelan",
-	"Jarralan",
-	"Briaccatara",
-	"Ixioghar",
-	"Ioxemel",
-	"Iopporan",
-	"Eobresos",
-	"Aeverah",
-	"Criwirona",
-	"Piossirah",
-	"Griagemund",
-	"Kophedalar",
-	"Eabixus",
-	"Akkerant",
-	"Kaggolas",
-	"Wutiopia",
-	"Segleaque",
-	"Braevioryon",
-	"Iareron",
-	"Eozotis",
-	"Olliodin",
-	"Veakiola",
-	"Ebbioxus",
-	"Udrirynn",
-	"Plenioroth",
-	"Lioppipia",
-	"Kuweolan",
-	"Peyidell",
-	"Slaetioxar",
-	"Krohiria",
-	"Slorerah",
-	"Vrearrenica",
-	"Cliwiadore",
-	"Cleadecyre",
-	"Lophudale",
-	"Baedetha",
-	"Ecrelion",
-	"Aemeonara",
-	"Uttadore",
-	"Eawavar",
-	"Wiastala",
-	"Cecesia",
-	"Iaxetika",
-	"Astigus",
-	"Draellagana",
-	"Krewerune",
-	"Jeoklelan",
-	"Gimirion",
-	"Zidrelan",
-	"Eoporus",
-	"Iorutria",
-	"Eohialar",
-	"Jophealon",
-	"Oddenem",
-	"Wrazidu",
-	"Grikkomel",
-	"Pritiapia",
-	"Eokanys",
-	"Kleallurion",
-	"Elleamelan",
-	"Acithan",
-	"Irrorah",
-	"Ohimar",
-	"Kliorreriel",
-	"Oddarus",
-	"Driaddimel",
-	"Brobeomar",
-	"Slurrogus",
-	"Zeoyinary",
-	"Breacuspea",
-	"Craedotara",
-	"Klarrethan",
-	"Kisimond",
-	"Sliaweterra",
-	"Shojular",
-	"Breoggeorus",
-	"Krallitha",
-	"Wimeogar",
-	"Hiolliodu",
-	"Ijomund",
-	"Ioccituary",
-	"Oklodalar",
-	"Xapionor",
-	"Eastethas",
-	"Eataxath",
-	"Iossudin",
-	"Geaphanary",
-	"Aecleother",
-	"Wrojopia",
-	"Brikarona",
-	"Cemmijan",
-	"Eollinata",
-	"Klaeboxus",
-	"Yeccotopia",
-	"Xeallacion",
-	"Cleabbumar",
-	"Seammianica",
-	"Fleapenon",
-	"Gleojebis",
-	"Oshiotope",
-	"Blaegeonor",
-	"Aegleanica",
-	"Glidagarth",
-	"Chemearene",
-	"Iochiarath",
-	"Ammopia",
-};
-
 int region_size = 36;
 
 int voronoi_iterations = 3;
@@ -223,32 +16,47 @@ float **create_region_centers(uint16_t nr_regions)
 		return NULL;
 	int i;
 	region_centers = malloc(sizeof(float *) * nr_regions);
+	if (!region_centers) return NULL;
 	for (i = 0; i < nr_regions; i++) {
 		region_centers[i] = malloc(sizeof(float) * 2);
+		if (!region_centers[i]) goto err;
 		region_centers[i][0] = fmod(rand(), world->grid->height);
 		region_centers[i][1] = fmod(rand(), world->grid->width);
 	}
 	return region_centers;
+err:
+	for (i = 0; i < nr_regions; i++) if (region_centers[i]) free(region_centers[i]);
+	free(region_centers);
+	return NULL;
 }
 
 void create_regions(uint16_t nr_regions)
 {
 	if (world->regionlist != NULL || nr_regions == 0)
 		return;
+	char **region_names_new = load_namelist("regions.txt", "Region", nr_regions);
 	int i;
-//      region_t *region = NULL;
-	if (nr_regions < 200) for (i = 0; i < nr_regions; i++) add_region(region_names[i]);
-	else {
-		char *name = malloc(floor(log10(nr_regions)) + 2);
-		for (i = 0; i < nr_regions; i++) {
-			sprintf(name, "%03d", i);
-			add_region(name);
-		}
-		free(name);
+	for (i = 0; i < nr_regions; i++) {
+		add_region(region_names_new[i]);
+		free(region_names_new[i]);
 	}
+	free(region_names_new);
 }
 
-void assign_tiles_to_centers2()
+void create_characters(uint16_t nr_characters)
+{
+	if (world->characterlist != NULL || nr_characters == 0)
+		return;
+	char **character_names_new = load_namelist("characters.txt", "Player", nr_characters);
+	int i;
+	for (i = 0; i < nr_characters; i++) {
+		add_character(character_names_new[i]);
+		free(character_names_new[i]);
+	}
+	free(character_names_new);
+}
+
+void assign_tiles_to_centers()
 {
 	uint16_t nr_regions = count_regions();
 	if (world->grid == NULL || nr_regions == 0 || region_centers == NULL)
@@ -290,83 +98,12 @@ void assign_tiles_to_centers2()
 	}
 }
 
-void assign_tiles_to_centers()
-{
-	uint16_t nr_regions = count_regions();
-	if (world->grid == NULL || nr_regions == 0 || region_centers == NULL)
-		return;
-	int i, j, counter;
-	int closest_center;
-	float min_distance = 0;
-	float tmp;
-	region_t *z = NULL;
-	region_t *current = NULL;
-	for (i = 0; i < world->grid->height; i++) {
-		for (j = 0; j < world->grid->width; j++) {
-			closest_center = world->regionlist->id;
-			min_distance =
-			    (float)
-			    sqrt(powf
-				 (((float)i + 0.5 -
-				   region_centers[closest_center][0]),
-				  2) + powf(((float)j + 0.5 -
-					     region_centers[closest_center][1]),
-					    2));
-			counter = 1;
-			current = world->regionlist->next;
-			while (current != NULL) {
-//                      for (k = 1; k < nr_regions; k++) {
-				tmp =
-				    (float)
-				    sqrt(powf
-					 (((float)i + 0.5 -
-					   region_centers[counter][0]),
-					  2) + powf(((float)j + 0.5 -
-						     region_centers[counter]
-						     [1]), 2));
-				if (tmp < min_distance) {
-					closest_center = current->id;
-					min_distance = tmp;
-				}
-				counter++;
-				current = current->next;
-			}
-			z = get_region_by_id(closest_center);
-			change_tile_region(z, world->grid->tiles[i][j]);
-		}
-	}
-}
-
-void recalculate_region_centers2()
-{
-	int i, j, k;
-	int cumul_h = 0, cumul_w = 0;
-	region_t *region = NULL;
-	uint16_t nr_regions = count_regions();
-	for (k = 0; k < nr_regions; k++) {
-		cumul_h = 0;
-		cumul_w = 0;
-		region = get_region_by_id(k + 1);
-		for (i = 0; i < world->grid->height; i++) {
-			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region->id ==
-				    k + 1) {
-					cumul_h += i;
-					cumul_w += j;
-				}
-			}
-		}
-		region_centers[k][0] = (float)cumul_h / region->size;
-		region_centers[k][1] = (float)cumul_w / region->size;
-	}
-}
-
 void recalculate_region_centers()
 {
 	int i, j;
 	int cumul_h = 0, cumul_w = 0;
 //      uint16_t nr_regions = count_regions();
-	int counter = 0;
+	uint16_t counter = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
 //      while (counter < nr_regions) {
@@ -394,10 +131,10 @@ void voronoi(int nr_regions)
 		return;
 	int i;
 	region_centers = create_region_centers(nr_regions);
-	assign_tiles_to_centers2();
+	assign_tiles_to_centers();
 	for (i = 0; i < voronoi_iterations; i++) {
 		recalculate_region_centers();
-		assign_tiles_to_centers2();
+		assign_tiles_to_centers();
 	}
 	for (i = 0; i < nr_regions; i++)
 		free(region_centers[i]);
@@ -407,11 +144,17 @@ void voronoi(int nr_regions)
 unsigned char **create_height_grid() {
 	if (!world->grid || !world->grid->tiles) return NULL;
 	unsigned char **grid = malloc(sizeof(char *) * world->grid->height);
+	if (!grid) return NULL;
 	int i;
 	for (i = 0; i < world->grid->height; i++) {
 		grid[i] = malloc(world->grid->width);
+		if (!grid[i]) goto err;
 	}
 	return grid;
+err:
+	for (i = 0; i < world->grid->height; i++) if (grid[i]) free(grid[i]);
+	free(grid);
+	return NULL;
 }
 
 void delete_height_grid(unsigned char **grid) {
@@ -437,6 +180,7 @@ void blur_height_grid(unsigned char **grid) {
 	if (!world->grid || !world->grid->tiles) return;
 	int i, j, x, y, x_min, x_max, y_min, y_max, count;
 	unsigned char **grid_tmp = create_height_grid();
+	if (!grid_tmp) return;
 	for (i = 0; i < world->grid->height; i++) {
 		for (j = 0; j < world->grid->width; j++) {
 			grid_tmp[i][j] = grid[i][j];

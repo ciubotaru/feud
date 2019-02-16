@@ -1,7 +1,7 @@
 AC_PREREQ([2.68])
-AC_INIT([feud], [0.0.1], [vitalie@ciubotaru.tokyo])
+AC_INIT([feud], [0.0.4], [vitalie@ciubotaru.tokyo])
 AC_CONFIG_SRCDIR([feud.c])
-#AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
