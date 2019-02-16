@@ -8,7 +8,6 @@
 #include "world.h"
 
 #define MAXLINE 1024
-#define ABOUT_STRING "Feud Server v0.0.3"
 
 #define SETUP_LOOP 0
 #define GAME_LOOP 1
@@ -45,7 +44,7 @@ void reset()
 
 void print_about()
 {
-	dprintf(STDOUT_FILENO, "%s\n", ABOUT_STRING);
+	dprintf(STDOUT_FILENO, "Feud Server v%s\n", PACKAGE_VERSION);
 	return;
 }
 

@@ -1,3 +1,18 @@
+Version 0.0.4 (February 2019)
+
+Changes:
+* Streamlined start menu and key behavior in game and editor
+* Specified diplomacy (attacking a neutral triggers war)
+* Improved player colors (excluded white-on-black)
+* Added editable files with character and region namelists
+* Improved behavior on newgame (rewrite savegame and clear log) and gameover
+  (delete savegame and rename log)
+* Updated RULES
+
+Bugfixes:
+* Added null-pointer checks
+* Missing newline after chronicle entry
+
 Version 0.0.3 (December 2018)
 -----------------------------
 

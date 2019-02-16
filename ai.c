@@ -10,7 +10,6 @@
 #define GAMEOVER 2
 #define MAXLINE 1024
 #define PROMPT "> "
-#define ABOUT_STRING "Feud AI v0.0.3"
 
 int stage = -1;
 int side;
@@ -43,7 +42,7 @@ void reset()
 
 void print_about()
 {
-	dprintf(STDOUT_FILENO, "%s\n", ABOUT_STRING);
+	dprintf(STDOUT_FILENO, "Feud AI v%s\n", PACKAGE_VERSION);
 }
 
 void print_help_piece()
