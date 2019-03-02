@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <time.h>
 #include <unistd.h>
 #include "world.h"
 
@@ -1096,6 +1097,7 @@ void think()
 
 int main(int argc, char **argv)
 {
+	srand((unsigned)time(NULL));
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
