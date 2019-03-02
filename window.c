@@ -225,12 +225,11 @@ void draw_map(WINDOW *local_win)
 	    (world->current_time.tm_mon - character->birthdate.tm_mon);
 	mvwprintw(local_win, 5, 50, "Age: %d year(s) %d month(s)",
 		  character_age_mon / 12, character_age_mon % 12);
-	mvwprintw(local_win, 6, 50, "Money: %d (#%d)", character->money,
-		  character->rank_money);
-	mvwprintw(local_win, 7, 50, "Army: %d (#%d)",
-		  count_pieces_by_owner(character), character->rank_army);
-	mvwprintw(local_win, 8, 50, "Land: %d (#%d)",
-		  count_tiles_by_owner(character), character->rank_land);
+	mvwprintw(local_win, 6, 50, "Money: %d", character->money);
+	mvwprintw(local_win, 7, 50, "Army: %d",
+		  count_pieces_by_owner(character));
+	mvwprintw(local_win, 8, 50, "Land: %d",
+		  count_tiles_by_owner(character));
 	mvwprintw(local_win, 9, 50, "Heir: %s",
 		  (character->heir != NULL ? character->heir->name : "none"));
 	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
@@ -533,7 +532,6 @@ int give_region_dialog(WINDOW *local_win)
 						region->name,
 						rank_name[selected_character->rank],
 						selected_character->name);
-				update_land_ranking();
 				return REGIONS_DIALOG;
 				break;
 			}
@@ -686,7 +684,6 @@ int give_money_dialog(WINDOW *local_win)
 				set_money(receiving_character,
 					  get_money(receiving_character) + money);
 			}
-			update_money_ranking();
 			return MAIN_SCREEN;
 			break;
 		}
@@ -700,9 +697,46 @@ int info_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
-	int i;
+	uint16_t i, j;
 	uint16_t section = 0;
 	uint16_t nr_characters = count_characters();
+
+	struct rankings {
+		character_t *character;
+		uint16_t nr_tiles;
+		uint16_t land_ranking;
+		uint16_t nr_pieces;
+		uint16_t army_ranking;
+		uint16_t money_ranking;
+	};
+
+	struct rankings **characters = malloc(sizeof(struct rankings *) * nr_characters);
+	if (!characters) goto err;
+	for (i = 0; i < nr_characters; i++) characters[i] = malloc(sizeof(struct rankings));
+
+	character_t *current = world->characterlist;
+	i = 0;
+	while (i < nr_characters && current != NULL) {
+		characters[i]->character = current;
+		characters[i]->nr_tiles = count_tiles_by_owner(characters[i]->character);
+		characters[i]->land_ranking = 1;
+		characters[i]->nr_pieces = count_pieces_by_owner(characters[i]->character);
+		characters[i]->army_ranking = 1;
+		characters[i]->money_ranking = 1;
+		current = current->next;
+		i++;
+	}
+
+	for (i = 0; i < nr_characters; i++) {
+		for (j = 0; j < i; j++) {
+			if (characters[i]->nr_tiles < characters[j]->nr_tiles) characters[i]->land_ranking++;
+			else if (characters[i]->nr_tiles > characters[j]->nr_tiles) characters[j]->land_ranking++;
+			if (characters[i]->nr_pieces < characters[j]->nr_pieces) characters[i]->army_ranking++;
+			else if (characters[i]->nr_pieces > characters[j]->nr_pieces) characters[j]->army_ranking++;
+			if (characters[i]->character->money < characters[j]->character->money) characters[i]->money_ranking++;
+			else if (characters[i]->character->money > characters[j]->character->money) characters[j]->money_ranking++;
+		}
+	}
 
 	while (1) {
 		wclear(local_win);
@@ -718,29 +752,26 @@ int info_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 6, 54, "Army");
 		mvwprintw(local_win, 6, 64, "Land");
 
-		uint16_t counter = 0;
-		character_t *current = world->characterlist;
-		while (current != NULL) {
-			if (counter >= section * 10
-			    && counter < section * 10 + 10
-			    && counter < nr_characters) {
-				mvwprintw(local_win, 8 + counter % 10, 2,
-					  "%3d. %s", current->id,
-					  current->name);
-				mvwprintw(local_win, 8 + counter % 10, 42,
-					  "%3d (#%d)", current->money,
-					  current->rank_money);
-				mvwprintw(local_win, 8 + counter % 10, 52,
+		i = 0;
+		while (i < nr_characters) {
+			if (i >= section * 10
+			    && i < section * 10 + 10) {
+				mvwprintw(local_win, 8 + i % 10, 2,
+					  "%3d. %s", characters[i]->character->id,
+					  characters[i]->character->name);
+				mvwprintw(local_win, 8 + i % 10, 42,
+					  "%3d (#%d)", characters[i]->character->money,
+					  characters[i]->money_ranking);
+				mvwprintw(local_win, 8 + i % 10, 52,
 					  "%3d (#%d)",
-					  count_pieces_by_owner(current),
-					  current->rank_army);
-				mvwprintw(local_win, 8 + counter % 10, 62,
+					  characters[i]->nr_pieces,
+					  characters[i]->army_ranking);
+				mvwprintw(local_win, 8 + i % 10, 62,
 					  "%3d (#%d)",
-					  count_tiles_by_owner(current),
-					  current->rank_land);
+					  characters[i]->nr_tiles,
+					  characters[i]->land_ranking);
 			}
-			current = current->next;
-			counter++;
+			i++;
 		}
 
 		int user_move = get_input(local_win);
@@ -754,10 +785,16 @@ int info_dialog(WINDOW *local_win)
 				section++;
 			break;
 		case 'q':
-			return MAIN_SCREEN;
+			goto err;
 			break;
 		}
 	}
+err:
+	if (characters) {
+		for (i = 0; i < nr_characters; i++) if (characters[i]) free(characters[i]);
+		free(characters);
+	}
+	return MAIN_SCREEN;
 }
 
 int successor_dialog(WINDOW *local_win)

@@ -31,9 +31,6 @@ static void fill_character_details(character_t *character, const char *name)
 	strcpy(character->name, name);
 	character->money = 0;
 	character->rank = 0;
-	character->rank_land = 0;
-	character->rank_army = 0;
-	character->rank_money = 0;
 	character->prev = NULL;
 	character->next = NULL;
 	character->birthdate.tm_year = world->current_time.tm_year;
@@ -288,33 +285,6 @@ uint16_t count_characters()
 		current = current->next;
 	}
 	return count;
-}
-
-void update_money_ranking()
-{
-	character_t *character = NULL;
-	character_t *character2 = NULL;
-
-	/* reset ranks to 1 */
-	character = world->characterlist;
-	while (character != NULL) {
-		character->rank_money = 1;
-		character = character->next;
-	}
-	/* rewind to start */
-	character = world->characterlist;
-
-	while (character != NULL) {
-		character2 = world->characterlist;
-		while (character2->id != character->id) {
-			if (character->money <= character2->money)
-				character->rank_money++;
-			else
-				character2->rank_money++;
-			character2 = character2->next;
-		}
-		character = character->next;
-	}
 }
 
 int is_gameover()

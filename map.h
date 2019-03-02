@@ -50,8 +50,6 @@ uint16_t get_region_order(region_t *region);
 
 region_t *get_region_by_order(uint16_t order);
 
-void update_land_ranking();
-
 void clear_region(region_t *region);
 
 void remove_region(region_t *region);
@@ -65,8 +63,6 @@ uint16_t count_tiles_by_owner(character_t *owner);
 uint16_t count_regions_by_owner(character_t *owner);
 
 uint16_t count_regions();
-
-void update_land_ranking();
 
 typedef struct grid {
 	uint16_t height;

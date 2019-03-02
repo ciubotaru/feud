@@ -368,34 +368,6 @@ uint16_t count_regions()
 	return counter;
 }
 
-void update_land_ranking()
-{
-	character_t *character = NULL;
-	character_t *character2 = NULL;
-
-	/* reset ranks to 1 */
-	character = world->characterlist;
-	while (character != NULL) {
-		character->rank_land = 1;
-		character = character->next;
-	}
-	/* rewind to start */
-	character = world->characterlist;
-
-	while (character != NULL) {
-		character2 = world->characterlist;
-		while (character2->id != character->id) {
-			if (count_tiles_by_owner(character) <=
-			    count_tiles_by_owner(character2))
-				character->rank_land++;
-			else
-				character2->rank_land++;
-			character2 = character2->next;
-		}
-		character = character->next;
-	}
-}
-
 grid_t *create_grid(const uint16_t height, const uint16_t width)
 {
 	if (world->grid != NULL)
@@ -517,7 +489,6 @@ unsigned int move_piece(piece_t * piece, const uint16_t dst_height,
 			/* if src and dest are neutral, trigger war */
 			if (get_diplomacy(src_character, dst_character) != WAR) set_diplomacy(src_character, dst_character, WAR);
 		}
-		update_army_ranking();
 	}
 	/* update grid */
 	world->grid->tiles[src_height][src_width]->piece = NULL;

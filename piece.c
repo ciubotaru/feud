@@ -164,31 +164,3 @@ uint16_t count_pieces_by_owner(character_t * owner)
 	}
 	return count;
 }
-
-void update_army_ranking()
-{
-	character_t *character = NULL;
-	character_t *character2 = NULL;
-
-	/* reset ranks to 1 */
-	character = world->characterlist;
-	while (character != NULL) {
-		character->rank_army = 1;
-		character = character->next;
-	}
-	/* rewind to start */
-	character = world->characterlist;
-
-	while (character != NULL) {
-		character2 = world->characterlist;
-		while (character2->id != character->id) {
-			if (count_pieces_by_owner(character) <=
-			    count_pieces_by_owner(character2))
-				character->rank_army++;
-			else
-				character2->rank_army++;
-			character2 = character2->next;
-		}
-		character = character->next;
-	}
-}

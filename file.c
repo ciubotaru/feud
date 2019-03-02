@@ -477,9 +477,6 @@ unsigned int load_game()
 	world->selected_character = get_character_by_id(selected_character_id);
 	if (!world->selected_character) return 1;
 
-	update_money_ranking();
-	update_army_ranking();
-	update_land_ranking();
 	sort_region_list();
 	return 0;
 }
