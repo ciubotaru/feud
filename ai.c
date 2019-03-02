@@ -266,7 +266,6 @@ int set_grid(const uint16_t height, const uint16_t width)
 
 void standby()
 {
-	char command[MAXLINE];
 	unsigned char print_prompt = 1;
 	while (1) {
 		if (print_prompt) dprintf(STDOUT_FILENO, "%s", PROMPT);
@@ -281,9 +280,8 @@ void standby()
 			stdin_buffer->size = 0;
 			continue;
 		}
-		strcpy(command, stdin_buffer->string);
 		stdin_buffer->size = 0;
-		char *token = strtok(command, " \n");	/* remove trailing newline */
+		char *token = strtok(stdin_buffer->string, " \n");	/* remove trailing newline */
 		if (!token) continue;
 		if (!strcmp(token, "about")) {
 			print_about();
@@ -1001,52 +999,52 @@ void standby()
 	}
 }
 
-void think()
-{
+int think(char *buffer) {
+	/**
+	 * This function makes one move at a time,
+	 * It returns 0 if further moves are possible, or 1 otherwise.
+	**/
+	if (!world || !world->selected_character) {
+		sprintf(buffer, "done\n");
+		return 0;
+	}
 	/* if have enough money and free tile, buy a soldier */
-	while (get_money(ai_character) >= COST_SOLDIER) {
+	if (get_money(world->selected_character) >= COST_SOLDIER) {
 		/* find free tile */
 		int i, j;
-		int done = 0;
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region != NULL && world->grid->tiles[i][j]->region->owner == ai_character && world->grid->tiles[i][j]->piece == NULL && !done) {
-					add_piece(1, i, j, ai_character);
-					set_money(ai_character, get_money(ai_character) - COST_SOLDIER);
-					dprintf(STDOUT_FILENO, "piece add %i 1 %i,%i\n", ai_character->id, i, j);
-					done = 1;
+				if (world->grid->tiles[i][j]->region != NULL && world->grid->tiles[i][j]->region->owner == world->selected_character && world->grid->tiles[i][j]->piece == NULL) {
+					add_piece(1, i, j, world->selected_character);
+					set_money(world->selected_character, get_money(world->selected_character) - COST_SOLDIER);
+					sprintf(buffer, "piece add %i 1 %i,%i\n", world->selected_character->id, i, j);
+					return 0;
 				}
 			}
 		}
-		/* break if no free tile */
-		if (done == 0) break;
 	}
 
 	/* if rolled 6, always choose money. Stupid, but... */
 	if (world->moves_left == 6) {
-		dprintf(STDOUT_FILENO, "take\n");
-		dprintf(STDOUT_FILENO, "done\n");
+//		dprintf(STDOUT_FILENO, "done\n");
 		world->moves_left = 0;
-		ai_character->money++;
-		stage = STANDBY;
-		return;
+		world->selected_character->money++;
+		strcpy(buffer, "take\n");
+		return 0;
 	}
-	while (world->moves_left > 0) {
+	/* move randomly */
+	if (world->moves_left > 0) {
 /**
 		float score = evaluate();
 		printf("Evaluation: %f\n", score);
 **/
-		uint16_t nr_ai_pieces = count_pieces_by_owner(ai_character) + 1;
+		uint16_t nr_ai_pieces = count_pieces_by_owner(world->selected_character) + 1;
 		piece_t *current_piece = world->piecelist;
-		if (!current_piece) {
-			stage = GAMEOVER;
-			return;
-		}
 		int random_nr;
 		if (nr_ai_pieces > 1) random_nr = rand() % nr_ai_pieces + 1;
 		else random_nr = 1;
 		while (current_piece->next != NULL) {
-			if (current_piece->owner == ai_character) {
+			if (current_piece->owner == world->selected_character) {
 				random_nr--;
 				if (random_nr == 0) break;
 			}
@@ -1059,7 +1057,7 @@ void think()
 		if (is_legal_move(current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1)) directions_mask |= (1 << 3);
 		uint16_t nr_directions = __builtin_popcount (directions_mask);
 		/* if piece is blocked, skip and choose another one (WHAT IF ALL PIECES are blocked???) */
-		if (nr_directions == 0) continue;
+//		if (nr_directions == 0) continue;
 		random_nr = rand() % nr_directions + 1;
 		int bit = 0;
 		while (random_nr > 0) {
@@ -1070,29 +1068,26 @@ void think()
 		}
 		switch (bit) {
 			case 1:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width);
+				sprintf(buffer, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height + 1, current_piece->tile->width);
 				move_piece(current_piece, current_piece->tile->height + 1, current_piece->tile->width);
 				break;
 			case 2:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1);
+				sprintf(buffer, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width + 1);
 				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width + 1);
 				break;
 			case 3:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width);
+				sprintf(buffer, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height - 1, current_piece->tile->width);
 				move_piece(current_piece, current_piece->tile->height - 1, current_piece->tile->width);
 				break;
 			case 4:
-				dprintf(STDOUT_FILENO, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1);
+				sprintf(buffer, "piece move %i %i %i %i\n", current_piece->tile->height, current_piece->tile->width, current_piece->tile->height, current_piece->tile->width - 1);
 				move_piece(current_piece, current_piece->tile->height, current_piece->tile->width - 1);
 				break;
 		}
+		return 0;
 	}
-	dprintf(STDOUT_FILENO, "done\n");
-	world->moves_left = 0;
-	if (ai_character->next != NULL) world->selected_character = ai_character->next;
-	else world->selected_character = world->characterlist;
-	stage = STANDBY;
-	return;
+	strcpy(buffer, "done\n");
+	return 1;
 }
 
 int main(int argc, char **argv)
@@ -1101,20 +1096,36 @@ int main(int argc, char **argv)
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
-	if (!stdin_buffer) return 0;
+	if (!stdin_buffer) return 1;
 	stdin_buffer->size = 0;
+	char *command = malloc(MAXLINE);
+	if (!command) return 1;
 	stage = STANDBY;
 	while (1) {
 		switch (stage) {
-		case STANDBY:
-			standby();
-			break;
-		case THINK:
-			think();
-			break;
-		default:
-			return 0;
-			break;
+			case STANDBY:
+				standby();
+				break;
+			case THINK:
+				if (is_gameover()) {
+					stage = GAMEOVER;
+					break;
+				}
+				int retval = think(command);
+				dprintf(STDOUT_FILENO, "%s",command);
+				if (retval) {
+					if (ai_character->next != NULL) world->selected_character = ai_character->next;
+					else world->selected_character = world->characterlist;
+					stage = STANDBY;
+				}
+				break;
+			case GAMEOVER:
+				/* print gameover message (score, winner etc), reset game and return to STANDBY */
+				return 0;
+				break;
+			default:
+				return 0;
+				break;
 		}
 	}
 	return 0;
