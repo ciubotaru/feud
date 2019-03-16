@@ -2,9 +2,9 @@ CC = @CC@
 datarootdir = @datarootdir@
 prefix = @prefix@
 CFLAGS = @CFLAGS@
-OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o logic.o mapgen.o new.o piece.o server.o time.o window.o world.o
+OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o logic.o mapgen.o new.o piece.o server.o single.o time.o window.o world.o
 CLI_OBJS = map.o character.o dice.o diplomacy.o file.o piece.o time.o world.o
-EXECS = feud feud-editor feud-ai feud-server
+EXECS = feud feud-editor feud-ai feud-server feud-single
 DATAFILES = characters.txt regions.txt
 
 .PHONY: all clean distclean install uninstall
@@ -25,6 +25,9 @@ feud-ai: $(CLI_OBJS) ai.o logic.o
 
 feud-server: $(CLI_OBJS) server.o
 	$(CC) $(CFLAGS) -o feud-server $(CLI_OBJS) server.o -lm
+
+feud-single: $(CLI_OBJS) logic.o mapgen.o new.o single.o window.o
+	$(CC) $(CFLAGS) -o feud-single $(CLI_OBJS) logic.o mapgen.o new.o single.o window.o -lncurses -lm
 
 clean:
 	for i in $(OBJS) $(EXECS); do \

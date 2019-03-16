@@ -44,7 +44,8 @@ char *screens[] = {
 	[HELP_DIALOG] = "HELP",
 	[INFORMATION] = "INFORMATION",
 	[SELF_DECLARATION_DIALOG] = "BECOME A KING",
-	[GAME_OVER] = "GAME OVER"
+	[GAME_OVER] = "GAME OVER",
+	[CHOOSE_CHARACTER_DIALOG] = "CHOOSE A HERO"
 };
 
 region_t *selected_region = NULL;
