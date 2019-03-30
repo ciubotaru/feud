@@ -675,16 +675,8 @@ int give_money_dialog(WINDOW *local_win)
 			}
 			break;
 		case 2:
-			if (get_money(receiving_character) + money > MONEY_MAX) {
-				set_money(active_character, 
-					  get_money(active_character) + get_money(receiving_character) - MONEY_MAX);
-				set_money(receiving_character, MONEY_MAX);
-			} else {
-				set_money(active_character, 
-					  get_money(active_character) - money);
-				set_money(receiving_character,
-					  get_money(receiving_character) + money);
-			}
+			error = transfer_money(active_character, receiving_character, money);
+			if (error) strcpy(world->message, "Failed to transfer money");
 			return MAIN_SCREEN;
 			break;
 		}

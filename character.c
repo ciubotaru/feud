@@ -254,6 +254,7 @@ int transfer_money(character_t *source, character_t *destination, const int amou
 	if (destination->money + amount > MONEY_MAX) return 1;
 	source->money -= amount;
 	destination->money += amount;
+	add_to_chronicle("%s granted %i coins to %s.\n", source->name, amount, destination->name);
 	return 0;
 }
 
