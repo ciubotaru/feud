@@ -1,4 +1,13 @@
+Version 0.0.5 (March 2019)
+
+Changes:
+* Added single player mode (human vs computer; AI still moving randomly)
+
+Bugfixes:
+* Fixed random number generator in ai.c (was generating same numbers at every program start)
+
 Version 0.0.4 (February 2019)
+-----------------------------
 
 Changes:
 * Streamlined start menu and key behavior in game and editor

@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([feud], [0.0.4], [vitalie@ciubotaru.tokyo])
+AC_INIT([feud], [0.0.5], [vitalie@ciubotaru.tokyo])
 AC_CONFIG_SRCDIR([feud.c])
 AC_CONFIG_HEADERS([config.h])
 
