@@ -56,4 +56,6 @@ dipoffer_t *open_offer(character_t * from, character_t * to,
 
 void close_offer(dipoffer_t * offer, const unsigned int result);
 
+void sort_diplomacy_list();
+
 #endif

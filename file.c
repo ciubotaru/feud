@@ -478,6 +478,7 @@ unsigned int load_game()
 	if (!world->selected_character) return 1;
 
 	sort_region_list();
+	sort_diplomacy_list();
 	return 0;
 }
 
