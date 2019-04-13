@@ -388,6 +388,11 @@ int deserialize_diplomacy(char **buffer, int *pos)
 		set_diplomacy(character1, character2, (unsigned int)status);
 		buffer_pos += DIPLOMACY_UNIT_SIZE;
 	}
+	character1 = world->characterlist;
+	while (character1) {
+		if (character1->lord) set_diplomacy(character1, character1->lord, ALLIANCE);
+		character1 = character1->next;
+	}
 	*pos = buffer_pos + 1;
 	return 0;
 }
