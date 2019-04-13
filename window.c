@@ -990,7 +990,7 @@ int feudal_dialog(WINDOW *local_win)
 			break;
 		case 'f':
 			if (selected_character != NULL) {
-				selected_character->lord = NULL;
+				unhomage(selected_character);
 				add_to_chronicle
 				    ("%s %s became a sovereign of his lands.\n",
 				     rank_name[selected_character->rank],
@@ -2270,6 +2270,8 @@ int edit_character_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
+	int have_lord = 0;
+
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
@@ -2280,6 +2282,7 @@ int edit_character_dialog(WINDOW *local_win)
 	if (active_character == NULL) {
 		return CHARACTERS_DIALOG;
 	}
+	if (active_character->lord) have_lord = 1;
 	while (1) {
 		mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
 		mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
@@ -2302,7 +2305,10 @@ int edit_character_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 12, 2, "To change money, press 'm'");
 		mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
 		mvwprintw(local_win, 14, 2, "To set heir, press 'h'");
-		mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
+		if (have_lord)
+				  mvwprintw(local_win, 15, 2, "To unset lord, press 'l'");
+		else
+				  mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
 		mvwprintw(local_win, 16, 2, "To edit diplomacy, press 'd'");
 		mvwprintw(local_win, 17, 2, "To return, press 'q'");
 
@@ -2326,7 +2332,11 @@ int edit_character_dialog(WINDOW *local_win)
 			return HEIR_DIALOG;
 			break;
 		case 'l':
-			return FEUDAL_DIALOG;
+			if (have_lord) {
+				unhomage(active_character);
+				have_lord = 0;
+			}
+			else return FEUDAL_DIALOG;
 			break;
 		case 'm':
 			return CHARACTER_MONEY_DIALOG;
@@ -2901,7 +2911,7 @@ int editor_homage_dialog(WINDOW *local_win)
 				break;
 			case 'd':
 				if (unset_lord_ok) {
-					active_character->lord = NULL;
+					unhomage(active_character);
 					return EDIT_CHARACTER_DIALOG;
 				}
 				break;

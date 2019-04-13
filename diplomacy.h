@@ -42,6 +42,8 @@ void remove_redundant_diplomacy();
 
 void homage(character_t * character, character_t * lord);
 
+void unhomage(character_t *character);
+
 void promote_soldier(character_t * character, piece_t * piece, region_t * region,
 		     char *name);
 
