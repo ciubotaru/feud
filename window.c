@@ -233,7 +233,9 @@ void draw_map(WINDOW *local_win)
 		  count_tiles_by_owner(character));
 	mvwprintw(local_win, 9, 50, "Heir: %s",
 		  (character->heir != NULL ? character->heir->name : "none"));
-	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
+	mvwprintw(local_win, 10, 50, "Lord: %s",
+		  (character->lord != NULL ? character->lord->name : "none"));
+	mvwprintw(local_win, 11, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
 	mvwprintw(local_win, 12, 50, "Tile: %d, %d", cursor->height,
