@@ -2895,7 +2895,7 @@ int editor_homage_dialog(WINDOW *local_win)
 				break;
 			case 10:
 				if (set_lord_ok) {
-					active_character->lord = lord;
+					homage(active_character, lord);
 					return EDIT_CHARACTER_DIALOG;
 				}
 				break;
