@@ -1285,7 +1285,7 @@ int diplomacy_dialog(WINDOW *local_win)
 
 	while (1) {
 		dipstatus_t *dipstatus = NULL;
-		unsigned char status = 0;
+		unsigned char status = NEUTRAL;
 		dipoffer_t *dipoffer = NULL;
 		offer_alliance_ok = 0;	/* a */
 		quit_alliance_ok = 0;	/* x */
@@ -1302,20 +1302,13 @@ int diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) {
-			dipstatus = NULL;
-			status = 3;	/* self */
-			dipoffer = NULL;
-		} else {
+		if (active_character == selected_character) status = 3;	/* self */
+		else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
 			if (dipstatus) {
 				status = dipstatus->status;
 				dipoffer = dipstatus->pending_offer;
-			}
-			else {
-				status = NEUTRAL;
-				dipoffer = NULL;
 			}
 		}
 		switch (status) {
@@ -1394,7 +1387,7 @@ int diplomacy_dialog(WINDOW *local_win)
 		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
-		unsigned char current_status = 0;
+		unsigned char current_status = NEUTRAL;
 		dipoffer_t *current_dipoffer = NULL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
@@ -1402,10 +1395,6 @@ int diplomacy_dialog(WINDOW *local_win)
 			if (current_dipstatus) {
 				current_status = current_dipstatus->status;
 				current_dipoffer = current_dipstatus->pending_offer;
-			}
-			else {
-				current_status = NEUTRAL;
-				current_dipoffer = NULL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -2937,7 +2926,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 
 	while (1) {
 		dipstatus_t *dipstatus = NULL;
-		unsigned char status = 0;
+		unsigned char status = NEUTRAL;
 		alliance_ok = 0;	/* a */
 		neutral_ok = 0;	/* n */
 		war_ok = 0;	/* w */
@@ -2949,14 +2938,11 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) {
-			dipstatus = NULL;
-			status = 3;	/* self */
-		} else {
+		if (active_character == selected_character) status = 3;	/* self */
+		else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
 			if (dipstatus) status = dipstatus->status;
-			else status = NEUTRAL;
 		}
 		switch (status) {
 			case NEUTRAL:
@@ -2995,7 +2981,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
-		unsigned char current_status = 0;
+		unsigned char current_status = NEUTRAL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
@@ -3003,8 +2989,6 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 				    get_dipstatus(active_character, current);
 				if (current_dipstatus)
 				    current_status = current_dipstatus->status;
-				else
-				    current_status = NEUTRAL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
