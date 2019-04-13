@@ -2284,6 +2284,7 @@ int edit_character_dialog(WINDOW *local_win)
 	}
 	if (active_character->lord) have_lord = 1;
 	while (1) {
+		wclear(local_win);
 		mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
 		mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
 		mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
@@ -2315,8 +2316,11 @@ int edit_character_dialog(WINDOW *local_win)
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case '+':
-			if (active_character->rank < KING)
-				active_character->rank++;
+			/* can not increase rank above king */
+			if (active_character->rank ==  KING) break;
+			/* can not increase rank if it will be equal to lord's rank */
+			if (active_character->lord && active_character->rank + 1 == active_character->lord->rank) break;
+			active_character->rank++;
 			break;
 		case '-':
 			if (active_character->rank > KNIGHT)
