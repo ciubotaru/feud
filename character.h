@@ -48,8 +48,6 @@ void set_character_rank(character_t *character, unsigned char rank);
 
 int transfer_money(character_t *source, character_t *destination, const int amount);
 
-void set_expected_age(character_t *character);
-
 void set_successor(character_t *character, character_t *successor);
 
 uint16_t count_characters();

@@ -70,8 +70,6 @@ typedef struct grid {
 	tile_t ***tiles;
 } grid_t;
 
-tile_t *tile_init();
-
 grid_t *create_grid(uint16_t height, uint16_t width);
 
 void remove_grid();

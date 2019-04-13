@@ -12,6 +12,8 @@ char *const rank_name[] = {
 	"king"
 };
 
+inline static void set_expected_age(character_t *character);
+
 character_t *create_characterlist()
 {
 	/* single instance */
@@ -256,7 +258,7 @@ int transfer_money(character_t *source, character_t *destination, const int amou
 	return 0;
 }
 
-void set_expected_age(character_t *character)
+inline static void set_expected_age(character_t *character)
 {
 	unsigned int months =
 	    (character->birthdate.tm_year + MIN_AGE) * 12 +

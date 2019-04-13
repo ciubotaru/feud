@@ -25,8 +25,6 @@ void create_characters(uint16_t nr_characters);
 
 void assign_tiles_to_centers();
 
-void recalculate_region_centers();
-
 void voronoi(int nr_regions);
 
 unsigned char **create_height_grid();

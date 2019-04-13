@@ -7,7 +7,9 @@
 #include "window.h"
 #include "world.h"
 
-tile_t *tile_init()
+inline static tile_t *tile_init();
+
+inline static tile_t *tile_init()
 {
 	tile_t *instance = malloc(sizeof(tile_t));
 	if (!instance) exit(EXIT_FAILURE);

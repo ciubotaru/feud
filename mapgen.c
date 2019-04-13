@@ -10,6 +10,8 @@ int voronoi_iterations = 3;
 
 float **region_centers = NULL;
 
+inline static void recalculate_region_centers();
+
 float **create_region_centers(uint16_t nr_regions)
 {
 	if (world->grid == NULL || nr_regions == 0)
@@ -94,7 +96,7 @@ void assign_tiles_to_centers()
 	}
 }
 
-void recalculate_region_centers()
+inline static void recalculate_region_centers()
 {
 	int i, j;
 	int cumul_h = 0, cumul_w = 0;
