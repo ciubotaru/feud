@@ -1005,10 +1005,10 @@ int main(int argc, char **argv)
 	reset();
 	print_about();
 	stdin_buffer = malloc(sizeof(buffer_t));
-	if (!stdin_buffer) return 1;
+	if (!stdin_buffer) exit(EXIT_FAILURE);
 	stdin_buffer->size = 0;
 	char *command = malloc(MAXLINE);
-	if (!command) return 1;
+	if (!command) exit(EXIT_FAILURE);
 	stage = STANDBY;
 	while (1) {
 		switch (stage) {

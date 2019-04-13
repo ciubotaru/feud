@@ -54,12 +54,12 @@ int think(char *buffer) {
 	if (world->moves_left > 0) {
 		if (!available_moves) {
 			available_moves = malloc(sizeof(available_moves_t));
-			if (!available_moves) return 2;
+			if (!available_moves) exit(EXIT_FAILURE);
 			available_moves->allocated_memory = 64;
 			available_moves->moves = malloc(sizeof(tile_t *) * available_moves->allocated_memory * 2);
 			if (!available_moves->moves) {
 				free(available_moves);
-				return 2;
+				exit(EXIT_FAILURE);
 			}
 		}
 		available_moves->nr_moves = 0;
@@ -71,7 +71,7 @@ int think(char *buffer) {
 					tile_t **tmp = realloc(available_moves->moves, sizeof(tile_t *) * available_moves->allocated_memory);
 					if (!tmp) {
 						if (available_moves->moves) free(available_moves->moves);
-						return 2;
+						exit(EXIT_FAILURE);
 					}
 					available_moves->moves = tmp;
 				}

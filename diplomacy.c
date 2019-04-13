@@ -16,8 +16,7 @@ dipstatus_t *create_diplomacylist()
 	if (world->diplomacylist != NULL)
 		return world->diplomacylist;
 	world->diplomacylist = malloc(sizeof(dipstatus_t));
-	if (world->diplomacylist == NULL)
-		return NULL;
+	if (world->diplomacylist == NULL) exit(EXIT_FAILURE);
 	return world->diplomacylist;
 }
 
@@ -93,7 +92,7 @@ inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *c
 			current = current->next;
 		}
 		dipstatus_t *new = malloc(sizeof(dipstatus_t));
-		if (!new) return NULL;
+		if (!new) exit(EXIT_FAILURE);
 		fill_diplomacy_details(new, character1, character2, status);
 		if (prev) {
 			prev->next = new;
@@ -295,7 +294,7 @@ dipoffer_t *open_offer(character_t *from, character_t *to, const unsigned int of
 	if ((status == WAR && offer == NEUTRAL)
 	    || (status == NEUTRAL && offer == ALLIANCE)) {
 		dipoffer = malloc(sizeof(dipoffer_t));
-		if (!dipoffer) return NULL;
+		if (!dipoffer) exit(EXIT_FAILURE);
 		dipoffer->from = from;
 		dipoffer->to = to;
 		dipoffer->offer = offer;

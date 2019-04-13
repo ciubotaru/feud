@@ -9,8 +9,7 @@ void create_world()
 	if (world != NULL)
 		return;		// world;
 	world = malloc(sizeof(world_t));
-	if (world == NULL)
-		return;		// NULL;
+	if (world == NULL) exit(EXIT_FAILURE);
 	world->grid = NULL;
 
 	/**

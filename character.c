@@ -18,8 +18,7 @@ character_t *create_characterlist()
 	if (world->characterlist != NULL)
 		return world->characterlist;
 	world->characterlist = malloc(sizeof(character_t));
-	if (world->characterlist == NULL)
-		return NULL;
+	if (world->characterlist == NULL) exit(EXIT_FAILURE);
 	return world->characterlist;
 }
 
@@ -57,8 +56,7 @@ character_t *add_character(const char *name)
 
 	/* now we can add a new variable */
 	current->next = malloc(sizeof(character_t));
-	if (!current->next)
-		return NULL;
+	if (!current->next) exit(EXIT_FAILURE);
 	fill_character_details(current->next, name);
 	current->next->prev = current;
 	return current->next;
@@ -81,7 +79,7 @@ character_t *add_character_before(character_t *parent, const char *name)
 
 	/* now we can add a new variable */
 	character_t *new = malloc(sizeof(character_t));
-	if (!new) return NULL;
+	if (!new) exit(EXIT_FAILURE);
 	fill_character_details(new, name);
 
 	if (current->prev) {

@@ -73,7 +73,7 @@ static char *strconcat_(unsigned int count, ...)
 	va_end(args);
 
 	char *output = malloc(len + 1);
-	if (output == NULL) return NULL;
+	if (output == NULL) exit(EXIT_FAILURE);
 
 	char *dst = output;
 	va_start(args, count);
@@ -90,12 +90,10 @@ void clearlog() {
 	if (!getenv("HOME")) return;
 	struct stat st = { 0 };
 	char *logdir = strconcat(getenv("HOME"), SAVE_DIRNAME);
-	if (!logdir) return;
 	if (stat(logdir, &st) == -1) {
 		mkdir(logdir, 0700);
 	}
 	char *logfile = strconcat(logdir, LOG_FILENAME);
-	if (!logfile) return;
 	free(logdir);
 
 	FILE *fp = fopen(logfile, "w");
@@ -114,7 +112,6 @@ int add_to_chronicle(char *format, ...)
 	if (!getenv("HOME"))
 		return 1;
 	char *logfile = strconcat(getenv("HOME"), SAVE_DIRNAME, LOG_FILENAME);
-	if (!logfile) return 2;
 
 	FILE *fp = fopen(logfile, "a");
 	free(logfile);
@@ -429,7 +426,6 @@ unsigned int load_game()
 		return 1;
 	struct stat st = { 0 };
 	char *savefile = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
-	if (!savefile) return 1;
 
 	if (stat(savefile, &st) == -1) {
 		free(savefile);
@@ -445,7 +441,7 @@ unsigned int load_game()
 	char *buffer = malloc(file_size);	/* included nullterm */
 	if (!buffer) {
 		fclose(fp);
-		return 4;
+		exit(EXIT_FAILURE);
 	}
 	size_t bytes_read = fread(buffer, 1, file_size, fp);
 	fclose(fp);
@@ -750,7 +746,6 @@ unsigned int save_game()
 		return 1;
 	/* write to file */
 	char *savefile = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
-	if (!savefile) return 2;
 	FILE *fp = fopen(savefile, "w");
 	free(savefile);
 	if (!fp) {
@@ -764,8 +759,7 @@ unsigned int save_game()
 	char *game_metadata_buffer = calloc(1, GAME_METADATA_SIZE + 1);
 	if (!game_metadata_buffer) {
 		fclose(fp);
-		retval = 2;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_game_metadata(&game_metadata_buffer);
 	if (!bytes) {
@@ -787,8 +781,7 @@ unsigned int save_game()
 		   count_characters() * CHARACTERLIST_UNIT_SIZE + 1);
 	if (!characterlist_buffer) {
 		fclose(fp);
-		retval = 2;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_characterlist(&characterlist_buffer);
 	if (!bytes) {
@@ -810,8 +803,7 @@ unsigned int save_game()
 		   count_regions() * REGIONLIST_UNIT_SIZE + 1);
 	if (!regionlist_buffer) {
 		fclose(fp);
-		retval = 2;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_regionlist(&regionlist_buffer);
 	if (!bytes) {
@@ -834,8 +826,7 @@ unsigned int save_game()
 		   1);
 	if (!grid_buffer) {
 		fclose(fp);
-		retval = 5;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_grid(&grid_buffer);
 	if (!bytes) {
@@ -856,8 +847,7 @@ unsigned int save_game()
 	    calloc(1, PIECES_METADATA_SIZE + nr_pieces * PIECES_UNIT_SIZE + 1);
 	if (!pieces_buffer) {
 		fclose(fp);
-		retval = 8;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_pieces(&pieces_buffer, nr_pieces);
 	if (!bytes) {
@@ -884,8 +874,7 @@ unsigned int save_game()
 	    calloc(1, FEUDAL_METADATA_SIZE + nr_feudal * FEUDAL_UNIT_SIZE + 1);
 	if (!feudal_buffer) {
 		fclose(fp);
-		retval = 11;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_feudal(&feudal_buffer, nr_feudal);
 	if (!bytes) {
@@ -912,8 +901,7 @@ unsigned int save_game()
 	    calloc(1, HEIR_METADATA_SIZE + nr_heir * HEIR_UNIT_SIZE + 1);
 	if (!heir_buffer) {
 		fclose(fp);
-		retval = 14;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_heir(&heir_buffer, nr_heir);
 	if (!bytes) {
@@ -942,8 +930,7 @@ unsigned int save_game()
 		   1);
 	if (!diplomacy_buffer) {
 		fclose(fp);
-		retval = 17;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_diplomacy(&diplomacy_buffer, nr_dipstat);
 	if (!bytes) {
@@ -972,8 +959,7 @@ unsigned int save_game()
 		   1);
 	if (!dipoffer_buffer) {
 		fclose(fp);
-		retval = 20;
-		goto ret;
+		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_dipoffer(&dipoffer_buffer, nr_dipoffer);
 	if (!bytes) {
@@ -1004,7 +990,7 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 	namelist_file[0] = strconcat(getenv("HOME"), SAVE_DIRNAME, "/", filename);
 	namelist_file[1] = strconcat(DATADIR, "/", filename);
 	namelist_file[2] = malloc(sizeof(char) * strlen(filename) + 1);
-	if (!namelist_file[2]) return NULL;
+	if (!namelist_file[2]) exit(EXIT_FAILURE);
 	strncpy(namelist_file[2], filename, strlen(filename));
 	int i = 0;
 	int retval;
@@ -1015,7 +1001,7 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 	}
 	int current_line = 0;
 	char **namelist = malloc(sizeof(char *) * size);
-	if (!namelist) return NULL;
+	if (!namelist) exit(EXIT_FAILURE);
 	FILE *fp = fopen(namelist_file[i], "r+");
 	if (!fp) {
 		free(namelist);
@@ -1032,7 +1018,7 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 	int current_char_nr = 0;
 	int fast_forward = 0;
 	namelist[0] = malloc(17);
-	if (!namelist[0]) goto err;
+	if (!namelist[0]) exit(EXIT_FAILURE);
 	while (current_line < size && !feof(fp)) {
 		current_char = fgetc(fp);
 		if (fast_forward == 1) {
@@ -1050,7 +1036,7 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 				}
 				if ((char) current_char != '\n' && (char) current_char != '\r') {
 					namelist[current_line] = malloc(sizeof(char) * 17);
-					if (!namelist[current_line]) goto err;
+					if (!namelist[current_line]) exit(EXIT_FAILURE);
 					namelist[current_line][0] = (char) current_char;
 					current_char_nr++;
 					continue;
@@ -1082,17 +1068,11 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 		int digits = floor(log10(abs(size))) + 1;
 		for (i = current_line; i < size; i++) {
 			namelist[i] = malloc(sizeof(char) * 17);
-			if (!namelist[i]) goto err;
+			if (!namelist[i]) exit(EXIT_FAILURE);
 			sprintf(namelist[i], "%s%0*d", placeholder, digits, i + 1);
 		}
 	}
 	return namelist;
-err:
-	for (i = 0; i < size; i++) {
-		if (namelist[i]) free(namelist[i]);
-	}
-	free(namelist);
-	return NULL;
 }
 
 int savefile_exists() {
@@ -1100,13 +1080,11 @@ int savefile_exists() {
 	if (!getenv("HOME")) return 0;
 	char *dirname = strconcat(getenv("HOME"), SAVE_DIRNAME);
 	struct stat st = { 0 };
-	if (!dirname) return 0;
 	if (stat(dirname, &st) == -1) {
 		mkdir(dirname, 0700);
 	}
 	char *filename = strconcat(dirname, SAVE_FILENAME);
 	free(dirname);
-	if (!filename) return 0;
 	if (access(filename, F_OK) != -1) retval = 1;
 	free(filename);
 	return retval;
@@ -1115,7 +1093,6 @@ int savefile_exists() {
 void delete_savefile() {
 	if (!getenv("HOME")) return;
 	char *filename = strconcat(getenv("HOME"), SAVE_DIRNAME, SAVE_FILENAME);
-	if (!filename) return;
 	if (access(filename, F_OK) == 0) remove(filename);
 	free(filename);
 }
@@ -1123,13 +1100,11 @@ void delete_savefile() {
 void rename_logfile() {
 	if (!getenv("HOME")) return;
 	char *old_filename = strconcat(getenv("HOME"), SAVE_DIRNAME, LOG_FILENAME);
-	if (!old_filename) return;
 	char unixtime[100];
 //	time_t *now;
 	time_t time_now = time(NULL);
 	snprintf(unixtime, 99, "%i", (int) time_now);
 	char *new_filename = strconcat(getenv("HOME"), SAVE_DIRNAME, "/", unixtime, ".log");
-	if (!new_filename) return;
 	rename(old_filename, new_filename);
 	free(old_filename);
 	free(new_filename);

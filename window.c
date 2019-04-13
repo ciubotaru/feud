@@ -704,8 +704,11 @@ int info_dialog(WINDOW *local_win)
 	};
 
 	struct rankings **characters = malloc(sizeof(struct rankings *) * nr_characters);
-	if (!characters) goto err;
-	for (i = 0; i < nr_characters; i++) characters[i] = malloc(sizeof(struct rankings));
+	if (!characters) exit(EXIT_FAILURE);
+	for (i = 0; i < nr_characters; i++) {
+		characters[i] = malloc(sizeof(struct rankings));
+		if (!characters[i]) exit(EXIT_FAILURE);
+	}
 
 	character_t *current = world->characterlist;
 	i = 0;
@@ -778,16 +781,12 @@ int info_dialog(WINDOW *local_win)
 				section++;
 			break;
 		case 'q':
-			goto err;
+			for (i = 0; i < nr_characters; i++) if (characters[i]) free(characters[i]);
+			free(characters);
+			return MAIN_SCREEN;
 			break;
 		}
 	}
-err:
-	if (characters) {
-		for (i = 0; i < nr_characters; i++) if (characters[i]) free(characters[i]);
-		free(characters);
-	}
-	return MAIN_SCREEN;
 }
 
 int successor_dialog(WINDOW *local_win)
