@@ -70,7 +70,7 @@ void print_help_player()
 	dprintf(STDOUT_FILENO,
 		" player name <playerID> <playerName> - set player name\n");
 	dprintf(STDOUT_FILENO,
-		" player rank <playerID> <playerRank> - set player rank([k]ing, [d]uke, [c]ount or [b]aron\n");
+		" player rank <playerID> <playerRank> - set player rank([K]ing, [d]uke, [c]ount, [b]aron or [k]night\n");
 	return;
 }
 
@@ -631,17 +631,20 @@ void standby()
 					continue;
 				}
 				switch (rank_ch[0]) {
-				case 'k':
-					rank = 4;
+				case 'K':
+					rank = KING;
 					break;
 				case 'd':
-					rank = 3;
+					rank = DUKE;
 					break;
 				case 'c':
-					rank = 2;
+					rank = COUNT;
 					break;
 				case 'b':
-					rank = 1;
+					rank = BARON;
+					break;
+				case 'k':
+					rank = KNIGHT;
 					break;
 				default:
 					dprintf(STDOUT_FILENO,
