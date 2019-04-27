@@ -1,2 +1,4 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+#undef CUSTOM_RNG
