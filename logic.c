@@ -26,7 +26,7 @@ int think(char *buffer) {
 	if (!world || !world->selected_character) {
 		return 2;
 	}
-	int i, j;
+	int i;
 	/* if have enough money and free tile, buy a soldier */
 	if (get_money(world->selected_character) >= COST_SOLDIER) {
 		/* find free tile */

@@ -79,7 +79,7 @@ static char *strconcat_(unsigned int count, ...)
 	va_start(args, count);
 	for (i = 0; i < count; i++) {
 		const char *src = va_arg(args, char *);
-		while (*dst++ = *src++);
+		while ((*dst++ = *src++));
 		dst--;
 	}
 	va_end(args);
