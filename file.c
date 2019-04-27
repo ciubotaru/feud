@@ -996,7 +996,9 @@ char **load_namelist(const char *filename, const char *placeholder, const int si
 	namelist_file[1] = strconcat(DATADIR, "/", filename);
 	namelist_file[2] = malloc(sizeof(char) * strlen(filename) + 1);
 	if (!namelist_file[2]) exit(EXIT_FAILURE);
-	strncpy(namelist_file[2], filename, strlen(filename));
+	char *src = (char *) filename;
+	char *dst = namelist_file[2];
+	while ((*dst++ = *src++));
 	int i = 0;
 	int retval;
 	for (i = 0; i < 3; i++) {
