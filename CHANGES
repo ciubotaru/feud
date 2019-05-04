@@ -1,10 +1,15 @@
-Version 0.0.5 (March 2019)
+Version 0.0.5 (May 2019)
 
 Changes:
 * Added single player mode (human vs computer; AI still moving randomly)
+* Minor improvements in AI (characters with common sovereign form an alliance)
+* Added internal RNG based on Wolframs's Rule 30 as an option
 
 Bugfixes:
 * Fixed random number generator in ai.c (was generating same numbers at every program start)
+* Fixed the behavior of "player rank" command in ac.c
+* Fixed segfault when repeatedly loading a character/region name list from file (missing null termination)
+
 
 Version 0.0.4 (February 2019)
 -----------------------------

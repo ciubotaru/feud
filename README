@@ -1,7 +1,7 @@
 feud
 ====
 
-Version 0.0.5 (March 2019)
+Version 0.0.5 (May 2019)
 
 feud is a turn-based military and political strategy game. It is based on
 medieval-styled board games I used to make and play (mostly with myself) as a
@@ -15,18 +15,20 @@ See file named RULES
 Usage
 -----
 
-Currently, only game editor and hot-seat client are implemented. There is no
-NPC, no network multiplayer, and no maps. "No NPC" means that you can not play
-against computer, only against other humans (or against yourself). "No network
-support" means that all players will use the same computer. "No maps" means
-that you will have to use editor to create your own world (create grid, design
-terrain, define regions, give them nice names, create players and set their
-pieces).
+Currently, only game editor, single player (vs computer) and local multiplayer
+(hot-seat) are implemented. Computer player (AI) is very weak and mostly random.
+There is no network, only local multiplayer, so all players will use the same
+computer. There are no prebuilt maps, so you will have to use editor to create
+your own world (create grid, design terrain, define regions, give them nice
+names, create players and set their pieces). Alternatively you can use a wizard
+to create a very simplistic world.
 
-To create a world, type 'feud-editor', create a map and populate it to your
-liking.
+To create or edit a world, type 'feud-editor'. You can create a map and populate
+it to your liking, or open an existing map and tweak it.
 
-To start the game, type 'feud' and play together with your friend(s).
+To play a hotseat game, type 'feud' and play together with your friend(s).
+
+To play against [very stupid] AI, type 'feud-ai', pick a character and have fun.
 
 Installation
 ------------
