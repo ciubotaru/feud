@@ -48,6 +48,8 @@ void destroy_world()
 	clear_region_list();
 	/* remove pieces */
 	clear_piece_list();
+	/* remove diplomacy */
+	clear_diplomacy_list();
 	/* remove characters */
 	clear_character_list();
 	/* remove tiles */

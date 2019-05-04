@@ -158,6 +158,17 @@ void remove_diplomacy(dipstatus_t *dipstatus)
 	}
 }
 
+void clear_diplomacy_list() {
+	if (!world) return;
+	dipstatus_t *current = world->diplomacylist;
+	dipstatus_t *next = current;
+	while (current) {
+		next = current->next;
+		remove_diplomacy(current);
+		current = next;
+	}
+}
+
 void remove_redundant_diplomacy() {
 	dipstatus_t *current = world->diplomacylist;
 	dipstatus_t *next = current;
