@@ -50,8 +50,6 @@ uint16_t get_region_order(region_t *region);
 
 region_t *get_region_by_order(uint16_t order);
 
-void update_land_ranking();
-
 void clear_region(region_t *region);
 
 void remove_region(region_t *region);
@@ -66,15 +64,11 @@ uint16_t count_regions_by_owner(character_t *owner);
 
 uint16_t count_regions();
 
-void update_land_ranking();
-
 typedef struct grid {
 	uint16_t height;
 	uint16_t width;
 	tile_t ***tiles;
 } grid_t;
-
-tile_t *tile_init();
 
 grid_t *create_grid(uint16_t height, uint16_t width);
 

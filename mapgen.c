@@ -10,24 +10,22 @@ int voronoi_iterations = 3;
 
 float **region_centers = NULL;
 
+inline static void recalculate_region_centers();
+
 float **create_region_centers(uint16_t nr_regions)
 {
 	if (world->grid == NULL || nr_regions == 0)
 		return NULL;
 	int i;
 	region_centers = malloc(sizeof(float *) * nr_regions);
-	if (!region_centers) return NULL;
+	if (!region_centers)  exit(EXIT_FAILURE);
 	for (i = 0; i < nr_regions; i++) {
 		region_centers[i] = malloc(sizeof(float) * 2);
-		if (!region_centers[i]) goto err;
+		if (!region_centers[i]) exit(EXIT_FAILURE);
 		region_centers[i][0] = fmod(rand(), world->grid->height);
 		region_centers[i][1] = fmod(rand(), world->grid->width);
 	}
 	return region_centers;
-err:
-	for (i = 0; i < nr_regions; i++) if (region_centers[i]) free(region_centers[i]);
-	free(region_centers);
-	return NULL;
 }
 
 void create_regions(uint16_t nr_regions)
@@ -98,7 +96,7 @@ void assign_tiles_to_centers()
 	}
 }
 
-void recalculate_region_centers()
+inline static void recalculate_region_centers()
 {
 	int i, j;
 	int cumul_h = 0, cumul_w = 0;
@@ -144,17 +142,13 @@ void voronoi(int nr_regions)
 unsigned char **create_height_grid() {
 	if (!world->grid || !world->grid->tiles) return NULL;
 	unsigned char **grid = malloc(sizeof(char *) * world->grid->height);
-	if (!grid) return NULL;
+	if (!grid)  exit(EXIT_FAILURE);
 	int i;
 	for (i = 0; i < world->grid->height; i++) {
 		grid[i] = malloc(world->grid->width);
-		if (!grid[i]) goto err;
+		if (!grid[i])  exit(EXIT_FAILURE);
 	}
 	return grid;
-err:
-	for (i = 0; i < world->grid->height; i++) if (grid[i]) free(grid[i]);
-	free(grid);
-	return NULL;
 }
 
 void delete_height_grid(unsigned char **grid) {

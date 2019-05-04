@@ -16,71 +16,117 @@ dipstatus_t *create_diplomacylist()
 	if (world->diplomacylist != NULL)
 		return world->diplomacylist;
 	world->diplomacylist = malloc(sizeof(dipstatus_t));
-	if (world->diplomacylist == NULL)
-		return NULL;
+	if (world->diplomacylist == NULL) exit(EXIT_FAILURE);
 	return world->diplomacylist;
 }
 
-static void fill_diplomacy_details(dipstatus_t *diplomacy, character_t *character1,
+inline static void fill_diplomacy_details(dipstatus_t *diplomacy, character_t *character1,
 			   character_t *character2, const unsigned int status)
 {
 	if (!diplomacy || !character1 || !character2) return;
-	diplomacy->character1 = character1;
-	diplomacy->character2 = character2;
+	if (character1->id < character2->id) {
+		diplomacy->character1 = character1;
+		diplomacy->character2 = character2;
+	}
+	else {
+		diplomacy->character1 = character2;
+		diplomacy->character2 = character1;
+	}
 	diplomacy->status = status;
 	diplomacy->pending_offer = NULL;
 	diplomacy->prev = NULL;
 	diplomacy->next = NULL;
 }
 
-dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
+inline static dipstatus_t *get_dipstatus_if_exist(character_t *character1, character_t *character2) {
+	if (character1 == NULL || character2 == NULL) return NULL;
+
+	character_t *first, *second;
+	if (character1->id < character2->id) {
+		first = character1;
+		second = character2;
+	}
+	else {
+		first = character2;
+		second = character1;
+	}
+
+	dipstatus_t *current = world->diplomacylist;
+	while (current != NULL) {
+		if (current->character1 == first && current->character2 == second) {
+			break;
+		}
+		current = current->next;
+	}
+	return current;
+}
+
+inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *character2,
 			   const unsigned int status)
 {
 	if (character1 == NULL || character2 == NULL) return NULL;
 
-	dipstatus_t *current;
+	character_t *first, *second;
+	if (character1->id < character2->id) {
+		first = character1;
+		second = character2;
+	}
+	else {
+		first = character2;
+		second = character1;
+	}
+
+	dipstatus_t *current = world->diplomacylist;
+	dipstatus_t *prev = NULL;
 
 	/* if diplomacylist does not exist, create it */
-	if (world->diplomacylist == NULL) {
-//printf("Diplomacy list does not exist. Creating...\n");
+	if (!current) {
 		current = create_diplomacylist();
-		fill_diplomacy_details(current, character1, character2, status);
+		fill_diplomacy_details(current, first, second, status);
 		world->diplomacylist = current;
 		return current;
 	}
+	else {
+		while (current && (current->character1->id < first->id || (current->character1 == first && current->character2->id < second->id))) {
+			prev = current;
+			current = current->next;
+		}
+		dipstatus_t *new = malloc(sizeof(dipstatus_t));
+		if (!new) exit(EXIT_FAILURE);
+		fill_diplomacy_details(new, character1, character2, status);
+		if (prev) {
+			prev->next = new;
+			new->prev = prev;
+		}
+		else {
+			world->diplomacylist = new;
+		}
+		if (current) {
+			current->prev = new;
+			new->next = current;
+		}
+		return new;
+	}
+}
 
-	current = get_dipstatus(character1, character2);
-	/* if dipstatus between two characters exists, update it */
+dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
+			   const unsigned int status)
+{
+	dipstatus_t *current = get_dipstatus_if_exist(character1, character2);
 	if (current) {
 		current->status = status;
 		current->pending_offer = NULL;
-		return current;
 	}
-	/* if no dipstatus, prepend to diplomacylist */
-	else {
-		current = malloc(sizeof(dipstatus_t));
-		if (!current) return NULL;
-		fill_diplomacy_details(current, character1, character2, status);
-		world->diplomacylist->prev = current;
-		current->next = world->diplomacylist;
-		world->diplomacylist = current;
-		return current;
-	}
+	else current = add_dipstatus(character1, character2, status);
+	return current;
 }
 
 dipstatus_t *get_dipstatus(character_t *character1, character_t *character2)
 {
-	dipstatus_t *current = world->diplomacylist;
-	while (current != NULL) {
-		if ((current->character1 == character1
-		     && current->character2 == character2)
-		    || (current->character1 == character2
-			&& current->character2 == character1)) {
-			return current;
-		}
-		current = current->next;
-	}
-	return NULL;
+	dipstatus_t *current = get_dipstatus_if_exist(character1, character2);
+	if (current) return current;
+	/* if nothing found, create neutral diplomacy and return it */
+	return add_dipstatus(character1, character2, NEUTRAL);
 }
 
 unsigned char get_diplomacy(character_t *character1, character_t *character2)
@@ -109,6 +155,17 @@ void remove_diplomacy(dipstatus_t *dipstatus)
 			return;
 		}
 		current = current->next;
+	}
+}
+
+void clear_diplomacy_list() {
+	if (!world) return;
+	dipstatus_t *current = world->diplomacylist;
+	dipstatus_t *next = current;
+	while (current) {
+		next = current->next;
+		remove_diplomacy(current);
+		current = next;
 	}
 }
 
@@ -165,6 +222,10 @@ void homage(character_t *character, character_t *lord)
 	set_diplomacy(character, lord, ALLIANCE);
 }
 
+void unhomage(character_t *character) {
+	if (!character) return;
+	character->lord = NULL;
+}
 /* not used */
 void promote_soldier(character_t *character, piece_t *piece, region_t *region,
 		     char *name)
@@ -248,7 +309,7 @@ dipoffer_t *open_offer(character_t *from, character_t *to, const unsigned int of
 	if ((status == WAR && offer == NEUTRAL)
 	    || (status == NEUTRAL && offer == ALLIANCE)) {
 		dipoffer = malloc(sizeof(dipoffer_t));
-		if (!dipoffer) return NULL;
+		if (!dipoffer) exit(EXIT_FAILURE);
 		dipoffer->from = from;
 		dipoffer->to = to;
 		dipoffer->offer = offer;
@@ -282,4 +343,32 @@ void close_offer(dipoffer_t *offer, const unsigned int result)
 	dipstatus->pending_offer = NULL;
 	if (dipstatus->status == NEUTRAL) remove_diplomacy(dipstatus);
 	return;
+}
+
+void sort_diplomacy_list() {
+	if (world->diplomacylist == NULL || world->diplomacylist->next == NULL) return;
+	int permutations;
+	dipstatus_t *current, *next;
+	do {
+		current = world->diplomacylist;
+		next = current->next;
+		permutations = 0;
+		while (next != NULL) {
+			if (current->character1->id > next->character1->id || (current->character1->id == next->character1->id && current->character2->id > next->character2->id) ) {
+				permutations++;
+				if (current->prev != NULL) current->prev->next = next;
+				else world->diplomacylist = next;
+				if (next->next) next->next->prev = current;
+				next->prev = current->prev;
+				current->next = next->next;
+				current->prev = next;
+				next->next = current;
+				next = current->next;
+			}
+			else {
+				current = next;
+				next = next->next;
+			}
+		}
+	} while (permutations > 0);
 }

@@ -16,15 +16,10 @@ typedef struct character {
 	char name[17];		/* 16 + endchar */
 	uint16_t money;
 	unsigned char rank;
-	uint16_t rank_land;
-	uint16_t rank_army;
-	uint16_t rank_money;
 	struct gametime birthdate;
 	struct gametime deathdate;
 	struct character *lord;
 	struct character *heir;
-//      uint16_t nr_vassals;
-//      struct character **vassals;
 	struct character *prev;
 	struct character *next;
 } character_t;
@@ -53,13 +48,9 @@ void set_character_rank(character_t *character, unsigned char rank);
 
 int transfer_money(character_t *source, character_t *destination, const int amount);
 
-void set_expected_age(character_t *character);
-
 void set_successor(character_t *character, character_t *successor);
 
 uint16_t count_characters();
-
-void update_money_ranking();
 
 int is_gameover();
 

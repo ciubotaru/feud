@@ -21,8 +21,7 @@ piece_t *create_piecelist()
 	if (world->piecelist != NULL)
 		return world->piecelist;
 	world->piecelist = calloc(sizeof(piece_t), 1);
-	if (world->piecelist == NULL)
-		return NULL;
+	if (world->piecelist == NULL) exit(EXIT_FAILURE);
 	return world->piecelist;
 }
 
@@ -57,7 +56,7 @@ piece_t *add_piece(const enum piece_type type, const uint16_t height,
 	piece_t *current = world->piecelist;
 	if (!current) {
 		world->piecelist = calloc(sizeof(piece_t), 1);
-		if (!world->piecelist) return NULL;
+		if (!world->piecelist) exit(EXIT_FAILURE);
 		fill_piece_details(world->piecelist, type, height, width, owner);
 		return world->piecelist;
 	}
@@ -71,8 +70,7 @@ piece_t *add_piece(const enum piece_type type, const uint16_t height,
 	/* now we can add a new variable */
 	piece_t *next = current->next;
 	current->next = calloc(sizeof(piece_t), 1);
-	if (!current->next)
-		return NULL;
+	if (!current->next) exit(EXIT_FAILURE);
 	fill_piece_details(current->next, type, height, width, owner);
 	current->next->next = next;
 	return current->next;
@@ -163,32 +161,4 @@ uint16_t count_pieces_by_owner(character_t * owner)
 		current = current->next;
 	}
 	return count;
-}
-
-void update_army_ranking()
-{
-	character_t *character = NULL;
-	character_t *character2 = NULL;
-
-	/* reset ranks to 1 */
-	character = world->characterlist;
-	while (character != NULL) {
-		character->rank_army = 1;
-		character = character->next;
-	}
-	/* rewind to start */
-	character = world->characterlist;
-
-	while (character != NULL) {
-		character2 = world->characterlist;
-		while (character2->id != character->id) {
-			if (count_pieces_by_owner(character) <=
-			    count_pieces_by_owner(character2))
-				character->rank_army++;
-			else
-				character2->rank_army++;
-			character2 = character2->next;
-		}
-		character = character->next;
-	}
 }

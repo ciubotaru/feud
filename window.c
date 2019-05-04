@@ -44,7 +44,8 @@ char *screens[] = {
 	[HELP_DIALOG] = "HELP",
 	[INFORMATION] = "INFORMATION",
 	[SELF_DECLARATION_DIALOG] = "BECOME A KING",
-	[GAME_OVER] = "GAME OVER"
+	[GAME_OVER] = "GAME OVER",
+	[CHOOSE_CHARACTER_DIALOG] = "CHOOSE A HERO"
 };
 
 region_t *selected_region = NULL;
@@ -225,15 +226,16 @@ void draw_map(WINDOW *local_win)
 	    (world->current_time.tm_mon - character->birthdate.tm_mon);
 	mvwprintw(local_win, 5, 50, "Age: %d year(s) %d month(s)",
 		  character_age_mon / 12, character_age_mon % 12);
-	mvwprintw(local_win, 6, 50, "Money: %d (#%d)", character->money,
-		  character->rank_money);
-	mvwprintw(local_win, 7, 50, "Army: %d (#%d)",
-		  count_pieces_by_owner(character), character->rank_army);
-	mvwprintw(local_win, 8, 50, "Land: %d (#%d)",
-		  count_tiles_by_owner(character), character->rank_land);
+	mvwprintw(local_win, 6, 50, "Money: %d", character->money);
+	mvwprintw(local_win, 7, 50, "Army: %d",
+		  count_pieces_by_owner(character));
+	mvwprintw(local_win, 8, 50, "Land: %d",
+		  count_tiles_by_owner(character));
 	mvwprintw(local_win, 9, 50, "Heir: %s",
 		  (character->heir != NULL ? character->heir->name : "none"));
-	mvwprintw(local_win, 10, 50, "Moves left: %d", world->moves_left);
+	mvwprintw(local_win, 10, 50, "Lord: %s",
+		  (character->lord != NULL ? character->lord->name : "none"));
+	mvwprintw(local_win, 11, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
 	mvwprintw(local_win, 12, 50, "Tile: %d, %d", cursor->height,
@@ -533,7 +535,6 @@ int give_region_dialog(WINDOW *local_win)
 						region->name,
 						rank_name[selected_character->rank],
 						selected_character->name);
-				update_land_ranking();
 				return REGIONS_DIALOG;
 				break;
 			}
@@ -676,17 +677,8 @@ int give_money_dialog(WINDOW *local_win)
 			}
 			break;
 		case 2:
-			if (get_money(receiving_character) + money > MONEY_MAX) {
-				set_money(active_character, 
-					  get_money(active_character) + get_money(receiving_character) - MONEY_MAX);
-				set_money(receiving_character, MONEY_MAX);
-			} else {
-				set_money(active_character, 
-					  get_money(active_character) - money);
-				set_money(receiving_character,
-					  get_money(receiving_character) + money);
-			}
-			update_money_ranking();
+			error = transfer_money(active_character, receiving_character, money);
+			if (error) strcpy(world->message, "Failed to transfer money");
 			return MAIN_SCREEN;
 			break;
 		}
@@ -700,9 +692,49 @@ int info_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
-	int i;
+	uint16_t i, j;
 	uint16_t section = 0;
 	uint16_t nr_characters = count_characters();
+
+	struct rankings {
+		character_t *character;
+		uint16_t nr_tiles;
+		uint16_t land_ranking;
+		uint16_t nr_pieces;
+		uint16_t army_ranking;
+		uint16_t money_ranking;
+	};
+
+	struct rankings **characters = malloc(sizeof(struct rankings *) * nr_characters);
+	if (!characters) exit(EXIT_FAILURE);
+	for (i = 0; i < nr_characters; i++) {
+		characters[i] = malloc(sizeof(struct rankings));
+		if (!characters[i]) exit(EXIT_FAILURE);
+	}
+
+	character_t *current = world->characterlist;
+	i = 0;
+	while (i < nr_characters && current != NULL) {
+		characters[i]->character = current;
+		characters[i]->nr_tiles = count_tiles_by_owner(characters[i]->character);
+		characters[i]->land_ranking = 1;
+		characters[i]->nr_pieces = count_pieces_by_owner(characters[i]->character);
+		characters[i]->army_ranking = 1;
+		characters[i]->money_ranking = 1;
+		current = current->next;
+		i++;
+	}
+
+	for (i = 0; i < nr_characters; i++) {
+		for (j = 0; j < i; j++) {
+			if (characters[i]->nr_tiles < characters[j]->nr_tiles) characters[i]->land_ranking++;
+			else if (characters[i]->nr_tiles > characters[j]->nr_tiles) characters[j]->land_ranking++;
+			if (characters[i]->nr_pieces < characters[j]->nr_pieces) characters[i]->army_ranking++;
+			else if (characters[i]->nr_pieces > characters[j]->nr_pieces) characters[j]->army_ranking++;
+			if (characters[i]->character->money < characters[j]->character->money) characters[i]->money_ranking++;
+			else if (characters[i]->character->money > characters[j]->character->money) characters[j]->money_ranking++;
+		}
+	}
 
 	while (1) {
 		wclear(local_win);
@@ -718,29 +750,26 @@ int info_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 6, 54, "Army");
 		mvwprintw(local_win, 6, 64, "Land");
 
-		uint16_t counter = 0;
-		character_t *current = world->characterlist;
-		while (current != NULL) {
-			if (counter >= section * 10
-			    && counter < section * 10 + 10
-			    && counter < nr_characters) {
-				mvwprintw(local_win, 8 + counter % 10, 2,
-					  "%3d. %s", current->id,
-					  current->name);
-				mvwprintw(local_win, 8 + counter % 10, 42,
-					  "%3d (#%d)", current->money,
-					  current->rank_money);
-				mvwprintw(local_win, 8 + counter % 10, 52,
+		i = 0;
+		while (i < nr_characters) {
+			if (i >= section * 10
+			    && i < section * 10 + 10) {
+				mvwprintw(local_win, 8 + i % 10, 2,
+					  "%3d. %s", characters[i]->character->id,
+					  characters[i]->character->name);
+				mvwprintw(local_win, 8 + i % 10, 42,
+					  "%3d (#%d)", characters[i]->character->money,
+					  characters[i]->money_ranking);
+				mvwprintw(local_win, 8 + i % 10, 52,
 					  "%3d (#%d)",
-					  count_pieces_by_owner(current),
-					  current->rank_army);
-				mvwprintw(local_win, 8 + counter % 10, 62,
+					  characters[i]->nr_pieces,
+					  characters[i]->army_ranking);
+				mvwprintw(local_win, 8 + i % 10, 62,
 					  "%3d (#%d)",
-					  count_tiles_by_owner(current),
-					  current->rank_land);
+					  characters[i]->nr_tiles,
+					  characters[i]->land_ranking);
 			}
-			current = current->next;
-			counter++;
+			i++;
 		}
 
 		int user_move = get_input(local_win);
@@ -754,6 +783,8 @@ int info_dialog(WINDOW *local_win)
 				section++;
 			break;
 		case 'q':
+			for (i = 0; i < nr_characters; i++) if (characters[i]) free(characters[i]);
+			free(characters);
 			return MAIN_SCREEN;
 			break;
 		}
@@ -961,7 +992,7 @@ int feudal_dialog(WINDOW *local_win)
 			break;
 		case 'f':
 			if (selected_character != NULL) {
-				selected_character->lord = NULL;
+				unhomage(selected_character);
 				add_to_chronicle
 				    ("%s %s became a sovereign of his lands.\n",
 				     rank_name[selected_character->rank],
@@ -1256,7 +1287,7 @@ int diplomacy_dialog(WINDOW *local_win)
 
 	while (1) {
 		dipstatus_t *dipstatus = NULL;
-		unsigned char status = 0;
+		unsigned char status = NEUTRAL;
 		dipoffer_t *dipoffer = NULL;
 		offer_alliance_ok = 0;	/* a */
 		quit_alliance_ok = 0;	/* x */
@@ -1273,20 +1304,13 @@ int diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) {
-			dipstatus = NULL;
-			status = 3;	/* self */
-			dipoffer = NULL;
-		} else {
+		if (active_character == selected_character) status = 3;	/* self */
+		else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
 			if (dipstatus) {
 				status = dipstatus->status;
 				dipoffer = dipstatus->pending_offer;
-			}
-			else {
-				status = NEUTRAL;
-				dipoffer = NULL;
 			}
 		}
 		switch (status) {
@@ -1365,7 +1389,7 @@ int diplomacy_dialog(WINDOW *local_win)
 		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
-		unsigned char current_status = 0;
+		unsigned char current_status = NEUTRAL;
 		dipoffer_t *current_dipoffer = NULL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
@@ -1373,10 +1397,6 @@ int diplomacy_dialog(WINDOW *local_win)
 			if (current_dipstatus) {
 				current_status = current_dipstatus->status;
 				current_dipoffer = current_dipstatus->pending_offer;
-			}
-			else {
-				current_status = NEUTRAL;
-				current_dipoffer = NULL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -2252,6 +2272,8 @@ int edit_character_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
+	int have_lord = 0;
+
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
@@ -2262,7 +2284,9 @@ int edit_character_dialog(WINDOW *local_win)
 	if (active_character == NULL) {
 		return CHARACTERS_DIALOG;
 	}
+	if (active_character->lord) have_lord = 1;
 	while (1) {
+		wclear(local_win);
 		mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
 		mvwprintw(local_win, 3, 2, "Rank: %s", rank_name[active_character->rank]);
 		mvwprintw(local_win, 4, 2, "Money: %d", active_character->money);
@@ -2284,15 +2308,21 @@ int edit_character_dialog(WINDOW *local_win)
 		mvwprintw(local_win, 12, 2, "To change money, press 'm'");
 		mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
 		mvwprintw(local_win, 14, 2, "To set heir, press 'h'");
-		mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
+		if (have_lord)
+				  mvwprintw(local_win, 15, 2, "To unset lord, press 'l'");
+		else
+				  mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
 		mvwprintw(local_win, 16, 2, "To edit diplomacy, press 'd'");
 		mvwprintw(local_win, 17, 2, "To return, press 'q'");
 
 		int user_move = get_input(local_win);
 		switch (user_move) {
 		case '+':
-			if (active_character->rank < KING)
-				active_character->rank++;
+			/* can not increase rank above king */
+			if (active_character->rank ==  KING) break;
+			/* can not increase rank if it will be equal to lord's rank */
+			if (active_character->lord && active_character->rank + 1 == active_character->lord->rank) break;
+			active_character->rank++;
 			break;
 		case '-':
 			if (active_character->rank > KNIGHT)
@@ -2308,7 +2338,11 @@ int edit_character_dialog(WINDOW *local_win)
 			return HEIR_DIALOG;
 			break;
 		case 'l':
-			return FEUDAL_DIALOG;
+			if (have_lord) {
+				unhomage(active_character);
+				have_lord = 0;
+			}
+			else return FEUDAL_DIALOG;
 			break;
 		case 'm':
 			return CHARACTER_MONEY_DIALOG;
@@ -2877,13 +2911,13 @@ int editor_homage_dialog(WINDOW *local_win)
 				break;
 			case 10:
 				if (set_lord_ok) {
-					active_character->lord = lord;
+					homage(active_character, lord);
 					return EDIT_CHARACTER_DIALOG;
 				}
 				break;
 			case 'd':
 				if (unset_lord_ok) {
-					active_character->lord = NULL;
+					unhomage(active_character);
 					return EDIT_CHARACTER_DIALOG;
 				}
 				break;
@@ -2908,7 +2942,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 
 	while (1) {
 		dipstatus_t *dipstatus = NULL;
-		unsigned char status = 0;
+		unsigned char status = NEUTRAL;
 		alliance_ok = 0;	/* a */
 		neutral_ok = 0;	/* n */
 		war_ok = 0;	/* w */
@@ -2920,14 +2954,11 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) {
-			dipstatus = NULL;
-			status = 3;	/* self */
-		} else {
+		if (active_character == selected_character) status = 3;	/* self */
+		else {
 			dipstatus =
 			    get_dipstatus(active_character, selected_character);
 			if (dipstatus) status = dipstatus->status;
-			else status = NEUTRAL;
 		}
 		switch (status) {
 			case NEUTRAL:
@@ -2966,7 +2997,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		uint16_t section = 0;
 		character_t *current = world->characterlist;
 		dipstatus_t *current_dipstatus = NULL;
-		unsigned char current_status = 0;
+		unsigned char current_status = NEUTRAL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
@@ -2974,8 +3005,6 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 				    get_dipstatus(active_character, current);
 				if (current_dipstatus)
 				    current_status = current_dipstatus->status;
-				else
-				    current_status = NEUTRAL;
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10

@@ -155,14 +155,12 @@ int main()
 							add_to_chronicle("%s %s claimed %s.\n",
 									 rank_name[world->selected_character->rank], world->selected_character->name,
 									 cursor->region->name);
-							update_land_ranking();
 							break;
 						case 2:	/* conquered from enemy */
 							add_to_chronicle("%s %s conquered %s.\n",
 									 rank_name[world->selected_character->rank], world->selected_character->name,
 									 cursor->region->name);
 							check_death();
-							update_land_ranking();
 							break;
 						default:	/* nothing changed */
 							break;
@@ -201,7 +199,6 @@ int main()
 					if (world->moves_left == 6 && get_money(world->selected_character) < MONEY_MAX) {
 						set_money(world->selected_character, get_money(world->selected_character) + 1);
 						world->moves_left = 0;
-						update_money_ranking();
 					}
 					break;
 				case 'u':		//place a soldier -- dialog
@@ -233,8 +230,6 @@ int main()
 					}
 					add_piece(1, cursor->height, cursor->width, world->selected_character);
 					set_money(world->selected_character, get_money(world->selected_character) - COST_SOLDIER);
-					update_money_ranking();
-					update_army_ranking();
 					break;
 				case 'v':		// toggle between 'move piece' and 'explore map'
 					current_mode = (current_mode + 1) % 2;	/* 0->1, 1->0 */

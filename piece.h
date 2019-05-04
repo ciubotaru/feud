@@ -32,6 +32,4 @@ uint16_t count_pieces();
 
 uint16_t count_pieces_by_owner(character_t *owner);
 
-void update_army_ranking();
-
 #endif				/* PIECE_H */

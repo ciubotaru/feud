@@ -38,9 +38,13 @@ unsigned char get_diplomacy(character_t * name1, character_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
 
+void clear_diplomacy_list();
+
 void remove_redundant_diplomacy();
 
 void homage(character_t * character, character_t * lord);
+
+void unhomage(character_t *character);
 
 void promote_soldier(character_t * character, piece_t * piece, region_t * region,
 		     char *name);
@@ -55,5 +59,7 @@ dipoffer_t *open_offer(character_t * from, character_t * to,
 		       const unsigned int offer);
 
 void close_offer(dipoffer_t * offer, const unsigned int result);
+
+void sort_diplomacy_list();
 
 #endif

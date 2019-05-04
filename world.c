@@ -9,8 +9,7 @@ void create_world()
 	if (world != NULL)
 		return;		// world;
 	world = malloc(sizeof(world_t));
-	if (world == NULL)
-		return;		// NULL;
+	if (world == NULL) exit(EXIT_FAILURE);
 	world->grid = NULL;
 
 	/**
@@ -49,6 +48,8 @@ void destroy_world()
 	clear_region_list();
 	/* remove pieces */
 	clear_piece_list();
+	/* remove diplomacy */
+	clear_diplomacy_list();
 	/* remove characters */
 	clear_character_list();
 	/* remove tiles */

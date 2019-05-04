@@ -12,14 +12,15 @@ char *const rank_name[] = {
 	"king"
 };
 
+inline static void set_expected_age(character_t *character);
+
 character_t *create_characterlist()
 {
 	/* single instance */
 	if (world->characterlist != NULL)
 		return world->characterlist;
 	world->characterlist = malloc(sizeof(character_t));
-	if (world->characterlist == NULL)
-		return NULL;
+	if (world->characterlist == NULL) exit(EXIT_FAILURE);
 	return world->characterlist;
 }
 
@@ -31,9 +32,6 @@ static void fill_character_details(character_t *character, const char *name)
 	strcpy(character->name, name);
 	character->money = 0;
 	character->rank = 0;
-	character->rank_land = 0;
-	character->rank_army = 0;
-	character->rank_money = 0;
 	character->prev = NULL;
 	character->next = NULL;
 	character->birthdate.tm_year = world->current_time.tm_year;
@@ -60,8 +58,7 @@ character_t *add_character(const char *name)
 
 	/* now we can add a new variable */
 	current->next = malloc(sizeof(character_t));
-	if (!current->next)
-		return NULL;
+	if (!current->next) exit(EXIT_FAILURE);
 	fill_character_details(current->next, name);
 	current->next->prev = current;
 	return current->next;
@@ -84,7 +81,7 @@ character_t *add_character_before(character_t *parent, const char *name)
 
 	/* now we can add a new variable */
 	character_t *new = malloc(sizeof(character_t));
-	if (!new) return NULL;
+	if (!new) exit(EXIT_FAILURE);
 	fill_character_details(new, name);
 
 	if (current->prev) {
@@ -257,10 +254,11 @@ int transfer_money(character_t *source, character_t *destination, const int amou
 	if (destination->money + amount > MONEY_MAX) return 1;
 	source->money -= amount;
 	destination->money += amount;
+	add_to_chronicle("%s granted %i coins to %s.\n", source->name, amount, destination->name);
 	return 0;
 }
 
-void set_expected_age(character_t *character)
+inline static void set_expected_age(character_t *character)
 {
 	unsigned int months =
 	    (character->birthdate.tm_year + MIN_AGE) * 12 +
@@ -288,33 +286,6 @@ uint16_t count_characters()
 		current = current->next;
 	}
 	return count;
-}
-
-void update_money_ranking()
-{
-	character_t *character = NULL;
-	character_t *character2 = NULL;
-
-	/* reset ranks to 1 */
-	character = world->characterlist;
-	while (character != NULL) {
-		character->rank_money = 1;
-		character = character->next;
-	}
-	/* rewind to start */
-	character = world->characterlist;
-
-	while (character != NULL) {
-		character2 = world->characterlist;
-		while (character2->id != character->id) {
-			if (character->money <= character2->money)
-				character->rank_money++;
-			else
-				character2->rank_money++;
-			character2 = character2->next;
-		}
-		character = character->next;
-	}
 }
 
 int is_gameover()

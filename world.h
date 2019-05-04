@@ -5,6 +5,7 @@
 #include "map.h"
 #include "dice.h"
 #include "diplomacy.h"
+#include "logic.h"
 #include "mapgen.h"
 #include "new.h"
 #include "piece.h"
