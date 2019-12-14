@@ -82,7 +82,7 @@ piece_t *get_noble_by_owner(character_t * owner)
 		return NULL;
 	piece_t *current = world->piecelist;
 	while (current != NULL) {
-		if (current->owner->id == owner->id && current->type == 0)
+		if (current->owner->id == owner->id && current->type == NOBLE)
 			return current;
 		else
 			current = current->next;
@@ -156,7 +156,7 @@ uint16_t count_pieces_by_owner(character_t * owner)
 	uint16_t count = 0;
 	piece_t *current = world->piecelist;
 	while (current != NULL) {
-		if (current->owner->id == owner->id && current->type == 1)
+		if (current->owner->id == owner->id && current->type == SOLDIER)
 			count++;
 		current = current->next;
 	}
