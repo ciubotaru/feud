@@ -149,7 +149,7 @@ void draw_map(WINDOW *local_win)
 	char tile_char = '.';
 	int color_nr = 0;
 	int character_age_mon = 0;
-	tile_t *current_tile = NULL;
+	tile_t *current_tile;
 	for (i = 24 + h_offset; i > h_offset; i--) {
 		for (j = w_offset; j < 48 + w_offset; j++) {
 /**
@@ -166,6 +166,7 @@ void draw_map(WINDOW *local_win)
 **/
 			if (i < 0 || i >= world->grid->height || j < 0
 			    || j >= world->grid->width) {
+				current_tile = NULL;
 				color_nr = 1;
 				tile_char = ' ';
 			} else {
