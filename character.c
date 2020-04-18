@@ -168,7 +168,6 @@ void clear_character_list()
 	while (world->characterlist != NULL)
 		remove_character(world->characterlist);
 	world->next_character_id = 1;
-	world->characterlist = NULL;
 }
 
 uint16_t get_money(character_t *character)

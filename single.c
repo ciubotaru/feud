@@ -144,8 +144,7 @@ int main()
 			else current_screen = START_MENU;
 			break;
 		case CHOOSE_CHARACTER_DIALOG:
-			current_screen = choose_character_dialog(local_win);
-			if (current_screen == 1) {
+			if (choose_character_dialog(local_win) == 1) {
 				human_player_id = human_player->id;
 				sprintf(world->message, "%s rolled %i\n", (world->selected_character == human_player ? "YOU" : world->selected_character->name), world->moves_left);
 				current_screen = MAIN_SCREEN;

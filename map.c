@@ -332,7 +332,6 @@ void clear_region_list()
 	while (world->regionlist != NULL)
 		remove_region(world->regionlist);
 	world->next_region_id = 1;
-	world->regionlist = NULL;
 }
 
 uint16_t count_tiles_by_owner(character_t * owner)

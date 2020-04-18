@@ -137,7 +137,6 @@ void clear_piece_list()
 	while (world->piecelist != NULL)
 		remove_piece(world->piecelist);
 	world->next_piece_id = 0;
-	world->piecelist = NULL;
 }
 
 uint16_t count_pieces()
