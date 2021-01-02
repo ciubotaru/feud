@@ -13,9 +13,9 @@ end
 #define MAPGEN_H
 #include <stdint.h>
 
-int voronoi_iterations;
+extern int voronoi_iterations;
 
-float **region_centers;
+extern float **region_centers;
 
 float **create_region_centers(uint16_t nr_regions);
 

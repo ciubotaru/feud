@@ -40,7 +40,7 @@ typedef struct {
 	char message[255];
 } world_t;
 
-world_t *world;
+extern world_t *world;
 
 void create_world(void);
 

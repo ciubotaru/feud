@@ -4,7 +4,7 @@
 #define MAX_AGE 100
 #include <stdint.h>
 
-const char *months[12];
+extern const char *months[12];
 
 typedef struct gametime {
 	uint16_t tm_year;

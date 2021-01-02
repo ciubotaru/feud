@@ -20,7 +20,6 @@ int main()
 		return 0;
 	}
 
-	gameover = 0;
 	create_world();
 	srand((unsigned)time(NULL));
 

@@ -14,6 +14,8 @@ char *modes[] = {
 	[VIEW] = "VIEW",
 };
 
+int current_screen;
+
 int current_mode = VIEW;
 
 char *screens[] = {

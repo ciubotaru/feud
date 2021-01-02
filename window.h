@@ -11,9 +11,9 @@
 #include <stdint.h>
 #include <ncurses.h>
 
-int current_mode;
+extern int current_mode;
 
-int gameover;
+extern int gameover;
 
 enum screenlist {
 	START_MENU,
@@ -51,21 +51,19 @@ enum screenlist {
 #define MOVE 0
 #define VIEW 1
 
-int current_mode;
-
 extern char *modes[];
 
 extern char *screens[];
 
-struct region *selected_region;
+extern struct region *selected_region;
 
 extern char const piece_char[];
 
 extern char const noble_char[];
 
-struct tile *cursor;
+extern struct tile *cursor;
 
-int current_screen;
+extern int current_screen;
 
 int check_termsize();
 

@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include "world.h"
 
+int gameover = 0;
+
 character_t *human_player = NULL;
 
 int choose_character_dialog(WINDOW *local_win)
@@ -81,7 +83,6 @@ int main()
 		return 0;
 	}
 
-	gameover = 0;
 	create_world();
 	srand((unsigned)time(NULL));
 

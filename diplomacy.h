@@ -10,7 +10,7 @@ enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
 #define REJECT 0
 #define ACCEPT 1
 
-char *const dipofferlist[2];	/* peace offer and alliance offer */
+extern char *const dipofferlist[2];	/* peace offer and alliance offer */
 
 extern char *const dipstatus_name[];
 
