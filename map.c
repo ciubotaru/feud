@@ -19,54 +19,33 @@ inline static tile_t *tile_init()
 	return instance;
 }
 
-region_t *regionlist = NULL;
-
-region_t *create_regionlist()
-{
-	/* single instance */
-	if (world->regionlist != NULL)
-		return world->regionlist;
-	world->regionlist = malloc(sizeof(region_t));
-	if (world->regionlist == NULL) exit(EXIT_FAILURE);
-	return world->regionlist;
-}
-
-void fill_region_details(region_t * region, const char *name)
-{
-	if (!region) return;
-	region->id = world->next_region_id;
-	world->next_region_id++;
-	region->size = 0;	/* start with one tile */
-	strcpy(region->name, name);
-	region->owner = NULL;
-	region->tiles = NULL;
-	region->prev = NULL;
-	region->next = NULL;
-}
-
 region_t *add_region(const char *name)
 {
-	region_t *current;
+	region_t *new = malloc(sizeof(region_t));
+	if (!new) exit(EXIT_FAILURE);
+	new->id = world->next_region_id;
+	world->next_region_id++;
+	new->size = 0;	/* start with no tiles */
+	strcpy(new->name, name);
+	new->owner = NULL;
+	new->tiles = NULL;
+	new->prev = NULL;
+	new->next = NULL;
+
 	if (world->regionlist == NULL) {
-		current = create_regionlist();
-		fill_region_details(current, name);
-		world->regionlist = current;
-		return current;
+		new->prev = NULL;
+		world->regionlist = new;
 	}
-
-	current = world->regionlist;
-
-	/*fast-forward to the end of list */
-	while (current->next != NULL) {
-		current = current->next;
+	else {
+		region_t *prev = world->regionlist;
+		/*fast-forward to the end of list */
+		while (prev->next != NULL) {
+			prev = prev->next;
+		}
+		new->prev = prev;
+		prev->next = new;
 	}
-
-	/* now we can add a new variable */
-	current->next = malloc(sizeof(region_t));
-	if (!current->next) exit(EXIT_FAILURE);
-	fill_region_details(current->next, name);
-	current->next->prev = current;
-	return current->next;
+	return new;
 }
 
 void change_tile_region(region_t * new_region, tile_t * tile)
@@ -286,18 +265,11 @@ void remove_region(region_t * region)
 		return;
 
 	clear_region(region);
-	region_t *current = world->regionlist;
-	while (current != NULL) {
-		if (current == region) {
-			if (current->prev) current->prev->next = current->next;
-			else world->regionlist = current->next;
-			if (current->next) current->next->prev = current->prev;
-			region_t *tmp = current;
-			free(tmp);
-			return;
-		}
-		current = current->next;
-	}
+	region_t *prev = region->prev;
+	region_t *next = region->next;
+	if (prev) prev->next = next;
+	if (next) next->prev = prev;
+	if (world->regionlist == region) world->regionlist = next;
 }
 
 void sort_region_list() {

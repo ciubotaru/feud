@@ -43,54 +43,47 @@ static void fill_character_details(character_t *character, const char *name)
 
 character_t *add_character(const char *name)
 {
-	if (world->characterlist == NULL) {
-		world->characterlist = create_characterlist();
-		fill_character_details(world->characterlist, name);
-		return world->characterlist;
-	}
-
-	character_t *current = world->characterlist;
-
-	/*fast-forward to the end of list */
-	while (current->next != NULL) {
-		current = current->next;
-	}
-
-	/* now we can add a new variable */
-	current->next = malloc(sizeof(character_t));
-	if (!current->next) exit(EXIT_FAILURE);
-	fill_character_details(current->next, name);
-	current->next->prev = current;
-	return current->next;
-}
-
-character_t *add_character_before(character_t *parent, const char *name)
-{
-	if (world->characterlist == NULL) {
-		world->characterlist = create_characterlist();
-		fill_character_details(world->characterlist, name);
-		return world->characterlist;
-	}
-
-	character_t *current = world->characterlist;
-
-	/*fast-forward to parent or to the end of list*/
-	while (current != parent && current->next != NULL) {
-		current = current->next;
-	}
-
-	/* now we can add a new variable */
 	character_t *new = malloc(sizeof(character_t));
 	if (!new) exit(EXIT_FAILURE);
 	fill_character_details(new, name);
 
-	if (current->prev) {
-		current->prev->next = new;
-		new->prev = current->prev;
+	if (world->characterlist == NULL) {
+		world->characterlist = new;
 	}
-	else world->characterlist = new;
-	new->next = current;
-	current->prev = new;
+	else {
+		character_t *prev = world->characterlist;
+		while (prev->next != NULL) {
+			prev = prev->next;
+		}
+		new->prev = prev;
+		prev->next = new;
+	}
+	return new;
+}
+
+character_t *add_character_before(character_t *parent, const char *name)
+{
+	character_t *new = malloc(sizeof(character_t));
+	if (!new) exit(EXIT_FAILURE);
+	fill_character_details(new, name);
+
+	if (world->characterlist == NULL) {
+		world->characterlist = new;
+	}
+	else {
+		character_t *current = world->characterlist;
+		while (current != parent && current->next != NULL) {
+			current = current->next;
+		}
+
+		if (current->prev) {
+			current->prev->next = new;
+			new->prev = current->prev;
+		}
+		else world->characterlist = new;
+		new->next = current;
+		current->prev = new;
+	}
 	return new;
 }
 
