@@ -129,7 +129,7 @@ int validate_game_data()
 		error = 1;
 		while (region != NULL) {
 			if (region->owner != NULL
-			    && region->owner->id == character->id) {
+			    && region->owner == character) {
 				error = 0;
 				break;
 			}
@@ -149,7 +149,7 @@ int validate_game_data()
 		error = 1;
 		while (piece != NULL) {
 			if (piece->owner != NULL
-			    && piece->owner->id == character->id) {
+			    && piece->owner == character) {
 				error = 0;
 				break;
 			}

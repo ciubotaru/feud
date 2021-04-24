@@ -191,7 +191,7 @@ void homage(character_t *character, character_t *lord)
 	if (character->lord != NULL)
 		return;
 	/* can not be a lord of yourself */
-	if (character->id == lord->id)
+	if (character == lord)
 		return;
 	/* can not pay homage to a baron */
 	unsigned char character_rank = get_character_rank(character);
@@ -212,7 +212,7 @@ void homage(character_t *character, character_t *lord)
 		while (current_character != NULL) {
 			/* free vassals */
 			if (current_character->lord != NULL
-			    && current_character->lord->id == character->id
+			    && current_character->lord == character
 			    && get_character_rank(current_character) >= character_rank)
 				current_character->lord = NULL;
 			current_character = current_character->next;
@@ -275,7 +275,7 @@ uint16_t count_vassals(character_t *character)
 	character_t *current_vassal = world->characterlist;
 	while (current_vassal != NULL) {
 		if (current_vassal->lord != NULL
-		    && current_vassal->lord->id == character->id)
+		    && current_vassal->lord == character)
 			counter++;
 		current_vassal = current_vassal->next;
 	}
@@ -354,7 +354,7 @@ void sort_diplomacy_list() {
 		next = current->next;
 		permutations = 0;
 		while (next != NULL) {
-			if (current->character1->id > next->character1->id || (current->character1->id == next->character1->id && current->character2->id > next->character2->id) ) {
+			if (current->character1->id > next->character1->id || (current->character1 == next->character1 && current->character2->id > next->character2->id) ) {
 				permutations++;
 				if (current->prev != NULL) current->prev->next = next;
 				else world->diplomacylist = next;

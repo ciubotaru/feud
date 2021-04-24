@@ -98,7 +98,7 @@ void remove_character(character_t *character)
 	while (current_piece != NULL) {
 		previous_piece = current_piece;
 		current_piece = current_piece->next;
-		if (previous_piece->owner->id == character->id) {
+		if (previous_piece->owner == character) {
 			remove_piece(previous_piece);
 		}
 	}
@@ -107,7 +107,7 @@ void remove_character(character_t *character)
 	region_t *current_region = world->regionlist;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner->id == character->id) {
+		    && current_region->owner == character) {
 			current_region->owner = NULL;
 		}
 		current_region = current_region->next;
@@ -127,9 +127,9 @@ void remove_character(character_t *character)
 	/* if this character was set as heir or lord to somebody else, remove him */
 	character_t *current = world->characterlist;
 	while (current != NULL) {
-		if (current->heir != NULL && current->heir->id == character->id)
+		if (current->heir != NULL && current->heir == character)
 			current->heir = NULL;
-		if (current->lord != NULL && current->lord->id == character->id)
+		if (current->lord != NULL && current->lord == character)
 			current->lord = NULL;
 		current = current->next;
 	}
@@ -237,7 +237,7 @@ int transfer_money(character_t *source, character_t *destination, const int amou
 {
 	/* check if source and destination exist. NEEDED? */
 	if (source == NULL || destination == NULL
-	    || source->id == destination->id)
+	    || source == destination)
 		return 1;
 	/* check if source has enough */
 	if (source->money < amount)
@@ -263,7 +263,7 @@ inline static void set_expected_age(character_t *character)
 void set_successor(character_t *character, character_t *successor)
 {
 	if (character == NULL
-	    || (successor != NULL && character->id == successor->id))
+	    || (successor != NULL && character == successor))
 		return;		/* can not name yourself a heir */
 	character->heir = successor;
 	return;
@@ -386,7 +386,7 @@ void succession(character_t *character)
 	region_t *current_region = world->regionlist;
 	while (current_region != NULL) {
 		if (current_region->owner != NULL
-		    && current_region->owner->id == character->id)
+		    && current_region->owner == character)
 			current_region->owner = heir;
 		current_region = current_region->next;
 	}
@@ -394,7 +394,7 @@ void succession(character_t *character)
 	/* the heir always inherits soldiers */
 	piece_t *current_piece = world->piecelist;
 	while (current_piece != NULL) {
-		if (current_piece->owner->id == character->id
+		if (current_piece->owner == character
 		    && current_piece->type == 1)
 			current_piece->owner = heir;
 		current_piece = current_piece->next;
@@ -410,7 +410,7 @@ void succession(character_t *character)
 	/* the heir always inherits grantor's vassals */
 	character_t *vassal = world->characterlist;
 	while (vassal != NULL) {
-		if (vassal->lord != NULL && vassal->lord->id == character->id) {
+		if (vassal->lord != NULL && vassal->lord == character) {
 			vassal->lord = heir;
 			set_diplomacy(vassal, character, ALLIANCE);
 		}

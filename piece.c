@@ -82,7 +82,7 @@ piece_t *get_noble_by_owner(character_t * owner)
 		return NULL;
 	piece_t *current = world->piecelist;
 	while (current != NULL) {
-		if (current->owner->id == owner->id && current->type == NOBLE)
+		if (current->owner == owner && current->type == NOBLE)
 			return current;
 		else
 			current = current->next;
@@ -101,7 +101,7 @@ piece_t *next_piece(piece_t * start_piece)
 			current = world->piecelist;
 //                      increment_gametime(); /* cycling around pieces of same character should not change time */
 		}
-		if (current->owner->id == active_character->id)
+		if (current->owner == active_character)
 			return current;
 	}
 	return NULL;
@@ -155,7 +155,7 @@ uint16_t count_pieces_by_owner(character_t * owner)
 	uint16_t count = 0;
 	piece_t *current = world->piecelist;
 	while (current != NULL) {
-		if (current->owner->id == owner->id && current->type == SOLDIER)
+		if (current->owner == owner && current->type == SOLDIER)
 			count++;
 		current = current->next;
 	}

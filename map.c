@@ -52,7 +52,7 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 {
 	/* same region */
 	if (new_region != NULL && tile->region != NULL
-	    && tile->region->id == new_region->id) {
+	    && tile->region == new_region) {
 		return;
 	}
 	/* same NO region */
@@ -120,7 +120,7 @@ void change_region_owner(character_t * new_character, region_t * region)
 {
 	/* same owner */
 	if (region->owner != NULL && new_character != NULL
-	    && region->owner->id == new_character->id) {
+	    && region->owner == new_character) {
 		return;
 	}
 	/* if region is not assigned AND new owner is real */
@@ -311,7 +311,7 @@ uint16_t count_tiles_by_owner(character_t * owner)
 	uint16_t count = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
-		if (current->owner != NULL && current->owner->id == owner->id)
+		if (current->owner != NULL && current->owner == owner)
 			count += current->size;
 		current = current->next;
 	}
@@ -323,7 +323,7 @@ uint16_t count_regions_by_owner(character_t * owner)
 	uint16_t count = 0;
 	region_t *current = world->regionlist;
 	while (current != NULL) {
-		if (current->owner != NULL && current->owner->id == owner->id)
+		if (current->owner != NULL && current->owner == owner)
 			count++;
 		current = current->next;
 	}
@@ -410,7 +410,7 @@ unsigned int is_legal_move(const uint16_t src_height, const uint16_t src_width,
 	piece_t *dst_piece = world->grid->tiles[dst_height][dst_width]->piece;
 	if (dst_piece != NULL) {
 		/* no own piece on destination tile */
-		if (dst_piece->owner->id == current_character->id)
+		if (dst_piece->owner == current_character)
 			return 0;
 		/* no allied piece on destination */
 		if (get_diplomacy(current_character, dst_piece->owner) == ALLIANCE)

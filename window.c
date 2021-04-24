@@ -839,7 +839,7 @@ int successor_dialog(WINDOW *local_win)
 				if (current == world->selected_character)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
-					 && current->id == heir->id)
+					 && current == heir)
 					wprintw(local_win, " (current heir)\n");
 				else
 					wprintw(local_win, "\n");
@@ -967,7 +967,7 @@ int feudal_dialog(WINDOW *local_win)
 				} else
 					wattron(local_win, COLOR_PAIR(1));
 				if (current->lord != NULL
-				    && current->lord->id == active_character->id) {
+				    && current->lord == active_character) {
 					mvwprintw(local_win, 9 + counter % 10,
 						  2, "%3d. %s (%s)",
 						  current->id, current->name,
@@ -1054,11 +1054,11 @@ int homage_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (selected_character->id == active_character->id)
+		if (selected_character == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
 		else if (selected_character->lord != NULL
-			 && selected_character->lord->id == active_character->id)
+			 && selected_character->lord == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
 		else if (selected_character->rank <= KNIGHT)
@@ -1089,7 +1089,7 @@ int homage_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == active_character->id)
+				if (current == active_character)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
@@ -1412,7 +1412,7 @@ int diplomacy_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s (", current->id,
 					  current->name);
-				if (current->id == active_character->id)
+				if (current == active_character)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",
@@ -2234,7 +2234,7 @@ int region_to_character(WINDOW *local_win)
 					  "%3d. %s", current->id,
 					  current->name);
 				if (region->owner != NULL
-				    && region->owner->id == current->id)
+				    && region->owner == current)
 					wprintw(local_win,
 						" (current owner)\n");
 				wattron(local_win, COLOR_PAIR(1));
@@ -2795,7 +2795,7 @@ int editor_successor_dialog(WINDOW *local_win)
 				if (current == world->selected_character)
 					wprintw(local_win, " (you)\n");
 				else if (heir != NULL
-					 && current->id == heir->id)
+					 && current == heir)
 					wprintw(local_win, " (current heir)\n");
 				else
 					wprintw(local_win, "\n");
@@ -2854,11 +2854,11 @@ int editor_homage_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (lord->id == active_character->id)
+		if (lord == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
 		else if (lord->lord != NULL
-			 && lord->lord->id == active_character->id)
+			 && lord->lord == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
 		else if (lord->rank <= KNIGHT)
@@ -2893,7 +2893,7 @@ int editor_homage_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s", current->id,
 					  current->name);
-				if (current->id == active_character->id)
+				if (current == active_character)
 					wprintw(local_win, " (you)\n");
 				else
 					wprintw(local_win, " (%s)\n",
@@ -3020,7 +3020,7 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 				mvwprintw(local_win, 8 + counter % 10, 2,
 					  "%3d. %s (", current->id,
 					  current->name);
-				if (current->id == active_character->id)
+				if (current == active_character)
 					wprintw(local_win, "you");
 				else {
 					wprintw(local_win, "%s",

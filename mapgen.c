@@ -109,8 +109,8 @@ inline static void recalculate_region_centers()
 		cumul_w = 0;
 		for (i = 0; i < world->grid->height; i++) {
 			for (j = 0; j < world->grid->width; j++) {
-				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region->id ==
-				    current->id) {
+				if (world->grid->tiles[i][j]->region && world->grid->tiles[i][j]->region ==
+				    current) {
 					cumul_h += i;
 					cumul_w += j;
 				}
