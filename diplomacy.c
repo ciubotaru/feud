@@ -10,36 +10,8 @@ char *const dipstatus_name[] = {
 	[WAR] = "war"
 };
 
-dipstatus_t *create_diplomacylist()
-{
-	/* single instance */
-	if (world->diplomacylist != NULL)
-		return world->diplomacylist;
-	world->diplomacylist = malloc(sizeof(dipstatus_t));
-	if (world->diplomacylist == NULL) exit(EXIT_FAILURE);
-	return world->diplomacylist;
-}
-
-inline static void fill_diplomacy_details(dipstatus_t *diplomacy, character_t *character1,
-			   character_t *character2, const unsigned int status)
-{
-	if (!diplomacy || !character1 || !character2) return;
-	if (character1->id < character2->id) {
-		diplomacy->character1 = character1;
-		diplomacy->character2 = character2;
-	}
-	else {
-		diplomacy->character1 = character2;
-		diplomacy->character2 = character1;
-	}
-	diplomacy->status = status;
-	diplomacy->offer = 0;
-	diplomacy->prev = NULL;
-	diplomacy->next = NULL;
-}
-
-inline static dipstatus_t *get_dipstatus_if_exist(character_t *character1, character_t *character2) {
-	if (character1 == NULL || character2 == NULL) return NULL;
+inline static dipstatus_t *find_dipstatus(character_t *character1, character_t *character2) {
+	if (!character1 || !character2) return NULL;
 
 	character_t *first, *second;
 	if (character1->id < character2->id) {
@@ -64,7 +36,8 @@ inline static dipstatus_t *get_dipstatus_if_exist(character_t *character1, chara
 inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *character2,
 			   const unsigned int status)
 {
-	if (character1 == NULL || character2 == NULL) return NULL;
+	dipstatus_t *new = malloc(sizeof(dipstatus_t));
+	if (!new) exit(EXIT_FAILURE);
 
 	character_t *first, *second;
 	if (character1->id < character2->id) {
@@ -75,44 +48,33 @@ inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *c
 		first = character2;
 		second = character1;
 	}
+	new->character1 = first;
+	new->character2 = second;
+	new->status = status;
+	new->offer = 0;
 
 	dipstatus_t *current = world->diplomacylist;
 	dipstatus_t *prev = NULL;
-
-	/* if diplomacylist does not exist, create it */
-	if (!current) {
-		current = create_diplomacylist();
-		fill_diplomacy_details(current, first, second, status);
-		world->diplomacylist = current;
-		return current;
+	while (current) {
+		if (current->character1->id > new->character1->id) break;
+		if (current->character1 == new->character1 && current->character2->id > new->character2->id) break;
+		prev = current;
+		current = current->next;
+	}
+	if (!prev) {
+		world->diplomacylist = new;
 	}
 	else {
-		while (current && (current->character1->id < first->id || (current->character1 == first && current->character2->id < second->id))) {
-			prev = current;
-			current = current->next;
-		}
-		dipstatus_t *new = malloc(sizeof(dipstatus_t));
-		if (!new) exit(EXIT_FAILURE);
-		fill_diplomacy_details(new, character1, character2, status);
-		if (prev) {
-			prev->next = new;
-			new->prev = prev;
-		}
-		else {
-			world->diplomacylist = new;
-		}
-		if (current) {
-			current->prev = new;
-			new->next = current;
-		}
-		return new;
+		prev->next = new;
 	}
+	new->next = current;
+	return new;
 }
 
 dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 			   const unsigned int status)
 {
-	dipstatus_t *current = get_dipstatus_if_exist(character1, character2);
+	dipstatus_t *current = find_dipstatus(character1, character2);
 	if (current) {
 		current->status = status;
 	}
@@ -122,7 +84,7 @@ dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 
 dipstatus_t *get_dipstatus(character_t *character1, character_t *character2)
 {
-	dipstatus_t *current = get_dipstatus_if_exist(character1, character2);
+	dipstatus_t *current = find_dipstatus(character1, character2);
 	if (current) return current;
 	/* if nothing found, create neutral diplomacy and return it */
 	return add_dipstatus(character1, character2, NEUTRAL);

@@ -29,8 +29,6 @@ typedef struct dipstatus {
 dipstatus_t *set_diplomacy(character_t * name1, character_t * name2,
 			   const unsigned int status);
 
-dipstatus_t *get_dipstatus(character_t * name1, character_t * name2);
-
 unsigned char get_diplomacy(character_t * name1, character_t * name2);
 
 void remove_diplomacy(dipstatus_t * dipstatus);
