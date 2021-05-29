@@ -32,49 +32,40 @@ int think_diplomacy(char *buffer) {
 		ai_diplomacy->ai_sovereign = get_sovereign(world->selected_character);
 		ai_diplomacy->next_to_check = world->characterlist;
 	}
-	dipstatus_t *current_dipstatus = NULL;
-	dipstatus_t *sovereign_dipstatus = NULL;
-	dipoffer_t *current_dipoffer = NULL;
+	unsigned char status;
+	unsigned char sovereign_status;
+	unsigned char offer;
+	unsigned char sovereign_offer;
 	while (ai_diplomacy->next_to_check) {
 		if (ai_diplomacy->next_to_check == world->selected_character) {
 			ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
 			continue;
 		}
-		current_dipstatus = get_dipstatus(ai_diplomacy->next_to_check, world->selected_character);
+		status = get_diplomacy(world->selected_character, ai_diplomacy->next_to_check);
+		offer = get_offer(world->selected_character, ai_diplomacy->next_to_check);
 		/* check if we are in the same clan */
 		if (get_sovereign(ai_diplomacy->next_to_check) == ai_diplomacy->ai_sovereign) {
-			if (!current_dipstatus || current_dipstatus->status != ALLIANCE) {
-				if (current_dipstatus) current_dipoffer = current_dipstatus->pending_offer;
-				else current_dipoffer = NULL;
+			if (status != ALLIANCE) {
 				/* if they sent us an alliance offer, accept it */
-				if (current_dipoffer) {
-					if (current_dipoffer->from == ai_diplomacy->next_to_check && current_dipoffer->offer == ALLIANCE) {
-						close_offer(current_dipoffer, ACCEPT);
-						sprintf(buffer, "accept alliance offer from %i\n", ai_diplomacy->next_to_check->id);
-						ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
-						return 0;
-					}
-					else {
-						close_offer(current_dipoffer, REJECT);
-						sprintf(buffer, "reject offer from %i\n", ai_diplomacy->next_to_check->id);
-						return 0;
-					}
+				if (offer & OFFER_RECEIVED_BIT) {
+					close_offer(world->selected_character, ai_diplomacy->next_to_check, ACCEPT);
+					sprintf(buffer, "accept alliance offer from %i\n", ai_diplomacy->next_to_check->id);
 				}
 				/* offer alliance */
 				else {
-					current_dipoffer = open_offer(world->selected_character, ai_diplomacy->next_to_check, ALLIANCE);
+					open_offer(world->selected_character, ai_diplomacy->next_to_check);
 					sprintf(buffer, "offer alliance to %i\n", ai_diplomacy->next_to_check->id);
-					ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
-					return 0;
 				}
+				ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
+				return 0;
 			}
 		}
 		else {
 			/* MOST IMPORTANT -- diplomacy towards outsiders */
 			if (world->selected_character == ai_diplomacy->ai_sovereign) {
 				/* we are the overlord -- declare total war */
-				if (current_dipstatus->status != WAR) {
-					set_diplomacy(ai_diplomacy->next_to_check, world->selected_character, WAR);
+				if (status != WAR) {
+					set_diplomacy(world->selected_character, ai_diplomacy->next_to_check, WAR);
 					sprintf(buffer, "declare war to %i\n", ai_diplomacy->next_to_check->id);
 					ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
 					return 0;
@@ -82,13 +73,13 @@ int think_diplomacy(char *buffer) {
 			}
 			else {
 				/* we are a vassal; copy overlord's diplomacy */
-				sovereign_dipstatus = get_dipstatus(ai_diplomacy->next_to_check, ai_diplomacy->ai_sovereign);
-				dipoffer_t *sovereign_dipoffer = sovereign_dipstatus->pending_offer;
-				if (sovereign_dipstatus->status != current_dipstatus->status) {
+				sovereign_status = get_diplomacy(ai_diplomacy->ai_sovereign, ai_diplomacy->next_to_check);
+				sovereign_offer = get_offer(ai_diplomacy->ai_sovereign, ai_diplomacy->next_to_check);
+				if (sovereign_status != status) {
 					/* if our sovereign is at war and has not sent a peace offer, declare war */
-					if (sovereign_dipstatus->status == WAR && (sovereign_dipoffer == NULL || sovereign_dipoffer->from != ai_diplomacy->ai_sovereign)) {
+					if (sovereign_status == WAR && sovereign_offer == 0) {
 						sprintf(buffer, "declare war to %i\n", ai_diplomacy->next_to_check->id);
-						set_diplomacy(ai_diplomacy->next_to_check, world->selected_character, WAR);
+						set_diplomacy(world->selected_character, ai_diplomacy->next_to_check, WAR);
 						ai_diplomacy->next_to_check = ai_diplomacy->next_to_check->next;
 						return 0;
 					}

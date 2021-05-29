@@ -33,7 +33,7 @@ inline static void fill_diplomacy_details(dipstatus_t *diplomacy, character_t *c
 		diplomacy->character2 = character1;
 	}
 	diplomacy->status = status;
-	diplomacy->pending_offer = NULL;
+	diplomacy->offer = 0;
 	diplomacy->prev = NULL;
 	diplomacy->next = NULL;
 }
@@ -115,7 +115,6 @@ dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 	dipstatus_t *current = get_dipstatus_if_exist(character1, character2);
 	if (current) {
 		current->status = status;
-		current->pending_offer = NULL;
 	}
 	else current = add_dipstatus(character1, character2, status);
 	return current;
@@ -175,7 +174,7 @@ void remove_redundant_diplomacy() {
 	while (current) {
 		next = current->next;
 		if (current->character1 == current->character2 ||
-			(current->status == NEUTRAL && current->pending_offer == NULL) ||
+			(current->status == NEUTRAL && current->offer == 0) ||
 			current->character1->lord == current->character2 ||
 			current->character1 == current->character2->lord
 		) remove_diplomacy(current);
@@ -290,59 +289,46 @@ character_t *get_sovereign(character_t *character)
 	return sovereign;
 }
 
-dipoffer_t *open_offer(character_t *from, character_t *to, const unsigned int offer)
-{
-	dipstatus_t *dipstatus = get_dipstatus(from, to);
-	/* if dipstatus does not exist, set it to default */
-	if (!dipstatus) {
-		dipstatus = set_diplomacy(from, to, NEUTRAL);
-		if (!dipstatus) return NULL;
-	}
-	else {
-		/* if another offer is pending, reject it */
-		if (dipstatus->pending_offer)
-			close_offer(dipstatus->pending_offer, REJECT);
-	}
-	unsigned char status = dipstatus->status;
-	/* war->neutral or neutral->alliance */
-	dipoffer_t *dipoffer = NULL;
-	if ((status == WAR && offer == NEUTRAL)
-	    || (status == NEUTRAL && offer == ALLIANCE)) {
-		dipoffer = malloc(sizeof(dipoffer_t));
-		if (!dipoffer) exit(EXIT_FAILURE);
-		dipoffer->from = from;
-		dipoffer->to = to;
-		dipoffer->offer = offer;
-		dipstatus->pending_offer = dipoffer;
-	}
-	return dipoffer;
+static void reverse_offer(unsigned char *status) {
+	unsigned char new = 0;
+	if (*status & OFFER_SENT_BIT) new |= OFFER_RECEIVED_BIT;
+	else if (*status & OFFER_RECEIVED_BIT) new |= OFFER_SENT_BIT;
+	*status = new;
 }
 
-void close_offer(dipoffer_t *offer, const unsigned int result)
-{
-	if (offer == NULL || offer->from == NULL || offer->to == NULL)
-		return;
-	dipstatus_t *dipstatus = get_dipstatus(offer->from, offer->to);
-	if (dipstatus == NULL) {
-		free(offer);
-		return;
-	}
+void set_offer(character_t *from, character_t *to, const unsigned char offer_status) {
+	if (!from || !to || from == to) return;
+	dipstatus_t *dipstatus = get_dipstatus(from, to);
+	if (!dipstatus) return; //why would this happen
+	dipstatus->offer = offer_status;
+	if (from != dipstatus->character1) reverse_offer(&(dipstatus->offer));
+}
+
+unsigned char get_offer(character_t *from, character_t *to) {
+	if (!from || !to || from == to) return 0;
+	dipstatus_t *dipstatus = get_dipstatus(from, to);
+	unsigned char retval = dipstatus->offer;
+	if (from != dipstatus->character1) reverse_offer(&retval);
+	return retval;
+}
+
+void open_offer(character_t *from, character_t *to) {
+	if (!from || !to || from == to) return;
+	dipstatus_t *dipstatus = get_dipstatus(from, to);
+	if (from == dipstatus->character1)
+		dipstatus->offer |= OFFER_SENT_BIT;
+	else
+		dipstatus->offer |= OFFER_RECEIVED_BIT;
+}
+
+void close_offer(character_t *from, character_t *to, const unsigned char result) {
+	if (!from || !to || from == to) return;
+	dipstatus_t *dipstatus = get_dipstatus(from, to);
+	dipstatus->offer = 0;
 	if (result == ACCEPT) {
-		switch (dipstatus->status) {
-		case WAR:
-			if (offer->offer == NEUTRAL)
-				dipstatus->status = NEUTRAL;
-			break;
-		case NEUTRAL:
-			if (offer->offer == ALLIANCE)
-				dipstatus->status = ALLIANCE;
-			break;
-		}
+		if (dipstatus->status == WAR) dipstatus->status = NEUTRAL;
+		else dipstatus->status = ALLIANCE;
 	}
-	free(offer);
-	dipstatus->pending_offer = NULL;
-	if (dipstatus->status == NEUTRAL) remove_diplomacy(dipstatus);
-	return;
 }
 
 void sort_diplomacy_list() {

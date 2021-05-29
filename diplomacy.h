@@ -10,21 +10,18 @@ enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
 #define REJECT 0
 #define ACCEPT 1
 
-extern char *const dipofferlist[2];	/* peace offer and alliance offer */
+enum offerlist {OFFER_SENT, OFFER_RECEIVED};
+
+#define OFFER_SENT_BIT (1 << OFFER_SENT)
+#define OFFER_RECEIVED_BIT (1 << OFFER_RECEIVED)
 
 extern char *const dipstatus_name[];
-
-typedef struct dipoffer {
-	character_t *from;
-	character_t *to;
-	unsigned char offer;
-} dipoffer_t;
 
 typedef struct dipstatus {
 	character_t *character1;
 	character_t *character2;
 	unsigned char status;
-	dipoffer_t *pending_offer;
+	unsigned char offer;
 	struct dipstatus *prev;
 	struct dipstatus *next;
 } dipstatus_t;
@@ -55,10 +52,13 @@ uint16_t count_vassals(character_t * character);
 
 character_t *get_sovereign(character_t * character);
 
-dipoffer_t *open_offer(character_t * from, character_t * to,
-		       const unsigned int offer);
+void set_offer(character_t *from, character_t *to, const unsigned char offer_status);
 
-void close_offer(dipoffer_t * offer, const unsigned int result);
+unsigned char get_offer(character_t *from, character_t *to);
+
+void open_offer(character_t *from, character_t *to);
+
+void close_offer(character_t *from, character_t *to, const unsigned char result);
 
 void sort_diplomacy_list();
 

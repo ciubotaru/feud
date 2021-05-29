@@ -417,7 +417,7 @@ int deserialize_dipoffer(char **buffer, int *pos)
 		to = get_character_by_id(be16toh(to_id_be));
 		memcpy(&offer, *buffer + buffer_pos + sizeof(uint16_t) * 2,
 		       sizeof(unsigned char));
-		open_offer(from, to, offer);
+		open_offer(from, to);
 		buffer_pos += DIPOFFER_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -460,14 +460,16 @@ unsigned int load_game()
 	/* unpack file data to game structures */
 	int pos = 0;
 	int (*deserialize[9]) () = {
-	&deserialize_game_metadata,
+		    &deserialize_game_metadata,
 		    &deserialize_characterlist,
 		    &deserialize_regionlist,
 		    &deserialize_grid,
 		    &deserialize_pieces,
 		    &deserialize_feudal,
 		    &deserialize_heir,
-		    &deserialize_diplomacy, &deserialize_dipoffer,};
+		    &deserialize_diplomacy,
+		    &deserialize_dipoffer,
+	};
 	int i, result;
 	for (i = 0; i < 9; i++) {
 		result = deserialize[i] (&buffer, &pos);
@@ -726,14 +728,27 @@ int serialize_dipoffer(char **buffer, uint16_t nr_dipoffer)
 	dipstatus_t *current = world->diplomacylist;
 	uint16_t from_id_be, to_id_be;
 	while (current != NULL) {
+/*
 		if (current->pending_offer != NULL) {
 			from_id_be = htobe16(current->pending_offer->from->id);
 			to_id_be = htobe16(current->pending_offer->to->id);
+*/
+
+		if (current->offer) {
+			if (current->offer & OFFER_SENT_BIT) {
+				from_id_be = htobe16(current->character1->id);
+				to_id_be = htobe16(current->character2->id);
+			}
+			else {
+				from_id_be = htobe16(current->character2->id);
+				to_id_be = htobe16(current->character1->id);
+			}
+
 			memcpy(*buffer + pos, &from_id_be, sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t), &to_id_be,
 			       sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t) * 2,
-			       &(current->pending_offer->offer),
+			       &(current->offer),
 			       sizeof(unsigned char));
 			pos += DIPOFFER_UNIT_SIZE;
 		}
@@ -923,7 +938,7 @@ unsigned int save_game()
 	}
 
 	int nr_dipstat = 0;
-	remove_redundant_diplomacy();
+//	remove_redundant_diplomacy();
 	dipstatus_t *current_diplomacy = world->diplomacylist;
 	while (current_diplomacy != NULL) {
 		nr_dipstat++;
@@ -954,7 +969,7 @@ unsigned int save_game()
 	int nr_dipoffer = 0;
 	current_diplomacy = world->diplomacylist;
 	while (current_diplomacy != NULL) {
-		if (current_diplomacy->pending_offer != NULL)
+		if (current_diplomacy->offer)
 			nr_dipoffer++;
 		current_diplomacy = current_diplomacy->next;
 	}

@@ -260,8 +260,8 @@ void draw_map(WINDOW *local_win)
 		  (piece == NULL ? " " : piece->owner->name));
 	mvwprintw(local_win, 19, 50, "Diplomacy: ");
 	if (piece != NULL && piece->owner->id != character->id) {
-		dipstatus_t *diplomacy = get_dipstatus(piece->owner, character);
 		unsigned char status = get_diplomacy(piece->owner, character);
+		unsigned char offer = get_offer(piece->owner, character);
 		switch (status) {
 			case NEUTRAL:
 				wcolor_set(local_win, 12, NULL);
@@ -274,7 +274,7 @@ void draw_map(WINDOW *local_win)
 				break;
 		}
 		wprintw(local_win, "%s", dipstatus_name[status]);
-		if (diplomacy && diplomacy->pending_offer)
+		if (offer)
 			wprintw(local_win, " *");
 		wcolor_set(local_win, 1, NULL);
 	}
@@ -1306,22 +1306,19 @@ int diplomacy_dialog(WINDOW *local_win)
 	unsigned char offer_alliance_ok, quit_alliance_ok, offer_peace_ok,
 	    declare_war_ok, accept_offer_ok, reject_offer_ok, retract_offer_ok;
 
-	dipstatus_t *dipstatus;
 	unsigned char status;
-	dipoffer_t *dipoffer;
+	unsigned char offer;
 
 	uint16_t nr_characters = count_characters();
 	uint16_t counter;
 	uint16_t section;
 	character_t *current;
-	dipstatus_t *current_dipstatus;
 	unsigned char current_status;
-	dipoffer_t *current_dipoffer;
+	unsigned char current_offer;
 
 	while (1) {
-		dipstatus = NULL;
 		status = NEUTRAL;
-		dipoffer = NULL;
+		offer = 0;
 		offer_alliance_ok = 0;	/* a */
 		quit_alliance_ok = 0;	/* x */
 		offer_peace_ok = 0;	/* p */
@@ -1337,19 +1334,18 @@ int diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) status = 3;	/* self */
+		if (active_character == selected_character) {
+			status = 3;	/* self */
+			offer = 0;
+		}
 		else {
-			dipstatus =
-			    get_dipstatus(active_character, selected_character);
-			if (dipstatus) {
-				status = dipstatus->status;
-				dipoffer = dipstatus->pending_offer;
-			}
+			status = get_diplomacy(active_character, selected_character);
+			offer = get_offer(active_character, selected_character);
 		}
 		switch (status) {
 		case NEUTRAL:
-			if (dipoffer != NULL) {
-				if (dipoffer->from == selected_character) {
+			if (offer) {
+				if (offer & OFFER_RECEIVED_BIT) {
 					/* accept or reject */
 					mvwprintw(local_win, 2, 2,
 						  "To accept alliance offer, press 'y'");
@@ -1392,8 +1388,8 @@ int diplomacy_dialog(WINDOW *local_win)
 		case WAR:
 			mvwprintw(local_win, 2, 2,
 				  "[You can not make alliance, first negotiate peace]");
-			if (dipoffer != NULL) {
-				if (dipoffer->from == selected_character) {
+			if (offer) {
+				if (offer & OFFER_RECEIVED_BIT) {
 					/* accept or reject */
 					mvwprintw(local_win, 3, 2,
 						  "To accept peace offer, press 'y'");
@@ -1420,15 +1416,10 @@ int diplomacy_dialog(WINDOW *local_win)
 		counter = 0;
 		section = 0;
 		current = world->characterlist;
-		current_dipstatus = NULL;
-		current_dipoffer = NULL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
-			current_dipstatus = get_dipstatus(active_character, current);
-			if (current_dipstatus) {
-				current_status = current_dipstatus->status;
-				current_dipoffer = current_dipstatus->pending_offer;
-			}
+			current_status = get_diplomacy(active_character, current);
+			current_offer = get_offer(active_character, current);
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
@@ -1445,15 +1436,12 @@ int diplomacy_dialog(WINDOW *local_win)
 				else {
 					wprintw(local_win, "%s",
 						dipstatus_name[current_status]);
-					if (current_dipoffer != NULL)
+					if (current_offer)
 						wprintw(local_win,
 							", %s offer %s",
 							dipstatus_name
-							[current_dipoffer->
-							 offer],
-							(current_dipoffer->
-							 from ==
-							 active_character ? "sent"
+							[current_status == WAR ? NEUTRAL : ALLIANCE],
+							(current_offer & OFFER_SENT_BIT ? "sent"
 							 : "received"));
 				}
 				wprintw(local_win, ")");
@@ -1473,32 +1461,27 @@ int diplomacy_dialog(WINDOW *local_win)
 			break;
 		case 'a':	/* offer alliance */
 			if (offer_alliance_ok) {
-				open_offer(active_character, selected_character,
-					   ALLIANCE);
-				dipstatus =
-				    get_dipstatus(active_character,
+				open_offer(active_character, selected_character);
+				status =
+				    get_diplomacy(active_character,
 						  selected_character);
 			}
 			break;
 		case 'n':	/* reject offer */
-			if (dipstatus && reject_offer_ok)
-				close_offer(dipstatus->pending_offer, REJECT);
+			if (reject_offer_ok)
+				close_offer(active_character, selected_character, REJECT);
 			break;
 		case 'p':	/* offer peace */
 			if (offer_peace_ok) {
-				open_offer(active_character, selected_character,
-					   NEUTRAL);
-				dipstatus =
-				    get_dipstatus(active_character,
-						  selected_character);
+				open_offer(active_character, selected_character);
 			}
 			break;
 		case 'q':	/* return */
 			return MAIN_SCREEN;
 			break;
 		case 'r':	/* retract offer */
-			if (dipstatus && retract_offer_ok)
-				close_offer(dipstatus->pending_offer, REJECT);
+			if (retract_offer_ok)
+				close_offer(active_character, selected_character, REJECT);
 			break;
 		case 'w':	/* declare war */
 			if (declare_war_ok) {
@@ -1525,9 +1508,9 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case 'y':	/* accept offer */
-			if (dipstatus && accept_offer_ok) {
-				close_offer(dipstatus->pending_offer, ACCEPT);
-				if (dipstatus->status == ALLIANCE)
+			if (accept_offer_ok) {
+				close_offer(active_character, selected_character, ACCEPT);
+				if (status == ALLIANCE)
 					add_to_chronicle
 					    ("%s %s and %s %s concluded an alliance.\n",
 					     rank_name[active_character->rank],
@@ -1541,7 +1524,6 @@ int diplomacy_dialog(WINDOW *local_win)
 					     active_character->name,
 					     rank_name[selected_character->rank],
 					     selected_character->name);
-//                                      dipstatus = NULL; /* not needed ? */
 			}
 			break;
 		}
@@ -2979,17 +2961,17 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 	int characterlist_selector;
 
 	unsigned char alliance_ok, neutral_ok, war_ok;
-
-	dipstatus_t *dipstatus;
 	unsigned char status;
+
+	curs_set(FALSE);
+	noecho();
+
 	uint16_t nr_characters = count_characters();
 	uint16_t counter;
 	uint16_t section;
 	character_t *current;
-	dipstatus_t *current_dipstatus;
 	unsigned char current_status;
 	while (1) {
-		dipstatus = NULL;
 		status = NEUTRAL;
 		alliance_ok = 0;	/* a */
 		neutral_ok = 0;	/* n */
@@ -3000,12 +2982,10 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
-		if (active_character == selected_character) status = 3;	/* self */
-		else {
-			dipstatus =
-			    get_dipstatus(active_character, selected_character);
-			if (dipstatus) status = dipstatus->status;
-		}
+		if (active_character == selected_character)
+			status = 3;	/* self */
+		else
+			status = get_diplomacy(active_character, selected_character);
 		switch (status) {
 			case NEUTRAL:
 				mvwprintw(local_win, 2, 2,
@@ -3041,15 +3021,12 @@ int editor_diplomacy_dialog(WINDOW *local_win)
 		counter = 0;
 		section = 0;
 		current = world->characterlist;
-		current_dipstatus = NULL;
 		current_status = NEUTRAL;
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			if (active_character != current) {
-				current_dipstatus =
-				    get_dipstatus(active_character, current);
-				if (current_dipstatus)
-				    current_status = current_dipstatus->status;
+				current_status =
+				    get_diplomacy(active_character, current);
 			}
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
