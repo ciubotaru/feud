@@ -5,23 +5,32 @@
 #include "piece.h"
 #include "map.h"
 
-enum dipstatuslist {NEUTRAL, ALLIANCE, WAR, NR_DIPSTATUSES};
+enum dipstatuslist {
+	ALLIANCE_BIT,
+	WAR_BIT,
+	OFFER_SENT_BIT,
+	OFFER_RECEIVED_BIT,
+	NR_DIPSTATUSES
+};
 
 #define REJECT 0
 #define ACCEPT 1
 
-enum offerlist {OFFER_SENT, OFFER_RECEIVED};
-
-#define OFFER_SENT_BIT (1 << OFFER_SENT)
-#define OFFER_RECEIVED_BIT (1 << OFFER_RECEIVED)
+#define NEUTRAL 0
+#define ALLIANCE (1 << ALLIANCE_BIT)
+#define WAR (1 << WAR_BIT)
+#define OFFER_SENT (1 << OFFER_SENT_BIT)
+#define OFFER_RECEIVED (1 << OFFER_RECEIVED_BIT)
 
 extern char *const dipstatus_name[];
+
+#define DIPLOMACY_MASK (unsigned char) (ALLIANCE | WAR)
+#define OFFER_MASK (unsigned char) (OFFER_SENT | OFFER_RECEIVED)
 
 typedef struct dipstatus {
 	character_t *character1;
 	character_t *character2;
 	unsigned char status;
-	unsigned char offer;
 	struct dipstatus *prev;
 	struct dipstatus *next;
 } dipstatus_t;
@@ -57,7 +66,5 @@ unsigned char get_offer(character_t *from, character_t *to);
 void open_offer(character_t *from, character_t *to);
 
 void close_offer(character_t *from, character_t *to, const unsigned char result);
-
-void sort_diplomacy_list();
 
 #endif

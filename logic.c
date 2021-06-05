@@ -47,7 +47,7 @@ int think_diplomacy(char *buffer) {
 		if (get_sovereign(ai_diplomacy->next_to_check) == ai_diplomacy->ai_sovereign) {
 			if (status != ALLIANCE) {
 				/* if they sent us an alliance offer, accept it */
-				if (offer & OFFER_RECEIVED_BIT) {
+				if (offer & OFFER_RECEIVED) {
 					close_offer(world->selected_character, ai_diplomacy->next_to_check, ACCEPT);
 					sprintf(buffer, "accept alliance offer from %i\n", ai_diplomacy->next_to_check->id);
 				}

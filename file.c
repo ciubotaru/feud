@@ -403,7 +403,6 @@ int deserialize_dipoffer(char **buffer, int *pos)
 	int buffer_pos = *pos;
 	memcpy(&nr_dipoffer_be, *buffer + buffer_pos, DIPOFFER_METADATA_SIZE);
 	uint16_t nr_dipoffer = be16toh(nr_dipoffer_be);
-	unsigned char offer;
 
 	int i;
 	buffer_pos = *pos + DIPOFFER_METADATA_SIZE;
@@ -415,9 +414,14 @@ int deserialize_dipoffer(char **buffer, int *pos)
 		from = get_character_by_id(be16toh(from_id_be));
 		memcpy(&to_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* to_id */
 		to = get_character_by_id(be16toh(to_id_be));
-		memcpy(&offer, *buffer + buffer_pos + sizeof(uint16_t) * 2,
-		       sizeof(unsigned char));
-		open_offer(from, to);
+		switch ((*buffer)[buffer_pos + sizeof(uint16_t) * 2] << 2) {
+			case OFFER_SENT:
+				open_offer(from, to);
+				break;
+			case OFFER_RECEIVED:
+				open_offer(to, from);
+				break;
+		}
 		buffer_pos += DIPOFFER_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -481,7 +485,6 @@ unsigned int load_game()
 	if (!world->selected_character) return 1;
 
 	sort_region_list();
-	sort_diplomacy_list();
 	return 0;
 }
 
@@ -709,8 +712,7 @@ int serialize_diplomacy(char **buffer, uint16_t nr_dipstat)
 		memcpy(*buffer + pos, &character1_id_be, sizeof(uint16_t));
 		memcpy(*buffer + pos + sizeof(uint16_t), &character2_id_be,
 		       sizeof(uint16_t));
-		memcpy(*buffer + pos + sizeof(uint16_t) * 2, &(current->status),
-		       sizeof(unsigned char));
+		(*buffer)[pos + sizeof(uint16_t) * 2] = (current->status & DIPLOMACY_MASK);
 		pos += DIPLOMACY_UNIT_SIZE;
 		current = current->next;
 	}
@@ -734,8 +736,8 @@ int serialize_dipoffer(char **buffer, uint16_t nr_dipoffer)
 			to_id_be = htobe16(current->pending_offer->to->id);
 */
 
-		if (current->offer) {
-			if (current->offer & OFFER_SENT_BIT) {
+		if (current->status & OFFER_MASK) {
+			if (current->status & OFFER_SENT) {
 				from_id_be = htobe16(current->character1->id);
 				to_id_be = htobe16(current->character2->id);
 			}
@@ -747,9 +749,7 @@ int serialize_dipoffer(char **buffer, uint16_t nr_dipoffer)
 			memcpy(*buffer + pos, &from_id_be, sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t), &to_id_be,
 			       sizeof(uint16_t));
-			memcpy(*buffer + pos + sizeof(uint16_t) * 2,
-			       &(current->offer),
-			       sizeof(unsigned char));
+			(*buffer)[pos + sizeof(uint16_t) * 2] = 1;
 			pos += DIPOFFER_UNIT_SIZE;
 		}
 		current = current->next;
@@ -969,7 +969,7 @@ unsigned int save_game()
 	int nr_dipoffer = 0;
 	current_diplomacy = world->diplomacylist;
 	while (current_diplomacy != NULL) {
-		if (current_diplomacy->offer)
+		if (current_diplomacy->status & OFFER_MASK)
 			nr_dipoffer++;
 		current_diplomacy = current_diplomacy->next;
 	}

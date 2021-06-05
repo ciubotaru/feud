@@ -1315,6 +1315,7 @@ int diplomacy_dialog(WINDOW *local_win)
 	character_t *current;
 	unsigned char current_status;
 	unsigned char current_offer;
+	char *status_name;
 
 	while (1) {
 		status = NEUTRAL;
@@ -1345,7 +1346,7 @@ int diplomacy_dialog(WINDOW *local_win)
 		switch (status) {
 		case NEUTRAL:
 			if (offer) {
-				if (offer & OFFER_RECEIVED_BIT) {
+				if (offer & OFFER_RECEIVED) {
 					/* accept or reject */
 					mvwprintw(local_win, 2, 2,
 						  "To accept alliance offer, press 'y'");
@@ -1389,7 +1390,7 @@ int diplomacy_dialog(WINDOW *local_win)
 			mvwprintw(local_win, 2, 2,
 				  "[You can not make alliance, first negotiate peace]");
 			if (offer) {
-				if (offer & OFFER_RECEIVED_BIT) {
+				if (offer & OFFER_RECEIVED) {
 					/* accept or reject */
 					mvwprintw(local_win, 3, 2,
 						  "To accept peace offer, press 'y'");
@@ -1419,6 +1420,16 @@ int diplomacy_dialog(WINDOW *local_win)
 		characterlist_selector = get_character_order(selected_character);
 		while (current != NULL) {
 			current_status = get_diplomacy(active_character, current);
+			switch (current_status) {
+				case NEUTRAL:
+					status_name = "neutral";
+					break;
+				case WAR:
+					status_name = "war";
+					break;
+				default:
+					status_name = "alluance";
+			}
 			current_offer = get_offer(active_character, current);
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
@@ -1440,8 +1451,8 @@ int diplomacy_dialog(WINDOW *local_win)
 						wprintw(local_win,
 							", %s offer %s",
 							dipstatus_name
-							[current_status == WAR ? NEUTRAL : ALLIANCE],
-							(current_offer & OFFER_SENT_BIT ? "sent"
+							[current_status & WAR ? NEUTRAL : ALLIANCE],
+							(current_offer & OFFER_SENT ? "sent"
 							 : "received"));
 				}
 				wprintw(local_win, ")");

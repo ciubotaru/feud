@@ -51,7 +51,6 @@ inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *c
 	new->character1 = first;
 	new->character2 = second;
 	new->status = status;
-	new->offer = 0;
 
 	dipstatus_t *current = world->diplomacylist;
 	dipstatus_t *prev = NULL;
@@ -76,7 +75,8 @@ dipstatus_t *set_diplomacy(character_t *character1, character_t *character2,
 {
 	dipstatus_t *current = find_dipstatus(character1, character2);
 	if (current) {
-		current->status = status;
+		current->status &= ~DIPLOMACY_MASK;
+		current->status |= status;
 	}
 	else current = add_dipstatus(character1, character2, status);
 	return current;
@@ -93,11 +93,7 @@ dipstatus_t *get_dipstatus(character_t *character1, character_t *character2)
 unsigned char get_diplomacy(character_t *character1, character_t *character2)
 {
 	dipstatus_t *dipstatus = get_dipstatus(character1, character2);
-	if (dipstatus) return dipstatus->status;
-	if ((character1->lord && character1->lord == character2)
-	    || (character2->lord && character2->lord == character1))
-		return ALLIANCE;
-	return NEUTRAL;
+	return dipstatus->status & DIPLOMACY_MASK;
 }
 
 void remove_diplomacy(dipstatus_t *dipstatus)
@@ -136,7 +132,7 @@ void remove_redundant_diplomacy() {
 	while (current) {
 		next = current->next;
 		if (current->character1 == current->character2 ||
-			(current->status == NEUTRAL && current->offer == 0) ||
+			(current->status == 0) ||
 			current->character1->lord == current->character2 ||
 			current->character1 == current->character2->lord
 		) remove_diplomacy(current);
@@ -253,23 +249,25 @@ character_t *get_sovereign(character_t *character)
 
 static void reverse_offer(unsigned char *status) {
 	unsigned char new = 0;
-	if (*status & OFFER_SENT_BIT) new |= OFFER_RECEIVED_BIT;
-	else if (*status & OFFER_RECEIVED_BIT) new |= OFFER_SENT_BIT;
-	*status = new;
+	if (*status & OFFER_SENT) new = OFFER_RECEIVED;
+	else if (*status & OFFER_RECEIVED) new = OFFER_SENT;
+	*status &= ~OFFER_MASK;
+	*status |= new;
 }
 
 void set_offer(character_t *from, character_t *to, const unsigned char offer_status) {
 	if (!from || !to || from == to) return;
 	dipstatus_t *dipstatus = get_dipstatus(from, to);
 	if (!dipstatus) return; //why would this happen
-	dipstatus->offer = offer_status;
-	if (from != dipstatus->character1) reverse_offer(&(dipstatus->offer));
+	dipstatus->status &= ~OFFER_MASK;
+	dipstatus->status |= offer_status << 2;
+	if (from != dipstatus->character1) reverse_offer(&(dipstatus->status));
 }
 
 unsigned char get_offer(character_t *from, character_t *to) {
 	if (!from || !to || from == to) return 0;
 	dipstatus_t *dipstatus = get_dipstatus(from, to);
-	unsigned char retval = dipstatus->offer;
+	unsigned char retval = dipstatus->status & OFFER_MASK;
 	if (from != dipstatus->character1) reverse_offer(&retval);
 	return retval;
 }
@@ -278,45 +276,28 @@ void open_offer(character_t *from, character_t *to) {
 	if (!from || !to || from == to) return;
 	dipstatus_t *dipstatus = get_dipstatus(from, to);
 	if (from == dipstatus->character1)
-		dipstatus->offer |= OFFER_SENT_BIT;
+		dipstatus->status |= OFFER_SENT;
 	else
-		dipstatus->offer |= OFFER_RECEIVED_BIT;
+		dipstatus->status |= OFFER_RECEIVED;
 }
 
 void close_offer(character_t *from, character_t *to, const unsigned char result) {
 	if (!from || !to || from == to) return;
 	dipstatus_t *dipstatus = get_dipstatus(from, to);
-	dipstatus->offer = 0;
+	dipstatus->status &= ~OFFER_MASK;
 	if (result == ACCEPT) {
-		if (dipstatus->status == WAR) dipstatus->status = NEUTRAL;
-		else dipstatus->status = ALLIANCE;
-	}
-}
-
-void sort_diplomacy_list() {
-	if (world->diplomacylist == NULL || world->diplomacylist->next == NULL) return;
-	int permutations;
-	dipstatus_t *current, *next;
-	do {
-		current = world->diplomacylist;
-		next = current->next;
-		permutations = 0;
-		while (next != NULL) {
-			if (current->character1->id > next->character1->id || (current->character1 == next->character1 && current->character2->id > next->character2->id) ) {
-				permutations++;
-				if (current->prev != NULL) current->prev->next = next;
-				else world->diplomacylist = next;
-				if (next->next) next->next->prev = current;
-				next->prev = current->prev;
-				current->next = next->next;
-				current->prev = next;
-				next->next = current;
-				next = current->next;
-			}
-			else {
-				current = next;
-				next = next->next;
-			}
+		switch (dipstatus->status & DIPLOMACY_MASK) {
+			case WAR:
+				dipstatus->status &= ~DIPLOMACY_MASK;
+				dipstatus->status |= NEUTRAL;
+				break;
+			case NEUTRAL:
+				dipstatus->status &= ~DIPLOMACY_MASK;
+				dipstatus->status |= ALLIANCE;
+				break;
+			case ALLIANCE:
+				//this should not happen
+				break;
 		}
-	} while (permutations > 0);
+	}
 }
