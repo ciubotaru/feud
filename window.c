@@ -2304,6 +2304,7 @@ int edit_character_dialog(WINDOW *local_win)
 	wprintw(local_win, "%s", screens[current_screen]);
 
 	character_t *active_character = world->selected_character;
+	character_t *heir = get_successor(active_character);
 	/* we can not get into this function if there's no selected_character, but still */
 	if (active_character == NULL) {
 		return CHARACTERS_DIALOG;
@@ -2321,8 +2322,8 @@ int edit_character_dialog(WINDOW *local_win)
 				  months[active_character->deathdate.tm_mon],
 				  active_character->deathdate.tm_year);
 		mvwprintw(local_win, 7, 2, "Heir: %s",
-				  (active_character->heir ==
-				   NULL ? "none" : active_character->heir->name));
+				  (heir ==
+				   NULL ? "none" : heir->name));
 		mvwprintw(local_win, 8, 2, "Lord: %s",
 				  (active_character->lord ==
 				   NULL ? "none" : active_character->lord->name));
@@ -2781,7 +2782,7 @@ int editor_successor_dialog(WINDOW *local_win)
 	int i;
 	character_t *current;
 	character_t *active_character = world->selected_character;
-	character_t *heir = active_character->heir;
+	character_t *heir = get_successor(active_character);
 	character_t *new_heir = world->selected_character;
 	int characterlist_selector;
 

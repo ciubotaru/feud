@@ -10,6 +10,8 @@ enum dipstatuslist {
 	WAR_BIT,
 	OFFER_SENT_BIT,
 	OFFER_RECEIVED_BIT,
+	HEIR_BIT, //character1 sets character2 as their heir
+	GRANTOR_BIT,
 	NR_DIPSTATUSES
 };
 
@@ -21,11 +23,14 @@ enum dipstatuslist {
 #define WAR (1 << WAR_BIT)
 #define OFFER_SENT (1 << OFFER_SENT_BIT)
 #define OFFER_RECEIVED (1 << OFFER_RECEIVED_BIT)
+#define HEIR (1 << HEIR_BIT)
+#define GRANTOR (1 << GRANTOR_BIT)
 
 extern char *const dipstatus_name[];
 
 #define DIPLOMACY_MASK (unsigned char) (ALLIANCE | WAR)
 #define OFFER_MASK (unsigned char) (OFFER_SENT | OFFER_RECEIVED)
+#define SUCCESSION_MASK (unsigned char) (HEIR | GRANTOR)
 
 typedef struct dipstatus {
 	character_t *character1;
@@ -66,5 +71,9 @@ unsigned char get_offer(character_t *from, character_t *to);
 void open_offer(character_t *from, character_t *to);
 
 void close_offer(character_t *from, character_t *to, const unsigned char result);
+
+void set_successor(character_t *character, character_t *heir);
+
+character_t *get_successor(character_t *character);
 
 #endif

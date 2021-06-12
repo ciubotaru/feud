@@ -19,7 +19,6 @@ typedef struct character {
 	struct gametime birthdate;
 	struct gametime deathdate;
 	struct character *lord;
-	struct character *heir;
 	struct character *prev;
 	struct character *next;
 } character_t;
@@ -47,10 +46,6 @@ unsigned char get_character_rank(character_t *character);
 void set_character_rank(character_t *character, unsigned char rank);
 
 int transfer_money(character_t *source, character_t *destination, const int amount);
-
-void set_successor(character_t *character, character_t *successor);
-
-character_t *get_successor(character_t *character);
 
 uint16_t count_characters();
 

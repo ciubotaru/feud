@@ -37,7 +37,6 @@ static void fill_character_details(character_t *character, const char *name)
 	character->birthdate.tm_year = world->current_time.tm_year;
 	character->birthdate.tm_mon = world->current_time.tm_mon;
 	character->lord = NULL;
-	character->heir = NULL;
 	set_expected_age(character);
 }
 
@@ -260,22 +259,6 @@ inline static void set_expected_age(character_t *character)
 	months += rand() % ((MAX_AGE - MIN_AGE) * 12);
 	character->deathdate.tm_year = months / 12;
 	character->deathdate.tm_mon = months % 12;
-}
-
-void set_successor(character_t *character, character_t *successor)
-{
-	if (character == NULL
-	    || (successor != NULL && character == successor))
-		return;		/* can not name yourself a heir */
-	character->heir = successor;
-	return;
-}
-
-character_t *get_successor(character_t *character)
-{
-	character_t *successor = NULL;
-	if (character) successor = character->heir;
-	return successor;
 }
 
 uint16_t count_characters()

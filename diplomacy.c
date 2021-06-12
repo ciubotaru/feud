@@ -300,3 +300,44 @@ void close_offer(character_t *from, character_t *to, const unsigned char result)
 		}
 	}
 }
+
+character_t *get_successor(character_t *character) {
+	if (!character) return NULL;
+	dipstatus_t *current = world->diplomacylist;
+	character_t *successor = NULL;
+	while (current) {
+		if ((current->character1 == character) && (current->status & HEIR)) {
+			successor = current->character2;
+			break;
+		}
+		if ((current->character2 == character) && (current->status & GRANTOR)) {
+			successor = current->character1;
+			break;
+		}
+		current = current->next;
+	}
+	return successor;
+}
+
+void set_successor(character_t *grantor, character_t *heir) {
+	if (!grantor) return;
+	if (grantor == heir) return;
+	/* clear old successor */
+	dipstatus_t *dipstatus = world->diplomacylist;
+	while (dipstatus) {
+		if (dipstatus->character1 == grantor && dipstatus->status & HEIR) {
+			dipstatus->status &= ~HEIR;
+			break;
+		}
+		if (dipstatus->character2 == grantor && dipstatus->status & GRANTOR) {
+			dipstatus->status &= ~ GRANTOR;
+			break;
+		}
+		dipstatus = dipstatus->next;
+	}
+	dipstatus = get_dipstatus(grantor, heir);
+	if (dipstatus->character1 == grantor)
+		dipstatus->status |= HEIR;
+	else
+		dipstatus->status |= GRANTOR;
+}
