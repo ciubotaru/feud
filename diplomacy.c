@@ -258,7 +258,6 @@ static void reverse_offer(unsigned char *status) {
 void set_offer(character_t *from, character_t *to, const unsigned char offer_status) {
 	if (!from || !to || from == to) return;
 	dipstatus_t *dipstatus = get_dipstatus(from, to);
-	if (!dipstatus) return; //why would this happen
 	dipstatus->status &= ~OFFER_MASK;
 	dipstatus->status |= offer_status << 2;
 	if (from != dipstatus->character1) reverse_offer(&(dipstatus->status));

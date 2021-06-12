@@ -74,9 +74,9 @@ int think_diplomacy(char *buffer) {
 			else {
 				/* we are a vassal; copy overlord's diplomacy */
 				sovereign_status = get_diplomacy(ai_diplomacy->ai_sovereign, ai_diplomacy->next_to_check);
-				sovereign_offer = get_offer(ai_diplomacy->ai_sovereign, ai_diplomacy->next_to_check);
 				if (sovereign_status != status) {
 					/* if our sovereign is at war and has not sent a peace offer, declare war */
+					sovereign_offer = get_offer(ai_diplomacy->ai_sovereign, ai_diplomacy->next_to_check);
 					if (sovereign_status == WAR && sovereign_offer == 0) {
 						sprintf(buffer, "declare war to %i\n", ai_diplomacy->next_to_check->id);
 						set_diplomacy(world->selected_character, ai_diplomacy->next_to_check, WAR);

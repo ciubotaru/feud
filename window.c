@@ -1337,7 +1337,6 @@ int diplomacy_dialog(WINDOW *local_win)
 
 		if (active_character == selected_character) {
 			status = 3;	/* self */
-			offer = 0;
 		}
 		else {
 			status = get_diplomacy(active_character, selected_character);

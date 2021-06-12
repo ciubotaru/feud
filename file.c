@@ -782,11 +782,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_game_metadata(&game_metadata_buffer);
-	if (!bytes) {
-		fclose(fp);
-		retval = 3;
-		goto ret;
-	}
 	bytes_written = fwrite(game_metadata_buffer, sizeof(char), bytes, fp);
 	free(game_metadata_buffer);
 	if (!bytes_written) {
@@ -804,11 +799,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_characterlist(&characterlist_buffer);
-	if (!bytes) {
-		fclose(fp);
-		retval = 3;
-		goto ret;
-	}
 	bytes_written = fwrite(characterlist_buffer, sizeof(char), bytes, fp);
 	free(characterlist_buffer);
 	if (!bytes_written) {
@@ -826,11 +816,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_regionlist(&regionlist_buffer);
-	if (!bytes) {
-		fclose(fp);
-		retval = 3;
-		goto ret;
-	}
 	bytes_written = fwrite(regionlist_buffer, sizeof(char), bytes, fp);
 	free(regionlist_buffer);
 	if (!bytes_written) {
@@ -849,11 +834,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_grid(&grid_buffer);
-	if (!bytes) {
-		fclose(fp);
-		retval = 6;
-		goto ret;
-	}
 	bytes_written = fwrite(grid_buffer, sizeof(char), bytes, fp);
 	free(grid_buffer);
 	if (!bytes_written) {
@@ -870,11 +850,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_pieces(&pieces_buffer, nr_pieces);
-	if (!bytes) {
-		fclose(fp);
-		retval = 9;
-		goto ret;
-	}
 	bytes_written = fwrite(pieces_buffer, sizeof(char), bytes, fp);
 	free(pieces_buffer);
 	if (!bytes_written) {
@@ -897,11 +872,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_feudal(&feudal_buffer, nr_feudal);
-	if (!bytes) {
-		fclose(fp);
-		retval = 12;
-		goto ret;
-	}
 	bytes_written = fwrite(feudal_buffer, sizeof(char), bytes, fp);
 	free(feudal_buffer);
 	if (!bytes_written) {
@@ -924,11 +894,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_heir(&heir_buffer, nr_heir);
-	if (!bytes) {
-		fclose(fp);
-		retval = 15;
-		goto ret;
-	}
 	bytes_written = fwrite(heir_buffer, sizeof(char), bytes, fp);
 	free(heir_buffer);
 	if (!bytes_written) {
@@ -953,11 +918,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_diplomacy(&diplomacy_buffer, nr_dipstat);
-	if (!bytes) {
-		fclose(fp);
-		retval = 18;
-		goto ret;
-	}
 	bytes_written = fwrite(diplomacy_buffer, sizeof(char), bytes, fp);
 	free(diplomacy_buffer);
 	if (!bytes_written) {
@@ -982,11 +942,6 @@ unsigned int save_game()
 		exit(EXIT_FAILURE);
 	}
 	bytes = serialize_dipoffer(&dipoffer_buffer, nr_dipoffer);
-	if (!bytes) {
-		fclose(fp);
-		retval = 21;
-		goto ret;
-	}
 	bytes_written = fwrite(dipoffer_buffer, sizeof(char), bytes, fp);
 	free(dipoffer_buffer);
 	if (!bytes_written) {

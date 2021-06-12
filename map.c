@@ -33,7 +33,6 @@ region_t *add_region(const char *name)
 	new->next = NULL;
 
 	if (world->regionlist == NULL) {
-		new->prev = NULL;
 		world->regionlist = new;
 	}
 	else {
