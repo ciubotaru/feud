@@ -358,7 +358,7 @@ int deserialize_heir(char **buffer, int *pos)
 		memcpy(&character_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* character_id */
 		current = get_character_by_id(be16toh(character_id_be));
 		memcpy(&heir_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* heir_id */
-		current->heir = get_character_by_id(be16toh(heir_id_be));
+		set_successor(current, get_character_by_id(be16toh(heir_id_be)));
 		buffer_pos += HEIR_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -681,11 +681,13 @@ int serialize_heir(char **buffer, uint16_t nr_heir)
 	memcpy(*buffer, &nr_heir_be, HEIR_METADATA_SIZE);
 	int pos = HEIR_METADATA_SIZE;
 	character_t *current = world->characterlist;
+	character_t *heir;
 	uint16_t character_id_be, heir_id_be;
-	while (current != NULL) {
-		if (current->heir != NULL) {
+	while (current) {
+		heir = get_successor(current);
+		if (heir) {
 			character_id_be = htobe16(current->id);
-			heir_id_be = htobe16(current->heir->id);
+			heir_id_be = htobe16(heir->id);
 			memcpy(*buffer + pos, &character_id_be, sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t), &heir_id_be,
 			       sizeof(uint16_t));
@@ -882,8 +884,10 @@ unsigned int save_game()
 
 	int nr_heir = 0;
 	current = world->characterlist;
-	while (current != NULL) {
-		if (current->heir != NULL)
+	character_t *heir;
+	while (current) {
+		heir = get_successor(current);
+		if (heir)
 			nr_heir++;
 		current = current->next;
 	}

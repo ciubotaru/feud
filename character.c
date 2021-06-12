@@ -126,9 +126,11 @@ void remove_character(character_t *character)
 
 	/* if this character was set as heir or lord to somebody else, remove him */
 	character_t *current = world->characterlist;
+	character_t *heir;
 	while (current != NULL) {
-		if (current->heir != NULL && current->heir == character)
-			current->heir = NULL;
+		heir = get_successor(current);
+		if (heir == character)
+			set_successor(current, NULL);
 		if (current->lord != NULL && current->lord == character)
 			current->lord = NULL;
 		current = current->next;
@@ -269,6 +271,13 @@ void set_successor(character_t *character, character_t *successor)
 	return;
 }
 
+character_t *get_successor(character_t *character)
+{
+	character_t *successor = NULL;
+	if (character) successor = character->heir;
+	return successor;
+}
+
 uint16_t count_characters()
 {
 	uint16_t count = 0;
@@ -360,9 +369,8 @@ void succession(character_t *character)
 	 * If the character did not name a heir, but has a lord, the lord will succeed.
 	 * If the character did not name a heir and has no lord, the property is lost.
 	 **/
-	character_t *heir = NULL;
-	if (character->heir != NULL) {
-		heir = character->heir;
+	character_t *heir = get_successor(character);
+	if (heir) {
 		add_to_chronicle("%s %s inherited the property of %s %s.\n",
 				rank_name[heir->rank], heir->name,
 				rank_name[character->rank], character->name);

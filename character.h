@@ -50,6 +50,8 @@ int transfer_money(character_t *source, character_t *destination, const int amou
 
 void set_successor(character_t *character, character_t *successor);
 
+character_t *get_successor(character_t *character);
+
 uint16_t count_characters();
 
 int is_gameover();

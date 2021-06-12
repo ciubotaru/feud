@@ -137,6 +137,7 @@ void draw_map(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	character_t *character = world->selected_character;
+	character_t *heir = get_successor(character);
 	if (!cursor) cursor = get_noble_by_owner(character)->tile;
 	piece_t *piece = cursor->piece;
 
@@ -235,7 +236,7 @@ void draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 8, 50, "Land: %d",
 		  count_tiles_by_owner(character));
 	mvwprintw(local_win, 9, 50, "Heir: %s",
-		  (character->heir != NULL ? character->heir->name : "none"));
+		  (heir != NULL ? heir->name : "none"));
 	mvwprintw(local_win, 10, 50, "Lord: %s",
 		  (character->lord != NULL ? character->lord->name : "none"));
 	mvwprintw(local_win, 11, 50, "Moves left: %d", world->moves_left);
@@ -806,7 +807,7 @@ int successor_dialog(WINDOW *local_win)
 	int i;
 	character_t *current;
 	character_t *active_character = world->selected_character;
-	character_t *heir = active_character->heir;
+	character_t *heir = get_successor(active_character);
 	character_t *new_heir = world->selected_character;
 	int characterlist_selector;
 
