@@ -51,6 +51,8 @@ inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *c
 	new->character1 = first;
 	new->character2 = second;
 	new->status = status;
+	new->prev = NULL;
+	new->next = NULL;
 
 	dipstatus_t *current = world->diplomacylist;
 	dipstatus_t *prev = NULL;
@@ -60,13 +62,17 @@ inline static dipstatus_t *add_dipstatus(character_t *character1, character_t *c
 		prev = current;
 		current = current->next;
 	}
-	if (!prev) {
-		world->diplomacylist = new;
+	if (prev) {
+		prev->next = new;
+		new->prev = prev;
 	}
 	else {
-		prev->next = new;
+		world->diplomacylist = new;
 	}
-	new->next = current;
+	if (current) {
+		current->prev = new;
+		new->next = current;
+	}
 	return new;
 }
 
