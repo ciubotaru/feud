@@ -233,9 +233,11 @@ int validate_game_data()
 
 	/* check if all lords are higher ranks than their vassals */
 	character = world->characterlist;
-	while (character != NULL) {
-		if (character->lord != NULL) {
-			if (character->lord->rank <= character->rank) {
+	character_t *lord;
+	while (character) {
+		lord = get_liege(character);
+		if (lord) {
+			if (lord->rank <= character->rank) {
 				msg =
 				    "Inconsistency between lord and vassal rank detected.";
 				goto error;

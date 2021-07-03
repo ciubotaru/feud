@@ -335,7 +335,7 @@ int deserialize_feudal(char **buffer, int *pos)
 		memcpy(&vassal_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* vassal_id */
 		current = get_character_by_id(be16toh(vassal_id_be));
 		memcpy(&lord_id_be, *buffer + buffer_pos + sizeof(uint16_t), sizeof(uint16_t));	/* lord_id */
-		current->lord = get_character_by_id(be16toh(lord_id_be));
+		set_liege(current, get_character_by_id(be16toh(lord_id_be)));
 		buffer_pos += FEUDAL_UNIT_SIZE;
 	}
 	*pos = buffer_pos + 1;
@@ -377,6 +377,7 @@ int deserialize_diplomacy(char **buffer, int *pos)
 	buffer_pos = *pos + DIPLOMACY_METADATA_SIZE;
 	uint16_t character1_id_be, character2_id_be;
 	character_t *character1 = NULL, *character2 = NULL;
+	character_t *lord;
 
 	for (i = 0; i < nr_dipstat; i++) {
 		memcpy(&character1_id_be, *buffer + buffer_pos, sizeof(uint16_t));	/* character1_id */
@@ -390,7 +391,8 @@ int deserialize_diplomacy(char **buffer, int *pos)
 	}
 	character1 = world->characterlist;
 	while (character1) {
-		if (character1->lord) set_diplomacy(character1, character1->lord, ALLIANCE);
+		lord = get_liege(character1);
+		if (lord) set_diplomacy(character1, lord, ALLIANCE);
 		character1 = character1->next;
 	}
 	*pos = buffer_pos + 1;
@@ -658,11 +660,13 @@ int serialize_feudal(char **buffer, uint16_t nr_feudal)
 	memcpy(*buffer, &nr_feudal_be, FEUDAL_METADATA_SIZE);
 	int pos = FEUDAL_METADATA_SIZE;
 	character_t *current = world->characterlist;
+	character_t *lord;
 	uint16_t vassal_id_be, lord_id_be;
-	while (current != NULL) {
-		if (current->lord != NULL) {
+	while (current) {
+		lord = get_liege(current);
+		if (lord) {
 			vassal_id_be = htobe16(current->id);
-			lord_id_be = htobe16(current->lord->id);
+			lord_id_be = htobe16(lord->id);
 			memcpy(*buffer + pos, &vassal_id_be, sizeof(uint16_t));
 			memcpy(*buffer + pos + sizeof(uint16_t), &lord_id_be,
 			       sizeof(uint16_t));
@@ -862,8 +866,10 @@ unsigned int save_game()
 
 	int nr_feudal = 0;
 	character_t *current = world->characterlist;
-	while (current != NULL) {
-		if (current->lord != NULL)
+	character_t *lord;
+	while (current) {
+		lord = get_liege(current);
+		if (lord)
 			nr_feudal++;
 		current = current->next;
 	}

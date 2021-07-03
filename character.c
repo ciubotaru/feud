@@ -126,12 +126,14 @@ void remove_character(character_t *character)
 	/* if this character was set as heir or lord to somebody else, remove him */
 	character_t *current = world->characterlist;
 	character_t *heir;
+	character_t *lord;
 	while (current != NULL) {
 		heir = get_successor(current);
 		if (heir == character)
 			set_successor(current, NULL);
-		if (current->lord != NULL && current->lord == character)
-			current->lord = NULL;
+		lord = get_liege(current);
+		if (lord == character)
+			set_liege(current, NULL);
 		current = current->next;
 	}
 
@@ -281,8 +283,10 @@ int is_gameover()
 	character_t *character = NULL;
 	int nr_sovereigns = 0;
 	character_t *current = world->characterlist;
-	while (current != NULL) {
-		if (current->lord == NULL)
+	character_t *lord;
+	while (current) {
+		lord = get_liege(current);
+		if (!lord)
 			nr_sovereigns++;
 		current = current->next;
 	}
@@ -353,12 +357,13 @@ void succession(character_t *character)
 	 * If the character did not name a heir and has no lord, the property is lost.
 	 **/
 	character_t *heir = get_successor(character);
+	character_t *lord = get_liege(character);
 	if (heir) {
 		add_to_chronicle("%s %s inherited the property of %s %s.\n",
 				rank_name[heir->rank], heir->name,
 				rank_name[character->rank], character->name);
-	} else if (character->lord != NULL) {
-		heir = character->lord;
+	} else if (lord) {
+		heir = lord;
 		add_to_chronicle
 		    ("%s %s had not named a heir, and their lord, %s %s, inherited everything.\n",
 		     rank_name[character->rank], character->name, rank_name[heir->rank],
@@ -400,33 +405,33 @@ void succession(character_t *character)
 
 	/* the heir always inherits grantor's vassals */
 	character_t *vassal = world->characterlist;
-	while (vassal != NULL) {
-		if (vassal->lord != NULL && vassal->lord == character) {
-			vassal->lord = heir;
+	while (vassal) {
+		if (get_liege(vassal) == character) {
+			set_liege(vassal, heir);
 			set_diplomacy(vassal, character, ALLIANCE);
 		}
 		vassal = vassal->next;
 	}
 
 	/* if the heir has no lord, he does not inherit grantor's lord allegiance */
-	if (heir->lord == NULL)
+	character_t *heirs_lord = get_liege(heir);
+	if (!heirs_lord)
 		return;
 
 	/* if possible, the heir keeps his lord allegiance */
-//      piece_t *heir_lord_noble = get_noble_by_owner(heir->lord);
-	if (character->rank < heir->lord->rank)
+	if (character->rank < heirs_lord->rank)
 		return;
 	/* only if character's new title is incompatible with current lord allegiance, he has to change allegiance */
 	else {
 		/* if grantor had no lord, the heir becomes free */
-		if (character->lord == NULL)
-			heir->lord = NULL;
+		if (!lord)
+			set_liege(heir, NULL);
 		else {
 			add_to_chronicle
 			    ("%s %s paid homage to %s %s for their title.\n",
 			     rank_name[heir->rank], heir->name,
-			     rank_name[character->lord->rank], character->lord->name);
-			homage(heir, character->lord);
+			     rank_name[lord->rank], lord->name);
+			homage(heir, lord);
 		}
 	}
 }

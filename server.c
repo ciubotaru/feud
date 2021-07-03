@@ -263,7 +263,8 @@ void print_status_player(character_t *character) {
 	dprintf(STDOUT_FILENO, "Regions: %u (%u tiles)\n", count_regions_by_owner(character), count_tiles_by_owner(character));
 	dprintf(STDOUT_FILENO, "Army: %u\n", count_pieces_by_owner(character));
 	dprintf(STDOUT_FILENO, "Money: %u\n", get_money(character));
-	dprintf(STDOUT_FILENO, "Lord: %s\n", (character->lord ? character->lord->name : "none"));
+	character_t *lord = get_liege(character);
+	dprintf(STDOUT_FILENO, "Lord: %s\n", (lord ? lord->name : "none"));
 	dprintf(STDOUT_FILENO, "Vassals: %u\n", count_vassals(character));
 	if (world->selected_character == character) dprintf(STDOUT_FILENO,
 		"Moves left: %i\n",

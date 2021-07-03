@@ -145,7 +145,8 @@ void homage(character_t *character, character_t *lord)
 	if (character == NULL || lord == NULL)
 		return;
 	/* can not switch lord */
-	if (character->lord != NULL)
+	character_t *current_lord = get_liege(character);
+	if (current_lord != NULL)
 		return;
 	/* can not be a lord of yourself */
 	if (character == lord)
@@ -153,7 +154,6 @@ void homage(character_t *character, character_t *lord)
 	/* can not pay homage to a baron */
 	unsigned char character_rank = get_character_rank(character);
 	unsigned char lord_rank = get_character_rank(lord);
-//      piece_t *lord_noble = get_noble_by_owner(lord);
 	if (lord_rank <= 1)
 		return;
 	/**
@@ -168,20 +168,19 @@ void homage(character_t *character, character_t *lord)
 		character_t *current_character = world->characterlist;
 		while (current_character != NULL) {
 			/* free vassals */
-			if (current_character->lord != NULL
-			    && current_character->lord == character
+			if (get_liege(current_character) == character
 			    && get_character_rank(current_character) >= character_rank)
-				current_character->lord = NULL;
+				set_liege(current_character, NULL);
 			current_character = current_character->next;
 		}
 	}
-	character->lord = lord;
+	set_liege(character, lord);
 	set_diplomacy(character, lord, ALLIANCE);
 }
 
 void unhomage(character_t *character) {
 	if (!character) return;
-	character->lord = NULL;
+	set_liege(character, NULL);
 }
 /* not used */
 void promote_soldier(character_t *character, piece_t *piece, region_t *region,
@@ -231,8 +230,7 @@ uint16_t count_vassals(character_t *character)
 	uint16_t counter = 0;
 	character_t *current_vassal = world->characterlist;
 	while (current_vassal != NULL) {
-		if (current_vassal->lord != NULL
-		    && current_vassal->lord == character)
+		if (get_liege(current_vassal) == character)
 			counter++;
 		current_vassal = current_vassal->next;
 	}
@@ -241,9 +239,13 @@ uint16_t count_vassals(character_t *character)
 
 character_t *get_sovereign(character_t *character)
 {
-	character_t *sovereign = character;
-	while (sovereign->lord != NULL)
-		sovereign = sovereign->lord;
+	if (!character) return NULL;
+	character_t *tmp = character;
+	character_t *sovereign;
+	while (tmp) {
+		sovereign = tmp;
+		tmp = get_liege(sovereign);
+	}
 	return sovereign;
 }
 
@@ -340,4 +342,14 @@ void set_successor(character_t *grantor, character_t *heir) {
 		dipstatus->status |= HEIR;
 	else
 		dipstatus->status |= GRANTOR;
+}
+
+character_t *get_liege(character_t *character) {
+	if (!character) return NULL;
+	return character->lord;
+}
+
+void set_liege(character_t *character, character_t *liege) {
+	if (!character || character == liege) return;
+	character->lord = liege;
 }

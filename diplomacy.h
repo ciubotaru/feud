@@ -76,4 +76,8 @@ void set_successor(character_t *character, character_t *heir);
 
 character_t *get_successor(character_t *character);
 
+character_t *get_liege(character_t *character);
+
+void set_liege(character_t *character, character_t *liege);
+
 #endif

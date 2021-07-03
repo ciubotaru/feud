@@ -138,6 +138,7 @@ void draw_map(WINDOW *local_win)
 
 	character_t *character = world->selected_character;
 	character_t *heir = get_successor(character);
+	character_t *lord = get_liege(character);
 	if (!cursor) cursor = get_noble_by_owner(character)->tile;
 	piece_t *piece = cursor->piece;
 
@@ -238,7 +239,7 @@ void draw_map(WINDOW *local_win)
 	mvwprintw(local_win, 9, 50, "Heir: %s",
 		  (heir != NULL ? heir->name : "none"));
 	mvwprintw(local_win, 10, 50, "Lord: %s",
-		  (character->lord != NULL ? character->lord->name : "none"));
+		  (lord != NULL ? lord->name : "none"));
 	mvwprintw(local_win, 11, 50, "Moves left: %d", world->moves_left);
 
 	/* place info */
@@ -888,9 +889,9 @@ int feudal_dialog(WINDOW *local_win)
 	wattrset(local_win, A_BOLD);
 
 	int i;
-	character_t *current;
+	character_t *current, *current_lord;
 	character_t *active_character = world->selected_character;
-	character_t *lord = active_character->lord;
+	character_t *lord = get_liege(active_character);
 
 	piece_t *current_piece = cursor->piece;
 	character_t *selected_character = NULL;
@@ -969,6 +970,7 @@ int feudal_dialog(WINDOW *local_win)
 		section = 0;
 		current = world->characterlist;
 		while (current != NULL) {
+			current_lord = get_liege(current);
 			section = characterlist_selector / 10;
 			if (counter >= section * 10
 			    && counter < section * 10 + 10
@@ -978,8 +980,7 @@ int feudal_dialog(WINDOW *local_win)
 					selected_character = current;
 				} else
 					wattron(local_win, COLOR_PAIR(1));
-				if (current->lord != NULL
-				    && current->lord == active_character) {
+				if (current_lord == active_character) {
 					mvwprintw(local_win, 9 + counter % 10,
 						  2, "%3d. %s (%s)",
 						  current->id, current->name,
@@ -1052,6 +1053,7 @@ int homage_dialog(WINDOW *local_win)
 	character_t *current;
 	character_t *active_character = world->selected_character;
 	character_t *selected_character = world->selected_character;
+	character_t *lord;
 	int characterlist_selector;
 
 	int pay_homage_ok = 0;
@@ -1070,11 +1072,11 @@ int homage_dialog(WINDOW *local_win)
 			wprintw(local_win, " ");
 		wprintw(local_win, "%s\n\n", screens[current_screen]);
 
+		lord = get_liege(selected_character);
 		if (selected_character == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
-		else if (selected_character->lord != NULL
-			 && selected_character->lord == active_character)
+		else if (lord == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
 		else if (selected_character->rank <= KNIGHT)
@@ -1301,6 +1303,7 @@ int diplomacy_dialog(WINDOW *local_win)
 
 	int i;
 	character_t *active_character = world->selected_character;
+	character_t *lord = get_liege(active_character);
 	character_t *selected_character = world->selected_character;
 	int characterlist_selector;
 
@@ -1372,10 +1375,8 @@ int diplomacy_dialog(WINDOW *local_win)
 			}
 			break;
 		case ALLIANCE:
-			if ((active_character->lord != NULL
-			     && active_character->lord == selected_character)
-			    || (selected_character->lord != NULL
-				&& selected_character->lord == active_character))
+			if ((lord == selected_character)
+			    || (get_liege(selected_character) == active_character))
 				mvwprintw(local_win, 2, 2,
 					  "[You can not break alliance with your lord or vassal]");
 			else {
@@ -1601,7 +1602,7 @@ int self_declaration_dialog(WINDOW *local_win) {
 	unsigned char eligible = 0;
 	character_t *active_character = world->selected_character;
 	uint16_t nr_regions = count_regions_by_owner(active_character);
-	character_t *lord = active_character->lord;
+	character_t *lord = get_liege(active_character);
 	uint16_t money = get_money(active_character);
 	unsigned char rank = get_character_rank(active_character);
 	if (rank == KING) {
@@ -2296,8 +2297,6 @@ int edit_character_dialog(WINDOW *local_win)
 	curs_set(FALSE);
 	noecho();
 
-	int have_lord = 0;
-
 	int i;
 	for (i = 0; i < (80 - strlen(screens[current_screen])) / 2; i++)
 		wprintw(local_win, " ");
@@ -2305,11 +2304,11 @@ int edit_character_dialog(WINDOW *local_win)
 
 	character_t *active_character = world->selected_character;
 	character_t *heir = get_successor(active_character);
+	character_t *lord = get_liege(active_character);
 	/* we can not get into this function if there's no selected_character, but still */
 	if (active_character == NULL) {
 		return CHARACTERS_DIALOG;
 	}
-	if (active_character->lord) have_lord = 1;
 	while (1) {
 		wclear(local_win);
 		mvwprintw(local_win, 2, 2, "Name: %s", active_character->name);
@@ -2325,15 +2324,14 @@ int edit_character_dialog(WINDOW *local_win)
 				  (heir ==
 				   NULL ? "none" : heir->name));
 		mvwprintw(local_win, 8, 2, "Lord: %s",
-				  (active_character->lord ==
-				   NULL ? "none" : active_character->lord->name));
+				  (lord ? lord->name : "none"));
 
 		mvwprintw(local_win, 10, 2, "To rename a hero, press 'r'");
 		mvwprintw(local_win, 11, 2, "To change rank, press '+' or '-'");
 		mvwprintw(local_win, 12, 2, "To change money, press 'm'");
 		mvwprintw(local_win, 13, 2, "To change dates, press 'b'");
 		mvwprintw(local_win, 14, 2, "To set heir, press 'h'");
-		if (have_lord)
+		if (lord)
 				  mvwprintw(local_win, 15, 2, "To unset lord, press 'l'");
 		else
 				  mvwprintw(local_win, 15, 2, "To set lord, press 'l'");
@@ -2346,7 +2344,7 @@ int edit_character_dialog(WINDOW *local_win)
 			/* can not increase rank above king */
 			if (active_character->rank ==  KING) break;
 			/* can not increase rank if it will be equal to lord's rank */
-			if (active_character->lord && active_character->rank + 1 == active_character->lord->rank) break;
+			if (lord && active_character->rank + 1 == lord->rank) break;
 			active_character->rank++;
 			break;
 		case '-':
@@ -2363,9 +2361,9 @@ int edit_character_dialog(WINDOW *local_win)
 			return HEIR_DIALOG;
 			break;
 		case 'l':
-			if (have_lord) {
+			if (lord) {
 				unhomage(active_character);
-				have_lord = 0;
+				lord = NULL;
 			}
 			else return FEUDAL_DIALOG;
 			break;
@@ -2887,15 +2885,14 @@ int editor_homage_dialog(WINDOW *local_win)
 		if (lord == active_character)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to yourself]\n");
-		else if (lord->lord != NULL
-			 && lord->lord == active_character)
+		else if (get_liege(lord) == active_character)
+			/* if we already have a lord, we should not even be able to get into this dialog */
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to your own vassal]\n");
 		else if (lord->rank <= KNIGHT)
 			mvwprintw(local_win, 2, 2,
 				  "[You can't pay homage to a knight]");
-		else if (active_character->lord != NULL
-			 && active_character->lord == lord) {
+		else if (get_liege(active_character) == lord) {
 			mvwprintw(local_win, 2, 2, "To unset lord, press 'd'");
 			unset_lord_ok = 1;
 		} else {
