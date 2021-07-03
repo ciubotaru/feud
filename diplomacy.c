@@ -183,11 +183,6 @@ void homage(character_t *character, character_t *lord)
 	set_liege(character, lord);
 	set_diplomacy(character, lord, ALLIANCE);
 }
-
-void unhomage(character_t *character) {
-	if (!character) return;
-	set_liege(character, NULL);
-}
 /* not used */
 void promote_soldier(character_t *character, piece_t *piece, region_t *region,
 		     char *name)

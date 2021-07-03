@@ -1008,7 +1008,7 @@ int feudal_dialog(WINDOW *local_win)
 			break;
 		case 'f':
 			if (selected_character != NULL) {
-				unhomage(selected_character);
+				set_liege(selected_character, NULL);
 				add_to_chronicle
 				    ("%s %s became a sovereign of his lands.\n",
 				     rank_name[selected_character->rank],
@@ -2362,7 +2362,7 @@ int edit_character_dialog(WINDOW *local_win)
 			break;
 		case 'l':
 			if (lord) {
-				unhomage(active_character);
+				set_liege(active_character, NULL);
 				lord = NULL;
 			}
 			else return FEUDAL_DIALOG;
@@ -2946,7 +2946,7 @@ int editor_homage_dialog(WINDOW *local_win)
 				break;
 			case 'd':
 				if (unset_lord_ok) {
-					unhomage(active_character);
+					set_liege(active_character, NULL);
 					return EDIT_CHARACTER_DIALOG;
 				}
 				break;
