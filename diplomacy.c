@@ -343,6 +343,7 @@ void set_successor(character_t *grantor, character_t *heir) {
 		}
 		dipstatus = dipstatus->next;
 	}
+	if (!heir) return;
 	dipstatus = get_dipstatus(grantor, heir);
 	if (dipstatus->character1 == grantor)
 		dipstatus->status |= HEIR;
