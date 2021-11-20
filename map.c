@@ -96,19 +96,20 @@ void change_tile_region(region_t * new_region, tile_t * tile)
 	}
 	/* remove tile from region */
 	else if (tile->region != NULL && new_region == NULL) {
-		tile_t **newlist =
-		    malloc(sizeof(tile_t *) * (tile->region->size - 1));
-		if (!newlist) exit(EXIT_FAILURE);
-		j = 0;
-		for (i = 0; i < tile->region->size; i++) {
-			if (tile->region->tiles[i] != tile) {
-				newlist[j] = (tile->region->tiles)[i];
-				j++;
+		tile_t **newlist = NULL;
+		if (tile->region->size > 1) {
+			newlist = malloc(sizeof(tile_t *) * (tile->region->size - 1));
+			if (!newlist) exit(EXIT_FAILURE);
+			j = 0;
+			for (i = 0; i < tile->region->size; i++) {
+				if (tile->region->tiles[i] != tile) {
+					newlist[j] = (tile->region->tiles)[i];
+					j++;
+				}
 			}
 		}
 		tile->region->size--;
-		if (tile->region->tiles != NULL)
-			free(tile->region->tiles);
+		free(tile->region->tiles);
 		tile->region->tiles = newlist;
 		tile->region = NULL;
 		return;
