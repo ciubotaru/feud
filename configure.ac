@@ -9,7 +9,8 @@ AC_PROG_LN_S
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [ncurses])
+AC_CHECK_LIB([m], [pow], [], AC_MSG_ERROR("math library not found"))
+AC_CHECK_LIB([ncurses], [wgetch], [], AC_MSG_ERROR("ncurses library not found"))
 # FIXME: Replace `main' with a function in `-lrt':
 #AC_CHECK_LIB([rt], [main])
 
@@ -30,7 +31,7 @@ esac],
 [custom_rng=false])
 
 if test x"$custom_rng" = x"true"; then
-AC_DEFINE(CUSTOM_RNG)
+AC_DEFINE([CUSTOM_RNG], [], [A custom RNG to be used instead of rand()])
 fi
 
 #AC_CONFIG_FILES([Makefile])
