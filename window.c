@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <time.h>
 #include <termios.h>
 #include <string.h>
 #include <stdio.h>

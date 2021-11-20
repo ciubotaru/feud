@@ -1,5 +1,6 @@
 #ifndef WORLD_H
 #define WORLD_H
+#include <time.h>		// for srand()
 #include "file.h"
 #include "character.h"
 #include "map.h"

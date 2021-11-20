@@ -8,7 +8,6 @@
 #include <math.h>	/* for log10() */
 #include <unistd.h>	/* for R_OK */
 #include <ctype.h>	/* for isalnum */
-#include <time.h>
 
 #if defined(__linux__) || defined(__CYGWIN__)
 
