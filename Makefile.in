@@ -2,8 +2,13 @@ CC = @CC@
 datarootdir = @datarootdir@
 prefix = @prefix@
 CFLAGS = @CFLAGS@
-OBJS = ai.o map.o character.o dice.o diplomacy.o editor.o feud.o file.o logic.o mapgen.o new.o piece.o server.o single.o time.o window.o world.o
-CLI_OBJS = map.o character.o dice.o diplomacy.o file.o piece.o time.o world.o
+CORE_SRCS = character.c dice.c diplomacy.c file.c map.c piece.c time.c world.c
+CORE_OBJS = ${CORE_SRCS:.c=.o}
+CORE_HEADERS = ${CORE_SRCS:.c=.h}
+GUI_SRCS = window.c
+GUI_OBJS = ${GUI_SRCS:.c=.o}
+GUI_HEADERS = ${CORE_SRCS:.c=.o}
+OBJS = $(CORE_OBJS) $(GUI_OBJS) feud.o server.o ai.o logic.o single.o editor.o
 EXECS = feud feud-editor feud-ai feud-server feud-single
 DATAFILES = characters.txt regions.txt
 
@@ -11,23 +16,26 @@ DATAFILES = characters.txt regions.txt
 
 all: $(EXECS)
 
-$(OBJS): %.o: %.c
+$(CORE_OBJS) $(GUI_OBJS): %.o: %.c %.h Makefile config.h
 	$(CC) -c $(CFLAGS) -DDATADIR=\"$(datarootdir)/feud\" $< -o $@
 
-feud: $(CLI_OBJS) feud.o new.o mapgen.o window.o
-	$(CC) $(CFLAGS) -o feud $(CLI_OBJS) feud.o new.o mapgen.o window.o -lncurses -lm
+ai.o editor.o feud.o server.o single.o: %.o: %.c Makefile
+	$(CC) -c $(CFLAGS) -DDATADIR=\"$(datarootdir)/feud\" $< -o $@
 
-feud-editor: $(CLI_OBJS) editor.o new.o mapgen.o window.o
-	$(CC) $(CFLAGS) -o feud-editor $(CLI_OBJS) editor.o new.o mapgen.o window.o -lncurses -lm
+feud: $(CORE_OBJS) $(GUI_OBJS) feud.o new.o mapgen.o
+	$(CC) $(CFLAGS) -o feud $(CORE_OBJS) $(GUI_OBJS) feud.o new.o mapgen.o -lncurses -lm
 
-feud-ai: $(CLI_OBJS) ai.o logic.o
-	$(CC) $(CFLAGS) -o feud-ai $(CLI_OBJS) ai.o logic.o -lm
+feud-editor: $(CORE_OBJS) $(GUI_OBJS) editor.o new.o mapgen.o
+	$(CC) $(CFLAGS) -o feud-editor $(CORE_OBJS) $(GUI_OBJS) editor.o new.o mapgen.o -lncurses -lm
 
-feud-server: $(CLI_OBJS) server.o
-	$(CC) $(CFLAGS) -o feud-server $(CLI_OBJS) server.o -lm
+feud-ai: $(CORE_OBJS) ai.o logic.o
+	$(CC) $(CFLAGS) -o feud-ai $(CORE_OBJS) ai.o logic.o -lm
 
-feud-single: $(CLI_OBJS) logic.o mapgen.o new.o single.o window.o
-	$(CC) $(CFLAGS) -o feud-single $(CLI_OBJS) logic.o mapgen.o new.o single.o window.o -lncurses -lm
+feud-server: $(CORE_OBJS) server.o
+	$(CC) $(CFLAGS) -o feud-server $(CORE_OBJS) server.o -lm
+
+feud-single: $(CORE_OBJS) $(GUI_OBJS) logic.o mapgen.o new.o single.o
+	$(CC) $(CFLAGS) -o feud-single $(CORE_OBJS) $(GUI_OBJS) logic.o mapgen.o new.o single.o -lncurses -lm
 
 clean:
 	for i in $(OBJS) $(EXECS); do \
